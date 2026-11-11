@@ -1,0 +1,24 @@
+<?php
+// Levélküldés beállításai.
+// Alapból minden levél az info@ postafiókra érkezik és onnan megy ki; további feladó és címzett az adminban is felvehető.
+// A jelszót az 'IDE-A-JELSZO' helyére kell beírni (egy fájl, csak itt szerepel).
+return array(
+    'from'      => 'info@bagdikata.hu',       // alapértelmezett feladó (az admin Beállítások > Értesítések alatt további feladó címek is felvehetők)
+    'from_name' => 'Bagdi Kata',
+    // Ki kapja a leveleket (a szerver ezt érvényesíti, az admin beállításától függetlenül):
+    'routes' => array(
+        'order'           => 'info@bagdikata.hu',       // új rendelések (az adminban további címzettek is megadhatók)
+        'withdrawal_copy' => 'info@bagdikata.hu',       // elállások másolata
+        'daily'           => 'info@bagdikata.hu',       // napi statisztika
+        'contact'         => 'info@bagdikata.hu',       // a Kapcsolat oldalon írt üzenetek
+    ),
+    // Feladó: alapból a 'from' (az adminban választható más is). Fajtánként itt is megadható, pl. 'senders' => array('daily' => 'cim@bagdikata.hu'),
+    'senders' => array(),
+    'smtp' => array(
+        'host'   => 'bagdikata.hu',
+        'port'   => 465,
+        'secure' => 'ssl',
+        'user'   => '*',                       // '*' = a feladó postafiókjával lép be (minden feladó címnek ugyanaz a jelszó)
+        'pass'   => 'IDE-A-JELSZO',
+    ),
+);

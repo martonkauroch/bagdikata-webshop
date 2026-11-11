@@ -1,0 +1,1 @@
+import{i as e,l as t}from"./createLucideIcon-Bc0h7bbI.js";import{K as n}from"./index-0f-fFOYT.js";var r=e();function i({status:e}){let i=n.find(t=>t.value===e)??n[0];return(0,r.jsx)(`span`,{className:t(`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset`,i.className),children:i.label})}export{i as t};

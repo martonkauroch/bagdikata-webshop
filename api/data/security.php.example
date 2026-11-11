@@ -1,0 +1,8 @@
+<?php
+// Robotvédelem (Cloudflare Turnstile) – opcionális. Ha mindkét kulcs ki van töltve, az űrlapok és a rendelés ellenőrzést kapnak.
+// Kulcsokat itt szerezhetsz (ingyenes): https://dash.cloudflare.com -> Turnstile -> Add site (Widget: Invisible vagy Managed)
+// Ezt a fájlt a tárhelyen töltsd ki; a webről nem érhető el (api/data védett).
+return array(
+    'turnstile_site' => '',     // nyilvános „Site key”
+    'turnstile_secret' => '',   // titkos „Secret key”
+);
