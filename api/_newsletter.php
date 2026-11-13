@@ -86,7 +86,7 @@ function nl_send_confirm($cfg, $s) {
 }
 
 // Egy hírlevél-levél kiküldése egy feliratkozónak (leiratkozó lábléc, List-Unsubscribe fejlécek)
-function nl_send_one($cfg, $camp, $s, $preview = false) {
+function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     $en = (isset($s['lang']) && $s['lang'] === 'en');
     $hasEn = (!empty($camp['subjectEn']) && !empty($camp['bodyEn']));
     $subj = ($en && $hasEn) ? $camp['subjectEn'] : $camp['subject'];
@@ -137,6 +137,11 @@ function nl_send_one($cfg, $camp, $s, $preview = false) {
         $first = false;
     }
     $it = (object) array('subject' => $subj, 'lang' => $en ? 'en' : 'hu', 'blocks' => $blocks);
+    if ($capture) {
+        list($text, $html) = mail_render($it);
+        unset($GLOBALS['bk_mail_footer_html'], $GLOBALS['bk_mail_footer_text'], $GLOBALS['bk_mail_nocopy'], $GLOBALS['bk_mail_headers'], $GLOBALS['bk_mail_logo_only']);
+        return array('subject' => ($preview ? '[TESZT] ' : '') . $subj, 'html' => $html, 'text' => $text);
+    }
     try {
         list($text, $html) = mail_render($it);
         $sender = nl_sender();

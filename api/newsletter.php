@@ -132,6 +132,15 @@ if ($act === 'delete' || $act === 'unsub') {
     }
     json_out(nl_snapshot());
 }
+if ($act === 'preview') {
+    $dr = nl_draft($d);
+    $lang = (isset($d->lang) && $d->lang === 'en') ? 'en' : 'hu';
+    $fake = array('id' => '0000000000000000', 'email' => 'feliratkozo@example.com', 'lang' => $lang, 'consentAt' => date('c'));
+    $r = nl_send_one($cfg, $dr, $fake, true, true);
+    $r['subject'] = preg_replace('/^\[TESZT\] /', '', $r['subject']);
+    $r['ok'] = true;
+    json_out($r);
+}
 if ($act === 'test') {
     $dr = nl_draft($d);
     if (rl_blocked('nltest', 20, 3600)) { fail(429, 'Túl sok tesztlevél. Próbáld később.'); }

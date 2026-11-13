@@ -92,6 +92,8 @@ function NewsletterPage(){
   let trNow=()=>{if(!f.subject.trim()&&!f.body.trim())return;setTrBusy(true);window.__bkTrItems([{hu:f.subject,en:""},{hu:f.body,en:""}]).then(r=>{setTrBusy(false);if(window.__bkTrErr&&window.__bkTrErr()){window.__bkToast&&window.__bkToast(window.__bkTrErr(),1);setErr("Az angol fordítás nem sikerült: "+window.__bkTrErr());return}setErr("");setF(x=>({...x,subjectEn:r[0]||x.subjectEn,bodyEn:r[1]||x.bodyEn}))})};
   let payload=()=>({subject:f.subject,body:f.body,subjectEn:en?f.subjectEn:"",bodyEn:en?f.bodyEn:"",ctaLabel:f.ctaLabel,ctaUrl:f.ctaUrl});
   let test=lang=>{setErr(null);setOk(null);api("newsletter.php",{action:"test",lang,...payload()}).then(j=>setOk("A tesztlevél elment ide: "+j.to+" (a lábléc leiratkozó linkje a teszten nem működik).")).catch(e=>setErr(e.message))};
+  let[pv,setPv]=N.useState(null),[pvLang,setPvLang]=N.useState("hu"),[pvW,setPvW]=N.useState(620),[pvBusy,setPvBusy]=N.useState(false);
+  let preview=lang=>{setErr(null);setOk(null);setPvBusy(true);setPvLang(lang);api("newsletter.php",{action:"preview",lang,...payload()}).then(j=>{setPv(j);setPvBusy(false)}).catch(e=>{setPvBusy(false);setErr(e.message)})};
   let runCampaign=async id=>{stop.current=false;setRun({id});try{for(;;){let r=await api("newsletter.php",{action:"campaign_send",id});setData(r);let c=r.campaigns.find(x=>x.id===id);if(!c||c.status!=="sending"||c.remaining===0){if(c)setOk("Kiküldés kész: "+c.sent+" elküldve"+(c.failed?", "+c.failed+" sikertelen":"")+".");if(c&&c.status==="paused")setErr("A kiküldés megszakadt: "+(c.lastError||"levélküldési hiba")+". A Folytatás gombbal újrapróbálhatod (a tárhelyek óránkénti levélkorlátja miatt érdemes várni).");break}if(stop.current){setOk("A kiküldés szünetel – a Folytatás gombbal újraindíthatod.");break}}}catch(e){setErr(e.message)}setRun(null);load()};
   let send=()=>{setErr(null);setOk(null);let n=data?data.counts.confirmed:0;if(!f.subject.trim()||!f.body.trim()){setErr("A tárgy és a levél szövege kötelező.");return}
     if(!window.confirm("Elküldöd a hírlevelet "+n+" megerősített feliratkozónak? A kiküldés nem vonható vissza. Javasolt előbb tesztlevelet küldeni magadnak."))return;
@@ -117,12 +119,25 @@ function NewsletterPage(){
           h("label",null,h("span",{style:S.lab},"Link felirata (nem kötelező)"),h("input",{style:S.inp,value:f.ctaLabel,maxLength:60,placeholder:"pl. Megnézem a webshopban",onChange:ev=>setF({...f,ctaLabel:ev.target.value})})),
           h("label",null,h("span",{style:S.lab},"Link címe (https://…)"),h("input",{style:S.inp,value:f.ctaUrl,placeholder:"https://bagdikata.hu",onChange:ev=>setF({...f,ctaUrl:ev.target.value})}))),
         h("div",{style:{display:"flex",flexWrap:"wrap",gap:10,alignItems:"center"}},
+          h("button",{type:"button",style:S.btn,onClick:()=>preview(en&&pvLang==="en"?"en":"hu"),disabled:!shared()||pvBusy,"data-testid":"nl-preview"},pvBusy?"Betöltés…":"Előnézet"),
           h("button",{type:"button",style:S.btn,onClick:()=>test("hu"),disabled:!shared()||!!run,"data-testid":"nl-test"},"Tesztlevél magamnak"),
           en&&h("button",{type:"button",style:S.btn,onClick:()=>test("en"),disabled:!shared()||!!run},"Teszt angolul"),
           h("button",{type:"button",style:{...S.btnD,opacity:(!shared()||run||!cnt.confirmed)?.5:1},onClick:send,disabled:!shared()||!!run||!cnt.confirmed,"data-testid":"nl-send"},"Kiküldés "+NF.format(cnt.confirmed)+" megerősített feliratkozónak"),
           run&&h("button",{type:"button",style:S.btn,onClick:()=>{stop.current=true}},"Szüneteltetés")),
         run&&data&&(()=>{let c=data.campaigns.find(x=>x.id===run.id);if(!c)return null;let done=c.sent+c.failed,pct=c.total?Math.round(done/c.total*100):0;return h("div",{role:"status"},h("div",{style:{fontSize:13,marginBottom:4}},"Küldés folyamatban: "+done+" / "+c.total+" – ne zárd be az oldalt."),h("div",{style:{height:8,background:"#e5e7eb",borderRadius:4}},h("div",{style:{height:8,borderRadius:4,width:pct+"%",background:"#4f46e5"}})))})(),
         h("p",{style:S.sub},"A tárhelyek gyakran óránként korlátozzák a kimenő levelek számát (néhol 100–300). Ha a küldés megszakad, a Folytatás gomb onnan folytatja, ahol abbamaradt – senki nem kap kétszer levelet."))),
+    pv&&h(Card,{title:"Előnézet – így megy ki a levél",description:"Ez az, amit a feliratkozó a levelezőjében lát. A leiratkozó link az előnézetben nem működik."},
+      h("div",{style:{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center",marginBottom:12}},
+        h("button",{type:"button",style:pvLang==="hu"?S.btnD:S.btn,onClick:()=>preview("hu")},"Magyar feliratkozónak"),
+        en&&h("button",{type:"button",style:pvLang==="en"?S.btnD:S.btn,onClick:()=>preview("en")},"Angol feliratkozónak"),
+        h("span",{style:{flex:1}}),
+        h("button",{type:"button",style:pvW===620?S.btnD:S.btn,onClick:()=>setPvW(620)},"Asztali"),
+        h("button",{type:"button",style:pvW===380?S.btnD:S.btn,onClick:()=>setPvW(380)},"Mobil"),
+        h("button",{type:"button",style:S.btn,onClick:()=>setPv(null)},"Bezárás")),
+      h("div",{style:{background:"#f3f4f6",borderRadius:10,padding:12}},
+        h("div",{style:{maxWidth:pvW,margin:"0 auto 8px",fontSize:13,color:"#374151"},"data-testid":"nl-preview-subject"},h("strong",null,"Tárgy: "),pv.subject),
+        h("iframe",{title:"Hírlevél előnézet",sandbox:"",srcDoc:pv.html,"data-testid":"nl-preview-frame",style:{display:"block",width:"100%",maxWidth:pvW,height:560,margin:"0 auto",border:"1px solid #e5e7eb",borderRadius:8,background:"#fff"}})),
+      h("p",{style:S.sub},"A szöveges (nem HTML-es) változatot is tartalmazza a levél, ezt a régi levelezők használják.")),
     h(Card,{title:"Korábbi kiküldések"},
       !data||!data.campaigns.length?h("p",{style:S.sub},"Még nem küldtél hírlevelet."):
       h("div",{style:scroll},h("table",{style:{width:"100%",borderCollapse:"collapse",minWidth:620}},h("thead",null,h("tr",null,["Időpont","Tárgy","Elküldve","Sikertelen","Állapot",""].map((x,i)=>h("th",{key:i,style:S.th},x)))),
