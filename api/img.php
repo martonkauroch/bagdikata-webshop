@@ -8,8 +8,42 @@ if (!preg_match('/^[a-f0-9]{32}\.(jpg|png|webp|gif)$/', $id, $m)) { http_respons
 $f = DATA_DIR . '/img/' . $id;
 if (!is_file($f)) { http_response_code(404); exit; }
 $mime = array('jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'gif' => 'image/gif');
+
+// Vízjel: a logó a jobb alsó sarokba kerül (megjelenítéskor, az eredeti feltöltött fájl érintetlen marad).
+function bk_watermarked($src, $ext, $id) {
+    $wmFile = dirname(__DIR__) . '/assets/watermark.png';
+    if ($ext === 'gif' || !is_file($wmFile) || !function_exists('imagecreatefrompng')) { return null; }
+    $cacheDir = DATA_DIR . '/imgwm';
+    $cache = $cacheDir . '/' . $id;
+    $ver = (string) @filemtime($wmFile) . '-' . (string) @filemtime($src);
+    if (is_file($cache) && is_file($cache . '.v') && @file_get_contents($cache . '.v') === $ver) { return $cache; }
+    $info = @getimagesize($src);
+    if (!$info || $info[0] < 120 || $info[1] < 120 || $info[0] * $info[1] > 24000000) { return null; }
+    if ($info[2] === IMAGETYPE_JPEG) { $im = @imagecreatefromjpeg($src); }
+    elseif ($info[2] === IMAGETYPE_PNG) { $im = @imagecreatefrompng($src); }
+    elseif ($info[2] === IMAGETYPE_WEBP && function_exists('imagecreatefromwebp')) { $im = @imagecreatefromwebp($src); }
+    else { return null; }
+    $wm = @imagecreatefrompng($wmFile);
+    if (!$im || !$wm) { return null; }
+    $W = imagesx($im); $H = imagesy($im);
+    $w = max(60, (int) round($W * 0.19)); $h = (int) round(imagesy($wm) * $w / imagesx($wm)); $m = (int) round($W * 0.025);
+    imagealphablending($im, true);
+    imagecopyresampled($im, $wm, $W - $w - $m, $H - $h - $m, 0, 0, $w, $h, imagesx($wm), imagesy($wm));
+    if (!is_dir($cacheDir)) { @mkdir($cacheDir, 0755, true); }
+    $tmp = $cache . '.tmp' . getmypid();
+    if ($ext === 'jpg') { $ok = imagejpeg($im, $tmp, 90); }
+    elseif ($ext === 'png') { imagesavealpha($im, true); $ok = imagepng($im, $tmp, 6); }
+    elseif ($ext === 'webp' && function_exists('imagewebp')) { imagesavealpha($im, true); $ok = imagewebp($im, $tmp, 90); }
+    else { $ok = false; }
+    imagedestroy($im); imagedestroy($wm);
+    if (!$ok) { @unlink($tmp); return null; }
+    @rename($tmp, $cache); @file_put_contents($cache . '.v', $ver);
+    return is_file($cache) ? $cache : null;
+}
+$out = bk_watermarked($f, $m[1], $id);
+$send = $out ? $out : $f;
 header('Content-Type: ' . $mime[$m[1]]);
-header('Cache-Control: private, max-age=31536000, immutable');
+header('Cache-Control: private, max-age=86400');
 header('X-Content-Type-Options: nosniff');
-header('Content-Length: ' . filesize($f));
-readfile($f);
+header('Content-Length: ' . filesize($send));
+readfile($send);
