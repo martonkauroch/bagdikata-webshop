@@ -1,8 +1,12 @@
 ---
 # cPanel Git™ Version Control: „Deploy HEAD Commit” ezt futtatja.
-# A repó tartalmát a public_html-be másolja. Az api/data (éles adatok, titkok)
-# és a teszt-PHP-k kimaradnak, a tárhelyen lévő változatuk érintetlen marad.
+# A repó tartalmát a public_html-be másolja (a tárhelyen nincs rsync, ezért cp/find).
+# Kimarad: .git, .github, README.md, .gitignore, .cpanel.yml, az api/data (éles adatok,
+# titkok – a tárhelyen lévő változat érintetlen marad) és a két teszt-PHP.
 deployment:
   tasks:
     - export DEPLOYPATH=/home/bagdikat/public_html/
-    - /usr/bin/rsync -rlt --exclude=.git --exclude=.github --exclude=.gitignore --exclude=.cpanel.yml --exclude=README.md --exclude=api/data --exclude=api/mailtest.php --exclude=api/selftest.php ./ $DEPLOYPATH
+    - /bin/mkdir -p ${DEPLOYPATH}api ${DEPLOYPATH}assets
+    - /bin/find . -maxdepth 1 -type f ! -name .gitignore ! -name .cpanel.yml ! -name README.md -exec /bin/cp -f {} $DEPLOYPATH \;
+    - /bin/cp -Rf assets/. ${DEPLOYPATH}assets/
+    - /bin/find api -maxdepth 1 -type f -name '*.php' ! -name mailtest.php ! -name selftest.php -exec /bin/cp -f {} ${DEPLOYPATH}api/ \;
