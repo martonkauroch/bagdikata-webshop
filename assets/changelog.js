@@ -1,6 +1,7 @@
 /* Frissítési előzmények. A legfelső bejegyzés a jelenlegi verzió – ez látszik az oldal alján és az adminban.
    Új kiadásnál egy új sort kell a LISTA ELEJÉRE tenni (v = verzió, d = dátum, c = mi módosult). */
 window.__BK_CHANGELOG=[
+{v:"1.15.0",d:"2026-11-13",c:["Új „Számlázás” menüpont az adminban: a Billingo API beállításai (kulcs, számlatömb, automatikus számlázás) ide kerültek a Beállítások oldalról"]},
 {v:"1.14.0",d:"2026-11-13",c:["Bemutatkozás: idézőjeles grafikás, dőlt talpas betűs, a többi szövegtől elütő stílus","Új „Események” blokk a nyitóoldalon (Facebook-események linkkel), az adminban ki-be kapcsolható, külön menüpontban szerkeszthető; az angol szöveg automatikusan fordítódik"]},
 {v:"1.13.1",d:"2026-11-13",c:["Lábléc: a kapcsolati sor (Textiltervező iparművész, telefon, e-mail) eltávolítva; a Kapcsolat oldalon marad"]},
 {v:"1.13.0",d:"2026-11-13",c:["Webshop háttér: pasztell fonalmintás kép egyszínű háttér helyett, görgetéskor lassabban mozog (parallax); az adminban nem látszik"]},
