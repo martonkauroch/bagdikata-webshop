@@ -1,7 +1,8 @@
 name: Feltöltés a tárhelyre (FTPS)
 
 on:
-  # Egyelőre csak kézzel indítható (Actions → Run workflow).
+  # Tartalék: a tárhely jelenleg tiltja a GitHub felőli FTP-t,
+  # az élesítés a cPanel Git™ Version Control-lal megy (.cpanel.yml).
   workflow_dispatch:
 
 jobs:
@@ -9,17 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: FTP diagnosztika (ideiglenes)
-        continue-on-error: true
-        env:
-          U: ${{ secrets.FTP_USERNAME }}
-          P: ${{ secrets.FTP_PASSWORD }}
-          S: ${{ secrets.FTP_SERVER }}
-        run: |
-          echo "Felhasznalonev hossza: ${#U}, @ utani resz: '${U#*@}', szokoz a vegen: $([[ "$U" =~ [[:space:]]$ ]] && echo IGEN || echo nem)"
-          echo "Szerver hossza: ${#S}"
-          echo "Jelszo hossza: ${#P}, szokoz/sortores a szelen: $([[ "$P" =~ ^[[:space:]] || "$P" =~ [[:space:]]$ ]] && echo IGEN || echo nem)"
-          curl -sS -v --ssl-reqd --insecure --max-time 30 -u "$U:$P" "ftp://$S/" 2>&1 | grep -E "^[<>] |^[a-z-]{10} " | grep -v PASS || true
       - name: Feltöltés
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -29,7 +19,6 @@ jobs:
           protocol: ftps
           port: 21
           server-dir: public_html/
-          log-level: verbose
           exclude: |
             **/.git*
             **/.git*/**
