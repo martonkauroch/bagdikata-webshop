@@ -117,6 +117,7 @@ function mail_render($it) {
     }
     $lang = (isset($it->lang) && $it->lang === 'en') ? 'en' : 'hu';
     $ref = (isset($it->ref) && is_string($it->ref)) ? mail_clean($it->ref, 60) : '';
+    if (!empty($GLOBALS['bk_mail_footer_text'])) { $t[] = $GLOBALS['bk_mail_footer_text']; $t[] = ''; }
     $t[] = '-- Bagdi Kata | ' . mail_site_url();
     if ($ref !== '') { $t[] = ($lang === 'en' ? 'Reference: ' : 'Azonosító: ') . $ref; }
     $html = mail_wrap(implode("\n", $h), $lang, $ref, $pre);
@@ -154,7 +155,7 @@ function mail_wrap($inner, $lang, $ref, $pre) {
         . '<tr><td style="padding:24px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#222222">' . $inner . '</td></tr>'
         . '<tr><td style="background:#f6f3ee;padding:16px 28px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#6b6b6b;border-top:1px solid #ece6dc">'
         . $refHtml
-        . '<p style="margin:0 0 4px">' . $auto . '</p>'
+        . (isset($GLOBALS['bk_mail_footer_html']) ? $GLOBALS['bk_mail_footer_html'] : '<p style="margin:0 0 4px">' . $auto . '</p>')
         . '<p style="margin:0">Bagdi Kata &middot; <a href="' . htmlspecialchars($site) . '" style="color:#161314">' . $host . '</a> &middot; <a href="mailto:' . htmlspecialchars($contact) . '" style="color:#161314">' . htmlspecialchars($contact) . '</a></p>'
         . '</td></tr></table></td></tr></table></body></html>';
 }
@@ -245,6 +246,7 @@ function mail_send_smtp($s, $from, $fromName, $to, $headersRaw, $body) {
 
 // Az admin "Kimenő levelek másolata" beállításának címei (rejtett másolat)
 function mail_copy_list($to) {
+    if (!empty($GLOBALS['bk_mail_nocopy'])) { return array(); }
     $raw = read_raw('settings');
     $st = $raw !== null ? json_decode($raw) : null;
     $out = array();
@@ -271,6 +273,7 @@ function mail_send($to, $subject, $text, $html, $replyTo, $fromOverride = null) 
     $h = array('From: ' . $encName . ' <' . $from . '>', 'Message-ID: <' . bin2hex(random_bytes(14)) . '@' . $dom . '>', 'Date: ' . date('r'), 'MIME-Version: 1.0',
         'Content-Type: multipart/alternative; boundary="' . $bd . '"', 'X-Mailer: bagdikata');
     if ($replyTo && mail_valid($replyTo)) { $h[] = 'Reply-To: ' . $replyTo; }
+    if (!empty($GLOBALS['bk_mail_headers']) && is_array($GLOBALS['bk_mail_headers'])) { foreach ($GLOBALS['bk_mail_headers'] as $xh) { $h[] = $xh; } }
     $body = "--$bd\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($text))
         . "--$bd\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($html))
         . "--$bd--\r\n";

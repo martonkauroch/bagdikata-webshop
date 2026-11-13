@@ -2,8 +2,8 @@
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 $cfg = load_config();
-if (!has_site($cfg)) { http_response_code(401); exit; }
 $id = isset($_GET['id']) ? (string) $_GET['id'] : '';
+if (!has_site($cfg) && !landing_has_image($id)) { http_response_code(401); exit; }
 if (!preg_match('/^[a-f0-9]{32}\.(jpg|png|webp|gif)$/', $id, $m)) { http_response_code(404); exit; }
 $f = DATA_DIR . '/img/' . $id;
 if (!is_file($f)) { http_response_code(404); exit; }

@@ -13,14 +13,32 @@ rl_hit('track', 3600);
 $d = body_json(2000);
 if (!is_object($d) || !isset($d->type) || !is_string($d->type)) { json_out(array('ok' => false), 400); }
 $type = $d->type;
-if (!in_array($type, array('pageview', 'impression', 'click', 'view', 'cart', 'share'), true)) { json_out(array('ok' => false), 400); }
+if (!in_array($type, array('pageview', 'impression', 'click', 'view', 'cart', 'share', 'vid'), true)) { json_out(array('ok' => false), 400); }
 $pid = (isset($d->productId) && is_string($d->productId) && preg_match('/^[A-Za-z0-9_-]{1,60}$/', $d->productId)) ? $d->productId : '';
 $ch = (isset($d->channel) && is_string($d->channel) && in_array($d->channel, array('facebook', 'messenger', 'whatsapp', 'viber', 'telegram', 'x', 'pinterest', 'linkedin', 'email', 'instagram', 'copy', 'native'), true)) ? $d->channel : '';
-if ($type !== 'pageview' && $pid === '') { json_out(array('ok' => false), 400); }
+if ($type !== 'pageview' && $type !== 'vid' && $pid === '') { json_out(array('ok' => false), 400); }
 if ($type === 'share' && $ch === '') { json_out(array('ok' => false), 400); }
 $newVisit = !empty($d->newVisit);
 date_default_timezone_set('Europe/Budapest');
 $today = date('Y-m-d');
+// Visszatérő látogatók: csak akkor, ha a látogató elfogadta a statisztikai azonosítót (a böngésző küldi a vid-et); az azonosító sózott lenyomata kerül tárolásra
+$vid = (isset($d->vid) && is_string($d->vid) && preg_match('/^[a-f0-9]{16,40}$/', $d->vid)) ? $d->vid : '';
+if ($vid !== '' && ($type === 'vid' || ($type === 'pageview' && $newVisit))) {
+    $vkey = substr(hash_hmac('sha256', $vid, $cfg['secret']), 0, 20);
+    $vKeep = date('Y-m-d', strtotime('-200 days'));
+    mutate_json('returning', function ($cur) use ($vkey, $today, $vKeep) {
+        $v = $cur ? json_decode(json_encode($cur), true) : array();
+        if (!is_array($v)) { $v = array(); }
+        foreach (array_keys($v) as $k) { if (!isset($v[$k]['l']) || $v[$k]['l'] < $vKeep) { unset($v[$k]); } }
+        if (count($v) > 60000) { return $v; }
+        if (!isset($v[$vkey])) { $v[$vkey] = array('f' => $today, 'l' => $today, 's' => 0, 'd' => array()); }
+        $e = &$v[$vkey];
+        if (!in_array($today, $e['d'], true)) { $e['d'][] = $today; $e['d'] = array_slice($e['d'], -150); }
+        $e['l'] = $today; $e['s'] = (int) $e['s'] + 1;
+        return $v;
+    });
+}
+if ($type === 'vid') { json_out(array('ok' => true)); }
 $keepFrom = date('Y-m-d', strtotime('-120 days'));
 mutate_json('analytics', function ($cur) use ($type, $pid, $ch, $newVisit, $today, $keepFrom) {
     $a = $cur ? json_decode(json_encode($cur), true) : array();

@@ -1,6 +1,8 @@
 <?php
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
+require __DIR__ . '/_coupon.php';
+require __DIR__ . '/_newsletter.php';
 ensure_data();
 require_post();
 $cfg = load_config();
@@ -14,10 +16,27 @@ foreach ($o->items as $it) {
 }
 if (!bot_verify(isset($d->captcha) ? $d->captcha : '')) { fail(400, 'A robotellenőrzés nem sikerült.'); }
 rl_hit('order', 3600);
-mutate_json('store', function ($cur) use ($o) {
+$isNew = false;
+mutate_json('store', function ($cur) use ($o, &$isNew) {
     if (!is_object($cur)) { $cur = new stdClass(); }
     $orders = (isset($cur->orders) && is_array($cur->orders)) ? $cur->orders : array();
     foreach ($orders as $x) { if (is_object($x) && isset($x->id) && $x->id === $o->id) { return $cur; } }
+    $isNew = true;
+    // Kupon: a számlálót a szerver növeli (zárolva); a vásárló által küldött adatból csak a kód és az összeg marad meg
+    if (isset($o->coupon) && is_object($o->coupon)) {
+        $code = isset($o->coupon->code) && is_string($o->coupon->code) ? coupon_code_norm($o->coupon->code) : '';
+        $disc = (isset($o->coupon->discount) && is_numeric($o->coupon->discount)) ? max(0, (int) $o->coupon->discount) : 0;
+        if ($code === '') { unset($o->coupon); }
+        else {
+            list($cs, $cpct) = coupon_redeem($code);
+            $o->coupon = (object) array('code' => $code, 'percent' => $cpct, 'discount' => $disc);
+            if ($cs !== 'ok') {
+                $o->coupon->invalid = true;
+                $why = array('unknown' => 'ismeretlen', 'disabled' => 'letiltva', 'exhausted' => 'elfogyott');
+                $o->note = trim(((isset($o->note) && is_string($o->note)) ? $o->note . ' ' : '') . '[FIGYELEM: a(z) ' . $code . ' kupon a leadáskor már nem volt érvényes (' . (isset($why[$cs]) ? $why[$cs] : $cs) . ')]');
+            }
+        }
+    }
     array_unshift($orders, $o);
     $cur->orders = array_slice($orders, 0, 2000);
     if (isset($cur->products) && is_array($cur->products)) {
@@ -31,4 +50,11 @@ mutate_json('store', function ($cur) use ($o) {
     }
     return $cur;
 });
+// Hírlevél: a vásárló a pénztárban külön jelölőnégyzettel kért feliratkozást -> megerősítő levél (kettős opt-in)
+if ($isNew && !empty($o->newsletter) && isset($o->customer) && is_object($o->customer) && isset($o->customer->email) && is_string($o->customer->email)) {
+    try {
+        nl_subscribe($cfg, $o->customer->email, isset($o->customer->name) && is_string($o->customer->name) ? $o->customer->name : '',
+            (isset($o->locale) && $o->locale === 'en') ? 'en' : 'hu', 'checkout');
+    } catch (Throwable $e) { /* a rendelést ez nem akadályozhatja */ }
+}
 json_out(array('ok' => true));

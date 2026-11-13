@@ -124,7 +124,9 @@ var PRIVACY_HU=`${DRAFT_NOTE_HU}
 - **Rendelés teljesítése:** név, e-mail-cím, telefonszám, szállítási és számlázási cím, rendelt termékek, fizetési mód, megjegyzés. Cél: a szerződés megkötése és teljesítése, szállítás, kapcsolattartás. Jogalap: a szerződés teljesítése (GDPR 6. cikk (1) b).
 - **Számlázás, számviteli kötelezettségek:** számlázási adatok, számla. Jogalap: jogi kötelezettség (GDPR 6. cikk (1) c); a számviteli bizonylatokat a jogszabály szerinti ideig (jelenleg 8 év) megőrizzük.
 - **Elállás, szavatosság, panasz:** az elállási nyilatkozat, panasz és szavatossági ügyintézés adatai. Jogalap: jogi kötelezettség és szerződés teljesítése.
-- **Névtelen statisztika:** oldalmegtekintések és termékmegtekintések, süti és személyes azonosító nélkül, naponta változó sózott lenyomattal; az adatból személy nem azonosítható.
+- **Statisztika:** oldal- és termékmegtekintések névtelenül, naponta változó sózott lenyomattal. Ha a süti-sávban elfogadod a statisztikai azonosítót, egy véletlenszerű azonosítót is tárolunk a böngésződben a visszatérő látogatók számolásához; ebből személy nem azonosítható. Jogalap: hozzájárulás (GDPR 6. cikk (1) a), Eht. 155. §); a hozzájárulás a lábléc „Süti-beállítások” hivatkozásával bármikor visszavonható.
+- **Hírlevél:** a feliratkozás adatait a külön Hírlevél – adatkezelési tájékoztató (/hirlevel) ismerteti. Jogalap: hozzájárulás (GDPR 6. cikk (1) a).
+- **Kuponkód:** a beváltott kuponkód a rendelés része; a kuponhasználat számlálása személyes adatot nem tartalmaz.
 
 ## 3. Kinek adjuk át az adatokat?
 - Fizetésfeldolgozó: Barion Payment Zrt. (bankkártyás fizetésnél).
@@ -159,7 +161,9 @@ var PRIVACY_EN=`${DRAFT_NOTE_EN}
 - **Fulfilling orders:** name, e-mail, phone number, delivery and billing address, ordered products, payment method, notes. Purpose: concluding and performing the contract, delivery, contact. Legal basis: performance of a contract (GDPR Art. 6(1)(b)).
 - **Invoicing and accounting:** billing data and invoices. Legal basis: legal obligation (GDPR Art. 6(1)(c)); accounting records are kept for the statutory period (currently 8 years).
 - **Withdrawal, warranty, complaints:** data of withdrawal notices, complaints and warranty cases. Legal basis: legal obligation and contract performance.
-- **Anonymous statistics:** page and product views, without cookies or personal identifiers, using a daily-changing salted hash; no person can be identified from it.
+- **Statistics:** page and product views, anonymously, using a daily-changing salted hash. If you accept the statistics identifier in the cookie banner, we also store a random identifier in your browser to count returning visitors; no person can be identified from it. Legal basis: consent (GDPR Art. 6(1)(a)); you can withdraw it at any time via "Cookie settings" in the footer.
+- **Newsletter:** subscription data is described in the separate Newsletter privacy notice (/hirlevel). Legal basis: consent (GDPR Art. 6(1)(a)).
+- **Coupon codes:** a redeemed coupon code is part of the order; counting coupon use involves no personal data.
 
 ## 3. Who receives the data
 - Payment processor: Barion Payment Zrt. (card payments).
@@ -256,8 +260,70 @@ var IMPRINT_EN=`${DRAFT_NOTE_EN}
 ## Complaints and dispute resolution
 Competent conciliation board: [NAME, ADDRESS, E-MAIL, POSTAL ADDRESS].`;
 
-var LEGAL_DEFAULTS={terms:{hu:TERMS_HU,en:TERMS_EN},privacy:{hu:PRIVACY_HU,en:PRIVACY_EN},shipping:{hu:SHIPPING_HU,en:SHIPPING_EN},imprint:{hu:IMPRINT_HU,en:IMPRINT_EN}};
-var LEGAL_TITLES={terms:{hu:"Általános szerződési feltételek (ÁSZF)",en:"Terms and Conditions"},privacy:{hu:"Adatkezelési tájékoztató",en:"Privacy Policy"},shipping:{hu:"Szállítási feltételek",en:"Shipping information"},imprint:{hu:"Impresszum",en:"Legal notice"}};
+var NEWSLETTER_HU=`${DRAFT_NOTE_HU}
+
+## 1. Az adatkezelő
+- Név / cégnév: [CÉGNÉV / NÉV]
+- Székhely: [CÍM]
+- E-mail: info@bagdikata.hu
+
+## 2. Az adatkezelés célja és jogalapja
+- **Cél:** hírlevél küldése: a Bagdi Kata újdonságairól, termékeiről, akcióiról és kuponjairól szóló, közvetlen üzletszerzési célú elektronikus levelek.
+- **Jogalap:** az érintett önkéntes, megfelelő tájékoztatáson alapuló hozzájárulása (GDPR 6. cikk (1) a), valamint a gazdasági reklámtevékenység alapvető feltételeiről és egyes korlátairól szóló 2008. évi XLVIII. törvény 6. §-a). A hozzájárulás nem feltétele a vásárlásnak; a pénztárban a jelölőnégyzet alapértelmezetten üres.
+
+## 3. Milyen adatokat kezelünk?
+- E-mail-cím, név (ha megadod), a feliratkozás időpontja és forrása (pénztár vagy weboldal), a megerősítés és az esetleges leiratkozás időpontja, a hozzájárulási szöveg változata.
+
+## 4. A feliratkozás menete
+Feliratkozáskor megerősítő levelet küldünk a megadott címre. A feliratkozás csak akkor lép érvénybe, ha a levélben lévő linkre kattintasz (kettős megerősítés). Megerősítés nélkül hírlevelet nem küldünk.
+
+## 5. Leiratkozás, a hozzájárulás visszavonása
+A hozzájárulást bármikor, indokolás nélkül, ingyenesen visszavonhatod: minden hírlevél alján található „Leiratkozás” linkkel, vagy az info@bagdikata.hu címre írt levéllel. A leiratkozás után hírlevelet nem küldünk. A leiratkozás tényét (e-mail-cím, időpont) annak érdekében, hogy ne küldjünk újra levelet, [MEGŐRZÉSI IDŐ] ideig megőrizzük; kérésedre ezt is töröljük, de akkor a későbbi, esetleges új feliratkozásig nem tudjuk biztosítani, hogy ne kapj levelet.
+
+## 6. Az adatok megőrzése
+A hozzájárulásod visszavonásáig kezeljük az adataidat; a hozzájárulás bizonyítása céljából a feliratkozás és a leiratkozás adatait a [MEGŐRZÉSI IDŐ] ideig őrizzük meg.
+
+## 7. Kinek adjuk át az adatokat?
+Adatfeldolgozó: tárhely- és e-mail-szolgáltató: [SZOLGÁLTATÓ NEVE]. Az adatokat harmadik félnek marketing célra nem adjuk át.
+
+## 8. Az érintett jogai és jogorvoslat
+Kérheted a hozzáférést, helyesbítést, törlést, az adatkezelés korlátozását, tiltakozhatsz az adatkezelés ellen, és kérheted az adatok hordozhatóságát: info@bagdikata.hu. Panasszal a Nemzeti Adatvédelmi és Információszabadság Hatóságnál (NAIH, 1055 Budapest, Falk Miksa utca 9-11., www.naih.hu) élhetsz, illetve bírósághoz fordulhatsz.
+
+Hatályos: [DÁTUM].`;
+
+var NEWSLETTER_EN=`${DRAFT_NOTE_EN}
+
+## 1. Data controller
+- Name / company: [COMPANY / NAME]
+- Address: [ADDRESS]
+- E-mail: info@bagdikata.hu
+
+## 2. Purpose and legal basis
+- **Purpose:** sending the newsletter: direct marketing e-mails about Bagdi Kata news, products, offers and coupons.
+- **Legal basis:** your voluntary, informed consent (GDPR Art. 6(1)(a) and Section 6 of Hungarian Act XLVIII of 2008 on commercial advertising). Consent is not a condition of purchase; the checkbox at checkout is unticked by default.
+
+## 3. What data we process
+- E-mail address, name (if given), date and source of the subscription (checkout or website), date of confirmation and of any unsubscription, version of the consent text.
+
+## 4. How subscription works
+When you subscribe we send a confirmation e-mail. The subscription only takes effect once you click the link in it (double opt-in). We do not send any newsletter without confirmation.
+
+## 5. Unsubscribing and withdrawing consent
+You can withdraw your consent at any time, free of charge and without giving reasons, using the "Unsubscribe" link at the bottom of every newsletter or by writing to info@bagdikata.hu. After that we send no more newsletters. To make sure we do not e-mail you again, we keep the fact of unsubscription (e-mail address, date) for [RETENTION PERIOD]; on request we delete this too, but then we cannot guarantee that you will not be contacted if you subscribe again later.
+
+## 6. Retention
+We process your data until you withdraw consent; to be able to prove consent, subscription and unsubscription records are kept for [RETENTION PERIOD].
+
+## 7. Who receives the data
+Processor: hosting and e-mail provider: [PROVIDER]. We do not pass the data to third parties for marketing purposes.
+
+## 8. Your rights and remedies
+You may request access, rectification, erasure or restriction, object to the processing and request data portability: info@bagdikata.hu. You may lodge a complaint with the Hungarian National Authority for Data Protection and Freedom of Information (NAIH, Falk Miksa utca 9-11, 1055 Budapest, www.naih.hu) or go to court.
+
+In force from: [DATE].`;
+
+var LEGAL_DEFAULTS={terms:{hu:TERMS_HU,en:TERMS_EN},privacy:{hu:PRIVACY_HU,en:PRIVACY_EN},shipping:{hu:SHIPPING_HU,en:SHIPPING_EN},imprint:{hu:IMPRINT_HU,en:IMPRINT_EN},newsletter:{hu:NEWSLETTER_HU,en:NEWSLETTER_EN}};
+var LEGAL_TITLES={terms:{hu:"Általános szerződési feltételek (ÁSZF)",en:"Terms and Conditions"},privacy:{hu:"Adatkezelési tájékoztató",en:"Privacy Policy"},shipping:{hu:"Szállítási feltételek",en:"Shipping information"},imprint:{hu:"Impresszum",en:"Legal notice"},newsletter:{hu:"Hírlevél – adatkezelési tájékoztató",en:"Newsletter – privacy notice"}};
 
 /* ---------------- Megjelenítés (biztonságos, csak szöveg) ---------------- */
 function Rich({text}){
@@ -286,7 +352,7 @@ function Legal({kind}){
     h(Rich,{text}),
     (kind==="terms"||kind==="shipping")&&h("p",{style:{marginTop:"2rem"}},h(LinkC,{to:path("/elallas"),className:"btn-secondary"},en?"Right of withdrawal →":"Elállás a szerződéstől →")));
 }
-var TermsPage=()=>h(Legal,{kind:"terms"}),PrivacyPage=()=>h(Legal,{kind:"privacy"}),ShippingPage=()=>h(Legal,{kind:"shipping"}),ImprintPage=()=>h(Legal,{kind:"imprint"});
+var TermsPage=()=>h(Legal,{kind:"terms"}),PrivacyPage=()=>h(Legal,{kind:"privacy"}),ShippingPage=()=>h(Legal,{kind:"shipping"}),ImprintPage=()=>h(Legal,{kind:"imprint"}),NewsletterPage=()=>h(Legal,{kind:"newsletter"});
 
 /* ---------------- Elállás a szerződéstől ---------------- */
 var WKEY="bagdikata:withdrawals:v1";
@@ -385,4 +451,4 @@ function ContactPage(){
     h("p",{className:"text-sm text-ink-muted",style:{marginTop:"1.5rem"}},T.direct+" ",mailLink));
 }
 
-export{TermsPage,PrivacyPage,ShippingPage,ImprintPage,WithdrawalPage,ContactPage,LEGAL_DEFAULTS,LEGAL_TITLES,pickText};
+export{NewsletterPage,TermsPage,PrivacyPage,ShippingPage,ImprintPage,WithdrawalPage,ContactPage,LEGAL_DEFAULTS,LEGAL_TITLES,pickText};

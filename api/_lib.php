@@ -59,6 +59,36 @@ function put_cookie($name, $val, $ttl) {
 }
 // Az oldal állapota: nyilvános (nincs oldaljelszó) vagy jelszóval védett. A jelzőfájlt a save.php írja, amikor az admin a Beállításokban menti.
 function site_is_public() { return is_file(DATA_DIR . '/public.flag'); }
+// A „Hamarosan” oldal szerkeszthető tartalma (settings.access.landing), megtisztítva – az oldaljelszó nélküli látogatók is megkapják.
+function landing_public() {
+    $raw = read_raw('settings'); $s = $raw ? json_decode($raw) : null;
+    if (!is_object($s) || !isset($s->access) || !is_object($s->access) || !isset($s->access->landing) || !is_object($s->access->landing)) { return null; }
+    $l = $s->access->landing; $out = array();
+    foreach (array('title' => 160, 'lead' => 700, 'writeTitle' => 80, 'hint' => 300) as $k => $max) {
+        if (!isset($l->$k) || !is_object($l->$k)) { continue; }
+        foreach (array('hu', 'en') as $lg) {
+            if (isset($l->$k->$lg) && is_string($l->$k->$lg)) { $out[$k][$lg] = mb_substr($l->$k->$lg, 0, $max, 'UTF-8'); }
+        }
+    }
+    if (isset($l->form)) { $out['form'] = ($l->form === true); }
+    if (isset($l->images) && is_array($l->images)) {
+        $imgs = array();
+        foreach ($l->images as $im) {
+            if (count($imgs) >= 4 || !is_object($im) || !isset($im->src) || !is_string($im->src)) { continue; }
+            if (!preg_match('#^(assets/[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)|srv:[a-f0-9]{32}\.(jpg|png|webp|gif))$#', $im->src)) { continue; }
+            $pos = isset($im->pos) && is_numeric($im->pos) ? max(0, min(100, (int) $im->pos)) : 50;
+            $imgs[] = array('src' => $im->src, 'pos' => $pos);
+        }
+        $out['images'] = $imgs;
+    }
+    return count($out) ? (object) $out : null;
+}
+function landing_has_image($id) {
+    $l = landing_public();
+    if (!$l || empty($l->images)) { return false; }
+    foreach ($l->images as $im) { if ($im['src'] === 'srv:' . $id) { return true; } }
+    return false;
+}
 function has_site($cfg) { if (!$cfg) { return false; } if (site_is_public()) { return true; } return isset($_COOKIE['bk_site']) && check_token($cfg, 'site', $_COOKIE['bk_site']); }
 function has_admin($cfg) { return $cfg && isset($_COOKIE['bk_admin']) && check_token($cfg, 'admin', $_COOKIE['bk_admin']); }
 // Opcionális robotvédelem (Cloudflare Turnstile): ha az api/data/security.php-ban nincs kulcs, kikapcsolt.

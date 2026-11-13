@@ -7,7 +7,7 @@ ensure_data();
 require_post();
 $cfg = load_config();
 if (!$cfg) { fail(503, 'A szerver még nincs beállítva.'); }
-require_site($cfg);
+// a kapcsolatfelvétel az oldaljelszó nélkül is elérhető (a „Hamarosan” oldalról)
 if (rl_blocked('contact', 5, 3600)) { fail(429, 'Túl sok üzenet ebből a címről. Próbáld újra később.'); }
 $d = body_json(12000);
 if (!is_object($d)) { fail(400, 'Érvénytelen adat'); }

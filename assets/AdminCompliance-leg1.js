@@ -4,7 +4,7 @@ import{t as PageHeader}from"./PageHeader-BYypCJGs.js";
 import{LEGAL_DEFAULTS,LEGAL_TITLES}from"./StorePages-leg1.js";
 var N=e(t(),1),P=n();
 var h=(type,props,...kids)=>{let{key:k,...rest}=props||{};if(kids.length===1)rest.children=kids[0];else if(kids.length>1)rest.children=kids;return k===void 0?P.jsx(type,rest):P.jsx(type,rest,k)};
-var KINDS=["terms","privacy","shipping","imprint"];
+var KINDS=["terms","privacy","shipping","imprint","newsletter"];
 var clip=s=>String(s||"").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"").slice(0,60000);
 var holes=s=>(String(s||"").match(/\[[^\]\n]{2,}\]/g)||[]).length;
 
@@ -25,7 +25,9 @@ function AdminLegalPage(){
   let doSave=()=>{let e={};for(let k of KINDS)if(draft[k].hu.trim().length<50)e[k]="A magyar szöveg kötelező (legalább 50 karakter).";
     setErrs(e);if(Object.keys(e).length)return;
     let legal={};for(let k of KINDS)legal[k]={hu:clip(draft[k].hu),en:clip(draft[k].en)};
-    save({...content,legal});setMsg("Mentve – a szövegek megjelentek a webshop oldalain.");window.setTimeout(()=>setMsg(null),4000)};
+    let old=initial(),items=[];for(let k of KINDS)items.push({hu:legal[k].hu,en:legal[k].en,oldHu:old[k].hu,oldEn:old[k].en});
+    setMsg("Mentés és angol fordítás…");
+    (window.__bkTrItems?window.__bkTrItems(items):Promise.resolve(items.map(i=>i.en))).then(res=>{KINDS.forEach((k,i)=>{if(res[i]&&res[i]!==legal[k].en)legal[k].en=res[i]});setDraft(d=>{let o={...d};KINDS.forEach(k=>{o[k]={...o[k],en:legal[k].en}});return o});save({...content,legal});let er=window.__bkTrErr&&window.__bkTrErr();setMsg(er?"Mentve, de az angol fordítás nem sikerült: "+er:"Mentve – a szövegek megjelentek a webshop oldalain.");window.setTimeout(()=>setMsg(null),er?9000:4000)})};
   let total=KINDS.reduce((a,k)=>a+holes(draft[k].hu)+holes(draft[k].en),0);
   return h("div",{className:"pb-24"},
     h(PageHeader,{title:"Jogi szövegek",description:"ÁSZF, adatkezelési tájékoztató, szállítási feltételek és impresszum. Az alapszövegek előre ki vannak töltve (vázlat), szerkeszthetők. Élesítés előtt jogásszal át kell nézetni őket."}),
@@ -40,7 +42,7 @@ function AdminLegalPage(){
             h("label",{className:"block"},h("span",{className:"label"},"English (ha üres, a magyar szöveg jelenik meg) – kitöltendő: "+holes(draft[k].en)),
               h("textarea",{className:"input",style:{minHeight:"22rem",fontFamily:"inherit",lineHeight:1.5},value:draft[k].en,onChange:ev=>set(k,"en",ev.target.value)}))),
           h("div",{className:"flex flex-wrap gap-2"},h("button",{type:"button",className:"btn-secondary px-3 py-2",onClick:()=>reset(k)},"Alapszöveg visszaállítása"))))),
-      h("p",{className:"text-sm text-gray-500"},"A szövegek a webshop láblécében lévő linkekről érhetők el: /aszf, /adatvedelem, /szallitas, /impresszum.")),
+      h("p",{className:"text-sm text-gray-500"},"A szövegek a webshop láblécében lévő linkekről érhetők el: /aszf, /adatvedelem, /szallitas, /impresszum, /hirlevel.")),
     h("div",{className:cx("fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur transition lg:left-64",dirty||msg?"translate-y-0":"translate-y-full")},
       h("div",{className:"mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 sm:px-2 lg:px-4"},
         h("p",{className:cx("text-sm",msg?"text-emerald-700":"text-gray-600"),role:"status"},msg||"Nem mentett változtatások."),

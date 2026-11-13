@@ -3,7 +3,8 @@ define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 ensure_data();
 $cfg = load_config();
-$out = array('shared' => true, 'configured' => (bool) $cfg, 'site' => false, 'public' => false, 'admin' => false, 'turnstile' => bot_site_key(), 'adminEmail' => '', 'data' => new stdClass());
+$landing = landing_public();
+$out = array('shared' => true, 'configured' => (bool) $cfg, 'site' => false, 'public' => false, 'admin' => false, 'turnstile' => bot_site_key(), 'adminEmail' => '', 'landing' => $landing, 'data' => new stdClass());
 if ($cfg && has_site($cfg)) {
     $out['site'] = true;
     $out['public'] = site_is_public();

@@ -9,7 +9,7 @@ try{
  var x=new XMLHttpRequest();x.open('GET',base+'api/boot.php',false);x.withCredentials=true;x.send(null);
  var ct=x.getResponseHeader('content-type')||'';
  if(x.status===200&&ct.indexOf('json')>=0){var j=JSON.parse(x.responseText);
-  if(j&&j.shared===true){BK.shared=true;BK.base=base;BK.configured=!!j.configured;BK.site=!!j.site;BK.publicSite=!!j.public;BK.turnstile=j.turnstile||'';BK.admin=!!j.admin;BK.adminEmail=j.adminEmail||'';BK.data=j.data||{};remember(BK.data);
+  if(j&&j.shared===true){BK.shared=true;BK.base=base;BK.configured=!!j.configured;BK.site=!!j.site;BK.publicSite=!!j.public;BK.turnstile=j.turnstile||'';BK.landing=j.landing||null;BK.admin=!!j.admin;BK.adminEmail=j.adminEmail||'';BK.data=j.data||{};remember(BK.data);
    try{localStorage.setItem('bagdikata:cleanup:test-data-2026-10-21','true')}catch(e){}}}
 }catch(e){}
 function api(path,opt){opt=opt||{};opt.credentials='same-origin';opt.headers=Object.assign({'X-BK':'1'},opt.headers||{});return fetch(BK.base+'api/'+path,opt)}
@@ -57,7 +57,27 @@ BK.poll=function(force){
   (d.audit||[]).forEach(function(o){if(o&&o.id&&!BK._known['a:'+o.id])fresh++});
   if(fresh)BK._fresh()}).catch(function(){BK._polling=0})};
 BK._bootAdmin=BK.admin;if(BK.shared){window.setInterval(function(){BK.poll()},15000)}
-BK.track=function(ev){if(!BK.shared)return;try{fetch(BK.base+'api/track.php',{method:'POST',keepalive:true,credentials:'same-origin',headers:{'X-BK':'1','Content-Type':'application/json'},body:JSON.stringify(ev)}).catch(function(){})}catch(e){}};
+BK.toast=function(msg,bad){try{var b=document.createElement('div');b.setAttribute('role','status');b.style.cssText='position:fixed;left:16px;bottom:16px;z-index:99999;max-width:360px;background:'+(bad?'#7f1d1d':'#161314')+';color:#fff;padding:10px 14px;border-radius:10px;font:14px system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.25)';b.textContent=msg;document.body.appendChild(b);setTimeout(function(){b.remove()},bad?9000:4500)}catch(e){}};
+BK.trErr='';window.__bkTrErr=function(){return BK.trErr};
+BK.tr=function(texts){if(!BK.shared||!BK.admin||!texts.length){BK.trErr='';return Promise.resolve(null)}
+ return api('translate.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'translate',texts:texts,source:'hu',target:'en'})}).then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(r.ok&&j&&j.ok&&Array.isArray(j.texts)){BK.trErr='';return j.texts}BK.trErr=(j&&j.error)||('Fordítási hiba ('+r.status+')');return null})}).catch(function(){BK.trErr='A fordító szolgáltatás nem érhető el.';return null})};
+/* Párok: {hu,en,oldHu,oldEn}. Fordít, ha az angol üres, vagy a magyar változott és az angolt közben senki sem írta át kézzel. */
+window.__bkTrItems=function(items){var need=[],idx=[];items.forEach(function(it,i){var hu=(it.hu||''),en=(it.en||'');if(!hu.trim())return;if(!en.trim()||(hu!==it.oldHu&&en===it.oldEn)){need.push(hu);idx.push(i)}});
+ if(!need.length)return Promise.resolve(items.map(function(it){return it.en||''}));
+ return BK.tr(need).then(function(out){var res=items.map(function(it){return it.en||''});if(out)idx.forEach(function(i,k){res[i]=out[k]||res[i]});return res})};
+window.__bkTrProd=function(p,orig){var items=[{hu:p.name,en:p.nameEn,oldHu:orig&&orig.name,oldEn:orig&&orig.nameEn},{hu:p.description,en:p.descriptionEn,oldHu:orig&&orig.description,oldEn:orig&&orig.descriptionEn}];
+ return window.__bkTrItems(items).then(function(r){var q=Object.assign({},p);if(r[0]&&r[0]!==p.nameEn)q.nameEn=r[0];if(r[1]&&r[1]!==p.descriptionEn)q.descriptionEn=r[1];if(BK.trErr)BK.toast('Az angol fordítás most nem sikerült: '+BK.trErr,true);return q})};
+function walk(o,path,fn){if(Array.isArray(o)){o.forEach(function(x,i){walk(x,path.concat(i),fn)})}else if(o&&typeof o==='object'){if(typeof o.hu==='string'&&typeof o.en==='string'&&!('__x' in o)){fn(path,o)}else Object.keys(o).forEach(function(k){walk(o[k],path.concat(k),fn)})}}
+function at(o,path){for(var i=0;i<path.length&&o!=null;i++)o=o[path[i]];return o}
+/* Tartalom mentésekor: a megváltozott magyar mezők angolját frissíti. Visszaad egy javító függvényt. */
+window.__bkTrContent=function(oldC,newC){var list=[];walk(newC,[],function(path,o){var ob=at(oldC,path);list.push({path:path,hu:o.hu,en:o.en,oldHu:ob&&typeof ob.hu==='string'?ob.hu:undefined,oldEn:ob&&typeof ob.en==='string'?ob.en:undefined})});
+ var cand=list.filter(function(it){return it.hu.trim()&&(!it.en.trim()||(it.hu!==it.oldHu&&it.en===it.oldEn))});
+ if(!cand.length||!BK.shared||!BK.admin)return Promise.resolve(null);
+ return window.__bkTrItems(cand).then(function(res){if(BK.trErr){BK.toast('Az angol fordítás most nem sikerült: '+BK.trErr,true);return null}
+  var n=0,jobs=cand.map(function(it,i){return {path:it.path,hu:it.hu,en:it.en,out:res[i]}}).filter(function(j){return j.out&&j.out!==j.en});if(!jobs.length)return null;
+  return function(cur){var copy=JSON.parse(JSON.stringify(cur));jobs.forEach(function(j){var o=at(copy,j.path);if(o&&o.hu===j.hu&&o.en===j.en){o.en=j.out;n++}});if(n&&!jobs.t){jobs.t=1;BK.toast('Az angol szöveg frissült ('+n+' mező).')}return n?copy:cur}})};
+BK.vid=function(){try{return localStorage.getItem('bk_consent')==='1'?(localStorage.getItem('bk_vid')||''):''}catch(e){return ''}};
+BK.track=function(ev){if(!BK.shared)return;try{var _v=BK.vid();if(_v)ev=Object.assign({},ev,{vid:_v});fetch(BK.base+'api/track.php',{method:'POST',keepalive:true,credentials:'same-origin',headers:{'X-BK':'1','Content-Type':'application/json'},body:JSON.stringify(ev)}).catch(function(){})}catch(e){}};
 BK.reload=function(){return fetch(BK.base+'api/boot.php',{credentials:'same-origin',cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(j&&j.shared&&j.site){BK.admin=!!j.admin;var d=j.data||{};Object.keys(d).forEach(function(k){BK.data[k]=d[k];try{BK._last[k]=JSON.stringify(d[k])}catch(e){}})}}).catch(function(){})};
 if(!BK.shared&&document.querySelector('meta[name=bk-expect-shared]')){BK.broken=true;var _b=function(){var d=document.createElement('div');d.setAttribute('role','alert');d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#b00020;color:#fff;padding:10px 14px;font:14px system-ui,sans-serif;text-align:center';d.textContent='Figyelem: a közös adattár (api mappa) nem érhető el, ezért a módosítások csak ebben a böngészőben látszanak. Ellenőrizd az api/selftest.php oldalt.';document.body.appendChild(d)};if(document.body)_b();else document.addEventListener('DOMContentLoaded',_b)}
 window.addEventListener('pagehide',function(){Object.keys(BK._t).forEach(function(n){BK._flush(n)})});
