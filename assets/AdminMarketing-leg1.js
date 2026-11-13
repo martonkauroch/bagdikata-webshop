@@ -79,7 +79,7 @@ function CouponsPage(){
 }
 
 /* ======================= HÍRLEVÉL ======================= */
-var SRC={checkout:"Pénztár",footer:"Weboldal"},STAT={confirmed:["green","Megerősített"],pending:["amber","Megerősítésre vár"],unsubscribed:["gray","Leiratkozott"]};
+var SRC={checkout:"Pénztár",footer:"Weboldal",landing:"Hamarosan oldal"},STAT={confirmed:["green","Megerősített"],pending:["amber","Megerősítésre vár"],unsubscribed:["gray","Leiratkozott"]};
 var CSTAT={sending:["amber","Folyamatban"],paused:["red","Szünetel"],done:["green","Kész"],stopped:["gray","Leállítva"]};
 function NewsletterPage(){
   let[data,setData]=N.useState(null),[err,setErr]=N.useState(null),[ok,setOk]=N.useState(null);

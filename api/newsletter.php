@@ -74,7 +74,8 @@ $act = (is_object($d) && isset($d->action) && is_string($d->action)) ? $d->actio
 
 // Nyilvános feliratkozás (lábléc űrlap)
 if ($act === 'subscribe') {
-    require_site($cfg);
+    $src = (isset($d->source) && $d->source === 'landing') ? 'landing' : 'footer';
+    if ($src !== 'landing') { require_site($cfg); }   // a „Hamarosan” oldalról belépés nélkül is lehet feliratkozni
     if (rl_blocked('nlsub', 8, 3600)) { fail(429, 'Túl sok próbálkozás. Próbáld később.'); }
     rl_hit('nlsub', 3600);
     if (!empty($d->hp)) { json_out(array('ok' => true)); }                 // csaliűrlap-mező: botok
@@ -82,7 +83,7 @@ if ($act === 'subscribe') {
     if (!bot_verify(isset($d->captcha) ? $d->captcha : '')) { fail(400, 'A robotellenőrzés nem sikerült.'); }
     $email = (isset($d->email) && is_string($d->email)) ? $d->email : '';
     if (!mail_valid(trim($email))) { fail(400, 'Érvénytelen e-mail-cím'); }
-    nl_subscribe($cfg, $email, (isset($d->name) && is_string($d->name)) ? $d->name : '', (isset($d->lang) && $d->lang === 'en') ? 'en' : 'hu', 'footer');
+    nl_subscribe($cfg, $email, (isset($d->name) && is_string($d->name)) ? $d->name : '', (isset($d->lang) && $d->lang === 'en') ? 'en' : 'hu', $src);
     json_out(array('ok' => true));
 }
 

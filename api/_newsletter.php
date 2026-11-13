@@ -28,7 +28,7 @@ function nl_subscribe($cfg, $email, $name, $lang, $source) {
     $key = strtolower($email);
     $name = mail_clean($name, 80);
     $lang = ($lang === 'en') ? 'en' : 'hu';
-    $source = in_array($source, array('checkout', 'footer'), true) ? $source : 'footer';
+    $source = in_array($source, array('checkout', 'footer', 'landing'), true) ? $source : 'footer';
     $send = null;
     mutate_json('newsletter', function ($cur) use ($email, $key, $name, $lang, $source, &$send) {
         $a = is_array($cur) ? json_decode(json_encode($cur), true) : array();
