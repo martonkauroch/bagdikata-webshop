@@ -1,6 +1,7 @@
 /* Frissítési előzmények. A legfelső bejegyzés a jelenlegi verzió – ez látszik az oldal alján és az adminban.
    Új kiadásnál egy új sort kell a LISTA ELEJÉRE tenni (v = verzió, d = dátum, c = mi módosult). */
 window.__BK_CHANGELOG=[
+{v:"1.20.0",d:"2026-11-13",c:["Kezdőlap: számozott „Kedvenceink” termékajánló a lista tetején (3 legnépszerűbb), bento-elrendezésű „Frissen a kollekcióból” ajánló a lista alján (3 legújabb); a termékekre kattintva a megszokott termékoldal nyílik; a terméklista újra a hagyományos rács"]},
 {v:"1.19.0",d:"2026-11-13",c:["Kezdőlap: a termékek termékajánló-sávban jelennek meg, egyszerre hármasával (tableten kettesével, telefonon egyesével), nyilakkal, pöttyökkel és húzással lapozható; a termékre kattintva a megszokott termékoldal nyílik"]},
 {v:"1.18.0",d:"2026-11-13",c:["Hírlevél: Előnézet gomb – megmutatja, pontosan milyen levél megy ki (magyar / angol feliratkozónak, asztali és mobil szélességben)"]},
 {v:"1.17.1",d:"2026-11-13",c:["Új webshop háttérkép (pasztell kötős-kézimunkás rajz)"]},
