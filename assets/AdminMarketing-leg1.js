@@ -219,6 +219,55 @@ function NewsAdminPage(){
     !dirty&&h("div",{style:{marginTop:8}},h("button",{type:"button",style:S.btnD,onClick:doSave,"data-testid":"news-save2"},"Mentés")));
 }
 
+
+/* ======================= ESEMÉNYEK ======================= */
+function EventsAdminPage(){
+  let{content,save}=useContent();
+  let def={enabled:false,title:{hu:"Események",en:"Events"},items:[]};
+  let init=()=>JSON.parse(JSON.stringify(content.events||def));
+  let[d,setD]=N.useState(init),[msg,setMsg]=N.useState(null);
+  let dirty=JSON.stringify(d)!==JSON.stringify(content.events||def);
+  let setItem=(i,k,v)=>setD(x=>({...x,items:x.items.map((it,j)=>j===i?{...it,[k]:v}:it)}));
+  let setPair=(i,k,l,v)=>setD(x=>({...x,items:x.items.map((it,j)=>j===i?{...it,[k]:{...it[k],[l]:v}}:it)}));
+  let add=()=>setD(x=>({...x,items:[...x.items,{id:"e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),date:new Date().toISOString().slice(0,10),endDate:"",time:"",place:"",title:{hu:"",en:""},text:{hu:"",en:""},link:""}]}));
+  let del=i=>{if(window.confirm("Törlöd ezt az eseményt?"))setD(x=>({...x,items:x.items.filter((_,j)=>j!==i)}))};
+  let doSave=()=>{let bad=d.items.find(it=>it.link&&!/^https?:\/\//.test(it.link.trim()));if(bad){setMsg({e:1,t:"Az esemény linkje https://-sel kezdődjön."});return}
+    let n={...d,items:d.items.filter(it=>(it.title.hu||"").trim()||(it.text.hu||"").trim()).map(it=>({...it,link:(it.link||"").trim()}))};setD(n);save({...content,events:n});setMsg({t:shared()?"Mentve – az angol szöveg automatikusan frissül.":"Mentve."});window.setTimeout(()=>setMsg(null),4000)};
+  let two={display:"grid",gap:12,gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))"};
+  let fb=content.social&&content.social.facebookUrl;
+  return h("div",{style:{maxWidth:900,paddingBottom:90}},
+    h(PageHeader,{title:"Események",description:"Facebook-események megjelenítése a nyitóoldalon, a friss hírek alatt."}),
+    h(Card,{title:"Megjelenítés"},
+      h("label",{style:{display:"flex",gap:10,alignItems:"center",fontSize:15}},h("input",{type:"checkbox",checked:!!d.enabled,onChange:ev=>setD({...d,enabled:ev.target.checked}),"data-testid":"events-toggle"}),d.enabled?"Bekapcsolva – az Események blokk látszik a webshopban (ha van közelgő esemény)":"Kikapcsolva – a blokk nem látszik"),
+      h("div",{style:{...two,marginTop:14}},
+        h("label",null,h("span",{style:S.lab},"Blokk címe (magyar)"),h("input",{style:S.inp,value:d.title.hu,maxLength:80,onChange:ev=>setD({...d,title:{...d.title,hu:ev.target.value}})})),
+        h("label",null,h("span",{style:S.lab},"Title (English)"),h("input",{style:S.inp,value:d.title.en,maxLength:80,onChange:ev=>setD({...d,title:{...d.title,en:ev.target.value}})})))),
+    h("div",{style:S.info},"Facebook nem engedi automatikusan lehúzni az eseményeket (ehhez külön Meta-alkalmazás és jóváhagyás kellene), ezért az eseményt itt kell felvenni, a Facebook-esemény linkjével. A webshopban a kártyán „Facebook esemény megnyitása” gomb vezet az eseményre."+(fb?" Facebook-oldalad: "+fb:"")),
+    h(Card,{title:"Események ("+d.items.length+")",description:"Időrendben jelennek meg. Az esemény napja (vagy a vége dátum) után magától eltűnik."},
+      h("div",{style:{marginBottom:14}},h("button",{type:"button",style:S.btnD,onClick:add,"data-testid":"events-add"},"+ Új esemény")),
+      !d.items.length&&h("p",{style:S.sub},"Még nincs esemény."),
+      d.items.map((it,i)=>h("div",{key:it.id,style:{border:"1px solid #e5e7eb",borderRadius:10,padding:14,marginBottom:12,background:"#fafafa"},"data-testid":"event-item"},
+        h("div",{style:{...two,gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",marginBottom:10}},
+          h("label",null,h("span",{style:S.lab},"Kezdő nap"),h("input",{style:S.inp,type:"date",value:it.date||"",onChange:ev=>setItem(i,"date",ev.target.value)})),
+          h("label",null,h("span",{style:S.lab},"Utolsó nap (nem kötelező)"),h("input",{style:S.inp,type:"date",value:it.endDate||"",onChange:ev=>setItem(i,"endDate",ev.target.value)})),
+          h("label",null,h("span",{style:S.lab},"Időpont (pl. 10:00–16:00)"),h("input",{style:S.inp,value:it.time||"",maxLength:40,onChange:ev=>setItem(i,"time",ev.target.value)})),
+          h("label",null,h("span",{style:S.lab},"Helyszín"),h("input",{style:S.inp,value:it.place||"",maxLength:120,onChange:ev=>setItem(i,"place",ev.target.value)}))),
+        h("div",{style:two},
+          h("label",null,h("span",{style:S.lab},"Cím (magyar)"),h("input",{style:S.inp,value:it.title.hu,maxLength:120,onChange:ev=>setPair(i,"title","hu",ev.target.value),"data-testid":"event-title-hu"})),
+          h("label",null,h("span",{style:S.lab},"Title (English)"),h("input",{style:S.inp,value:it.title.en,maxLength:120,onChange:ev=>setPair(i,"title","en",ev.target.value)}))),
+        h("div",{style:{...two,marginTop:10}},
+          h("label",null,h("span",{style:S.lab},"Leírás (magyar)"),h("textarea",{style:{...S.inp,minHeight:70,fontFamily:"inherit"},value:it.text.hu,maxLength:600,onChange:ev=>setPair(i,"text","hu",ev.target.value)})),
+          h("label",null,h("span",{style:S.lab},"Description (English)"),h("textarea",{style:{...S.inp,minHeight:70,fontFamily:"inherit"},value:it.text.en,maxLength:600,onChange:ev=>setPair(i,"text","en",ev.target.value)}))),
+        h("div",{style:{display:"flex",gap:12,alignItems:"end",marginTop:10,flexWrap:"wrap"}},
+          h("label",{style:{flex:1,minWidth:220}},h("span",{style:S.lab},"Facebook-esemény linkje (https://www.facebook.com/events/…)"),h("input",{style:S.inp,value:it.link||"",maxLength:300,onChange:ev=>setItem(i,"link",ev.target.value),"data-testid":"event-link"})),
+          h("button",{type:"button",style:S.btnR,onClick:()=>del(i)},"Törlés"))))),
+    msg&&h("div",{style:msg.e?S.err||S.ok:S.ok,role:"status"},msg.t),
+    dirty&&h("div",{style:{position:"fixed",left:0,right:0,bottom:0,background:"#fff",borderTop:"1px solid #e5e7eb",padding:"12px 24px",display:"flex",justifyContent:"flex-end",gap:10,zIndex:20}},
+      h("button",{type:"button",style:S.btn,onClick:()=>setD(init())},"Elvetés"),
+      h("button",{type:"button",style:S.btnD,onClick:doSave,"data-testid":"events-save"},"Mentés")),
+    !dirty&&h("div",{style:{marginTop:8}},h("button",{type:"button",style:S.btnD,onClick:doSave,"data-testid":"events-save2"},"Mentés")));
+}
+
 /* ======================= FRISSÍTÉSI ELŐZMÉNYEK ======================= */
 function UpdateHistory(){
   let list=Array.isArray(window.__BK_CHANGELOG)?window.__BK_CHANGELOG:[];
@@ -287,4 +336,4 @@ function DailyReports(){
       !shared()&&h("div",{style:{...S.warn,marginTop:14}},"A tényleges kiküldéshez az éles, szerveres működés és a cPanel időzített feladata (cron) szükséges.")));
 }
 
-export{DailyReports,HistoryTabs,NewsAdminPage as AdminNewsPage,LanguagePage as AdminLanguagePage,CouponsPage as AdminCouponsPage,NewsletterPage as AdminNewsletterPage};
+export{DailyReports,HistoryTabs,NewsAdminPage as AdminNewsPage,EventsAdminPage as AdminEventsPage,LanguagePage as AdminLanguagePage,CouponsPage as AdminCouponsPage,NewsletterPage as AdminNewsletterPage};
