@@ -1,5 +1,5 @@
 import{$ as e,Z as t,i as n}from"./createLucideIcon-Bc0h7bbI.js";
-import{j as useStore,W as useSettings}from"./index-0f-fFOYT.js";
+import{j as useStore,W as useSettings,A as useContent}from"./index-0f-fFOYT.js";
 import{t as PageHeader}from"./PageHeader-BYypCJGs.js";
 var N=e(t(),1),P=n();
 var h=(type,props,...kids)=>{let{key:k,...rest}=props||{};if(kids.length===1)rest.children=kids[0];else if(kids.length>1)rest.children=kids;return k===void 0?P.jsx(type,rest):P.jsx(type,rest,k)};
@@ -173,4 +173,71 @@ function LanguagePage(){
   );
 }
 
-export{LanguagePage as AdminLanguagePage,CouponsPage as AdminCouponsPage,NewsletterPage as AdminNewsletterPage};
+
+/* ======================= FRISS HÍREK ======================= */
+function NewsAdminPage(){
+  let{content,save}=useContent();
+  let init=()=>JSON.parse(JSON.stringify(content.news||{enabled:false,title:{hu:"Friss hírek és akciók",en:"News & offers"},items:[]}));
+  let[d,setD]=N.useState(init),[msg,setMsg]=N.useState(null);
+  let dirty=JSON.stringify(d)!==JSON.stringify(content.news||{enabled:false,title:{hu:"Friss hírek és akciók",en:"News & offers"},items:[]});
+  let setItem=(i,k,v)=>setD(x=>({...x,items:x.items.map((it,j)=>j===i?{...it,[k]:v}:it)}));
+  let setPair=(i,k,l,v)=>setD(x=>({...x,items:x.items.map((it,j)=>j===i?{...it,[k]:{...it[k],[l]:v}}:it)}));
+  let add=kind=>setD(x=>({...x,items:[{id:"n"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),kind,date:new Date().toISOString().slice(0,10),until:"",title:{hu:"",en:""},text:{hu:"",en:""},link:""},...x.items]}));
+  let del=i=>{if(window.confirm("Törlöd ezt a bejegyzést?"))setD(x=>({...x,items:x.items.filter((_,j)=>j!==i)}))};
+  let doSave=()=>{let n={...d,items:d.items.filter(it=>(it.title.hu||"").trim()||(it.text.hu||"").trim())};setD(n);save({...content,news:n});setMsg(shared()?"Mentve – az angol szöveg automatikusan frissül.":"Mentve.");window.setTimeout(()=>setMsg(null),4000)};
+  let two={display:"grid",gap:12,gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))"};
+  return h("div",{style:{maxWidth:900,paddingBottom:90}},
+    h(PageHeader,{title:"Friss hírek és akciók",description:"A termékek alatt megjelenő szekció a nyitóoldalon."}),
+    h(Card,{title:"Megjelenítés"},
+      h("label",{style:{display:"flex",gap:10,alignItems:"center",fontSize:15}},h("input",{type:"checkbox",checked:!!d.enabled,onChange:ev=>setD({...d,enabled:ev.target.checked}),"data-testid":"news-toggle"}),d.enabled?"Bekapcsolva – a szekció látszik a webshopban (ha van aktív bejegyzés)":"Kikapcsolva – a szekció nem látszik"),
+      h("div",{style:{...two,marginTop:14}},
+        h("label",null,h("span",{style:S.lab},"Szekció címe (magyar)"),h("input",{style:S.inp,value:d.title.hu,maxLength:80,onChange:ev=>setD({...d,title:{...d.title,hu:ev.target.value}})})),
+        h("label",null,h("span",{style:S.lab},"Title (English)"),h("input",{style:S.inp,value:d.title.en,maxLength:80,onChange:ev=>setD({...d,title:{...d.title,en:ev.target.value}})})))),
+    h(Card,{title:"Bejegyzések ("+d.items.length+")",description:"A legújabb dátumú jelenik meg elöl. A lejárat napja után a bejegyzés magától eltűnik."},
+      h("div",{style:{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}},
+        h("button",{type:"button",style:S.btnD,onClick:()=>add("sale"),"data-testid":"news-add-sale"},"+ Új akció"),
+        h("button",{type:"button",style:S.btn,onClick:()=>add("news"),"data-testid":"news-add-news"},"+ Új hír")),
+      !d.items.length&&h("p",{style:S.sub},"Még nincs bejegyzés."),
+      d.items.map((it,i)=>h("div",{key:it.id,style:{border:"1px solid #e5e7eb",borderRadius:10,padding:14,marginBottom:12,background:"#fafafa"},"data-testid":"news-item"},
+        h("div",{style:{...two,gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",marginBottom:10}},
+          h("label",null,h("span",{style:S.lab},"Típus"),h("select",{style:S.inp,value:it.kind,onChange:ev=>setItem(i,"kind",ev.target.value)},h("option",{value:"sale"},"Akció"),h("option",{value:"news"},"Hír"))),
+          h("label",null,h("span",{style:S.lab},"Dátum"),h("input",{style:S.inp,type:"date",value:it.date||"",onChange:ev=>setItem(i,"date",ev.target.value)})),
+          h("label",null,h("span",{style:S.lab},"Lejár (nem kötelező)"),h("input",{style:S.inp,type:"date",value:it.until||"",onChange:ev=>setItem(i,"until",ev.target.value)}))),
+        h("div",{style:two},
+          h("label",null,h("span",{style:S.lab},"Cím (magyar)"),h("input",{style:S.inp,value:it.title.hu,maxLength:120,onChange:ev=>setPair(i,"title","hu",ev.target.value),"data-testid":"news-title-hu"})),
+          h("label",null,h("span",{style:S.lab},"Title (English)"),h("input",{style:S.inp,value:it.title.en,maxLength:120,onChange:ev=>setPair(i,"title","en",ev.target.value)}))),
+        h("div",{style:{...two,marginTop:10}},
+          h("label",null,h("span",{style:S.lab},"Szöveg (magyar)"),h("textarea",{style:{...S.inp,minHeight:80,fontFamily:"inherit"},value:it.text.hu,maxLength:600,onChange:ev=>setPair(i,"text","hu",ev.target.value)})),
+          h("label",null,h("span",{style:S.lab},"Text (English)"),h("textarea",{style:{...S.inp,minHeight:80,fontFamily:"inherit"},value:it.text.en,maxLength:600,onChange:ev=>setPair(i,"text","en",ev.target.value)}))),
+        h("div",{style:{display:"flex",gap:12,alignItems:"end",marginTop:10,flexWrap:"wrap"}},
+          h("label",{style:{flex:1,minWidth:220}},h("span",{style:S.lab},"Link (nem kötelező; https://… vagy #/termek/…)"),h("input",{style:S.inp,value:it.link||"",maxLength:300,onChange:ev=>setItem(i,"link",ev.target.value)})),
+          h("button",{type:"button",style:S.btnR,onClick:()=>del(i)},"Törlés"))))),
+    msg&&h("div",{style:S.ok,role:"status"},msg),
+    dirty&&h("div",{style:{position:"fixed",left:0,right:0,bottom:0,background:"#fff",borderTop:"1px solid #e5e7eb",padding:"12px 24px",display:"flex",justifyContent:"flex-end",gap:10,zIndex:20}},
+      h("button",{type:"button",style:S.btn,onClick:()=>setD(init())},"Elvetés"),
+      h("button",{type:"button",style:S.btnD,onClick:doSave,"data-testid":"news-save"},"Mentés")),
+    !dirty&&h("div",{style:{marginTop:8}},h("button",{type:"button",style:S.btnD,onClick:doSave,"data-testid":"news-save2"},"Mentés")));
+}
+
+/* ======================= FRISSÍTÉSI ELŐZMÉNYEK ======================= */
+function UpdateHistory(){
+  let list=Array.isArray(window.__BK_CHANGELOG)?window.__BK_CHANGELOG:[];
+  return h("div",{"data-testid":"updates-tab"},
+    h("div",{style:S.info},"Jelenlegi verzió: ",h("b",null,"v"+(window.__BKV||"–")),". A verziószám a legfelső bejegyzésből jön, ez látszik az oldal alján és az adminban is. Így ellenőrizheted, mi ment ki élesbe."),
+    h("section",{style:S.card},h("div",{style:{overflowX:"auto"}},h("table",{style:{width:"100%",borderCollapse:"collapse"}},
+      h("thead",null,h("tr",null,h("th",{style:S.th},"Dátum"),h("th",{style:S.th},"Mi módosult"),h("th",{style:S.th},"Verzió"))),
+      h("tbody",null,list.map((x,i)=>h("tr",{key:x.v},
+        h("td",{style:{...S.td,whiteSpace:"nowrap",verticalAlign:"top"}},x.d),
+        h("td",{style:S.td},h("ul",{style:{margin:0,paddingLeft:18}},x.c.map((c,j)=>h("li",{key:j},c)))),
+        h("td",{style:{...S.td,verticalAlign:"top",whiteSpace:"nowrap"}},h(Badge,{tone:i===0?"green":"gray"},"v"+x.v+(i===0?" (jelenlegi)":""))))))))));
+}
+function HistoryTabs({Audit}){
+  let[tab,setTab]=N.useState(()=>{try{return sessionStorage.getItem("bk_histtab")||"admin"}catch{return"admin"}});
+  let pick=t=>{setTab(t);try{sessionStorage.setItem("bk_histtab",t)}catch{}};
+  let tb=(id,label)=>h("button",{type:"button",role:"tab","aria-selected":tab===id,onClick:()=>pick(id),"data-testid":"tab-"+id,style:{border:"none",background:"none",padding:"10px 16px",fontSize:14,fontWeight:600,cursor:"pointer",color:tab===id?"#111827":"#6b7280",borderBottom:tab===id?"2px solid #4f46e5":"2px solid transparent",marginBottom:-1}},label);
+  return h("div",null,
+    h("div",{role:"tablist",style:{display:"flex",gap:4,borderBottom:"1px solid #e5e7eb",marginBottom:20}},tb("admin","Admin előzmények"),tb("updates","Frissítési előzmények")),
+    tab==="admin"?h(Audit,null):h(UpdateHistory,null));
+}
+
+export{HistoryTabs,NewsAdminPage as AdminNewsPage,LanguagePage as AdminLanguagePage,CouponsPage as AdminCouponsPage,NewsletterPage as AdminNewsletterPage};
