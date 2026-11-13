@@ -35,7 +35,7 @@ BK.login=function(email,pw){return api('login.php',{method:'POST',headers:{'Cont
 BK.logout=function(){return api('logout.php',{method:'POST'}).catch(function(){})};
 BK.upload=function(blob){return api('upload.php',{method:'POST',headers:{'Content-Type':blob.type||'application/octet-stream'},body:blob}).then(function(r){return r.json().then(function(j){if(!r.ok||!j.id)throw new Error(j.error||'A kép feltöltése nem sikerült.');return j.id})})};
 window.__bkSplit=function(sh){var lab={facebook:'Facebook',messenger:'Messenger',whatsapp:'WhatsApp',viber:'Viber',telegram:'Telegram',x:'X',pinterest:'Pinterest',linkedin:'LinkedIn',email:'e-mail',instagram:'Instagram',copy:'link',native:'telefon'};return Object.keys(sh||{}).filter(function(k){return sh[k]>0}).sort(function(a,b){return sh[b]-sh[a]}).map(function(k){return (lab[k]||k)+' '+sh[k]}).join(' · ')};
-BK.imgUrl=function(src){return (typeof src==='string'&&src.indexOf('srv:')===0)?BK.base+'api/img.php?id='+encodeURIComponent(src.slice(4)):src};
+BK.imgUrl=function(src){return (typeof src==='string'&&src.indexOf('srv:')===0)?BK.base+'api/img.php?id='+encodeURIComponent(src.slice(4))+'&v=3':src};
 BK._fresh=function(){
  var ae=document.activeElement,typing=ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName);
  if(!typing&&/#\/admin\/rendelesek/.test(location.hash)&&!Object.keys(BK._t).length){location.reload();return}

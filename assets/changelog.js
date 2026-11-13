@@ -1,6 +1,7 @@
 /* Frissítési előzmények. A legfelső bejegyzés a jelenlegi verzió – ez látszik az oldal alján és az adminban.
    Új kiadásnál egy új sort kell a LISTA ELEJÉRE tenni (v = verzió, d = dátum, c = mi módosult). */
 window.__BK_CHANGELOG=[
+{v:"1.11.1",d:"2026-11-13",c:["Vízjel kisebb (12%), és a kép sarkához igazodik: sötét sarokra világos, világos sarokra sötét logó","Minden feltöltött kép újratöltődik a vízjellel (gyorsítótár frissítve)"]},
 {v:"1.11.0",d:"2026-11-13",c:["Logó vízjel a képek jobb alsó sarkában (termékképek, hero képek, minden feltöltött kép)","A feltöltött képek eredetije érintetlen marad, a vízjel megjelenítéskor kerül rá"]},
 {v:"1.10.4",d:"2026-11-13",c:["Admin oldalsáv menüje görgethető, ha nem fér ki a képernyőre"]},
 {v:"1.10.3",d:"2026-11-13",c:["Névjegykártya adatai (Textiltervező iparművész, telefon, e-mail) a láblécben és a Kapcsolat oldalon"]},

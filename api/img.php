@@ -11,11 +11,12 @@ $mime = array('jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp
 
 // Vízjel: a logó a jobb alsó sarokba kerül (megjelenítéskor, az eredeti feltöltött fájl érintetlen marad).
 function bk_watermarked($src, $ext, $id) {
-    $wmFile = dirname(__DIR__) . '/assets/watermark.png';
-    if ($ext === 'gif' || !is_file($wmFile) || !function_exists('imagecreatefrompng')) { return null; }
+    $wmLight = dirname(__DIR__) . '/assets/watermark.png';
+    $wmDark = dirname(__DIR__) . '/assets/watermark-dark.png';
+    if ($ext === 'gif' || !is_file($wmLight) || !is_file($wmDark) || !function_exists('imagecreatefrompng')) { return null; }
     $cacheDir = DATA_DIR . '/imgwm';
     $cache = $cacheDir . '/' . $id;
-    $ver = (string) @filemtime($wmFile) . '-' . (string) @filemtime($src);
+    $ver = 'v3-' . (string) @filemtime($wmLight) . '-' . (string) @filemtime($wmDark) . '-' . (string) @filemtime($src);
     if (is_file($cache) && is_file($cache . '.v') && @file_get_contents($cache . '.v') === $ver) { return $cache; }
     $info = @getimagesize($src);
     if (!$info || $info[0] < 120 || $info[1] < 120 || $info[0] * $info[1] > 24000000) { return null; }
@@ -23,12 +24,21 @@ function bk_watermarked($src, $ext, $id) {
     elseif ($info[2] === IMAGETYPE_PNG) { $im = @imagecreatefrompng($src); }
     elseif ($info[2] === IMAGETYPE_WEBP && function_exists('imagecreatefromwebp')) { $im = @imagecreatefromwebp($src); }
     else { return null; }
-    $wm = @imagecreatefrompng($wmFile);
-    if (!$im || !$wm) { return null; }
+    if (!$im) { return null; }
     $W = imagesx($im); $H = imagesy($im);
-    $w = max(60, (int) round($W * 0.19)); $h = (int) round(imagesy($wm) * $w / imagesx($wm)); $m = (int) round($W * 0.025);
+    $w0 = imagesx(imagecreatefrompng($wmLight)); $h0 = imagesy(imagecreatefrompng($wmLight));
+    $w = max(60, (int) round($W * 0.12)); $h = (int) round($h0 * $w / $w0); $m = (int) round($W * 0.022);
+    $x = $W - $w - $m; $y = $H - $h - $m;
+    // a sarok átlagos világossága dönt: sötét sarokra világos, világos sarokra sötét vízjel
+    $rx = max(0, $x - (int) ($m / 2)); $ry = max(0, $y - (int) ($m / 2));
+    $probe = imagecreatetruecolor(1, 1);
+    imagecopyresampled($probe, $im, 0, 0, $rx, $ry, 1, 1, $W - $rx, $H - $ry);
+    $c = imagecolorat($probe, 0, 0); imagedestroy($probe);
+    $lum = 0.299 * (($c >> 16) & 255) + 0.587 * (($c >> 8) & 255) + 0.114 * ($c & 255);
+    $wm = @imagecreatefrompng($lum >= 128 ? $wmDark : $wmLight);
+    if (!$wm) { return null; }
     imagealphablending($im, true);
-    imagecopyresampled($im, $wm, $W - $w - $m, $H - $h - $m, 0, 0, $w, $h, imagesx($wm), imagesy($wm));
+    imagecopyresampled($im, $wm, $x, $y, 0, 0, $w, $h, imagesx($wm), imagesy($wm));
     if (!is_dir($cacheDir)) { @mkdir($cacheDir, 0755, true); }
     $tmp = $cache . '.tmp' . getmypid();
     if ($ext === 'jpg') { $ok = imagejpeg($im, $tmp, 90); }
