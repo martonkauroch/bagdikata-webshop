@@ -1,6 +1,7 @@
 /* Frissítési előzmények. A legfelső bejegyzés a jelenlegi verzió – ez látszik az oldal alján és az adminban.
    Új kiadásnál egy új sort kell a LISTA ELEJÉRE tenni (v = verzió, d = dátum, c = mi módosult). */
 window.__BK_CHANGELOG=[
+{v:"1.10.1",d:"2026-11-13",c:["Lábléc elrendezés javítása (szétcsúszás megszüntetve)","A feltöltött BAGDIKATA logó pontos vektoros változata, pirosban"]},
 {v:"1.10.0",d:"2026-11-13",c:["Verziószám az oldal alján és az adminban","Előzmények: két fül (Admin előzmények, Frissítési előzmények)","Friss hírek és akciók szekció a termékek alatt, adminból ki-be kapcsolható","Az euró árfolyam sor eltűnik a láblécből, ha az euró ki van kapcsolva"]},
 {v:"1.9.0",d:"2026-11-13",c:["Automatikus angol fordítás (Google Fordító): termékek, tartalom, jogi szövegek, hírlevél","Euró ár megjelenítése ki-be kapcsolható az adminban","„Minden jog fenntartva” jogi nyilatkozat, piros logó"]},
 {v:"1.8.0",d:"2026-11-13",c:["Kuponkódok az adminban (százalékos kedvezmény, mennyiség, számláló, tiltás)","Hírlevél: feliratkozás, kétlépcsős megerősítés, leiratkozás, kiküldés az adminból","Statisztika: pontosabb visszatérő látogatók (böngészőazonosító, hozzájárulással)"]},
