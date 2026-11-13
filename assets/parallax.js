@@ -2,7 +2,7 @@
 (function(){
   try{
     var el=document.createElement('div');el.id='bk-bg';el.setAttribute('aria-hidden','true');
-    var src=(document.currentScript&&document.currentScript.src)?document.currentScript.src.replace(/parallax\.js.*$/,'bg-fonal.jpg'):'./assets/bg-fonal.jpg';
+    var src=(document.currentScript&&document.currentScript.src)?document.currentScript.src.replace(/parallax\.js.*$/,'bg-fonal2.jpg'):'./assets/bg-fonal2.jpg';
     el.style.cssText='position:fixed;left:0;right:0;top:0;height:135vh;z-index:-1;pointer-events:none;background:#f6f3ee url('+src+') center top/cover no-repeat;will-change:transform;transform:translate3d(0,0,0)';
     var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var tick=false;
