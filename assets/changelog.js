@@ -1,6 +1,7 @@
 /* Frissítési előzmények. A legfelső bejegyzés a jelenlegi verzió – ez látszik az oldal alján és az adminban.
    Új kiadásnál egy új sort kell a LISTA ELEJÉRE tenni (v = verzió, d = dátum, c = mi módosult). */
 window.__BK_CHANGELOG=[
+{v:"1.17.0",d:"2026-11-13",c:["Az Instagram-posztok megjelenítése a kezdőlapon megszűnt (a szekció és az admin kapcsolója is kikerült)","A changelog.js betöltése verziófüggő, hogy a frissítési előzmények és a verziószám mindig együtt frissüljenek"]},
 {v:"1.16.1",d:"2026-11-13",c:["A „Rólunk” menüpont átnevezve „Rólam”-ra"]},
 {v:"1.16.0",d:"2026-11-13",c:["Hírlevél: kétnyelvű levél Magyar / English váltógombbal a tetején (az előfizető nyelve van elöl), a fejlécben csak a logó látszik, a lábléc is kétnyelvű"]},
 {v:"1.15.0",d:"2026-11-13",c:["Új „Számlázás” menüpont az adminban: a Billingo API beállításai (kulcs, számlatömb, automatikus számlázás) ide kerültek a Beállítások oldalról"]},
