@@ -77,6 +77,20 @@ function mail_render($it) {
     $blocks = (isset($it->blocks) && is_array($it->blocks)) ? array_slice($it->blocks, 0, 30) : array();
     foreach ($blocks as $b) {
         if (!is_object($b)) { continue; }
+        if (isset($b->anchor) && is_string($b->anchor)) { $h[] = '<a id="' . htmlspecialchars(preg_replace('/[^a-z0-9_-]/i', '', $b->anchor)) . '" name="' . htmlspecialchars(preg_replace('/[^a-z0-9_-]/i', '', $b->anchor)) . '"></a>'; }
+        if (isset($b->rule) && $b->rule) { $h[] = '<div style="border-top:1px solid #ece6dc;margin:26px 0 18px;height:1px;line-height:1px">&nbsp;</div>'; $t[] = ''; $t[] = '========================================'; }
+        if (isset($b->langtag) && is_string($b->langtag)) { $x = mail_clean($b->langtag, 20); $t[] = '[ ' . $x . ' ]'; $t[] = ''; $h[] = '<p style="margin:0 0 10px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#bf1b2c;font-weight:700">' . htmlspecialchars($x) . '</p>'; }
+        if (isset($b->switch) && is_array($b->switch)) {
+            $sw = array(); $st = array();
+            foreach (array_slice($b->switch, 0, 4) as $lk) {
+                if (!is_object($lk) || !isset($lk->label, $lk->href)) { continue; }
+                $href = preg_match('/^#[a-z0-9_-]{1,20}$/i', (string) $lk->href) ? $lk->href : '';
+                if ($href === '') { continue; }
+                $sw[] = '<a href="' . htmlspecialchars($href) . '" style="display:inline-block;margin:0 4px;padding:6px 14px;border:1px solid #161314;border-radius:999px;font-size:13px;color:#161314;text-decoration:none">' . htmlspecialchars(mail_clean($lk->label, 20)) . '</a>';
+                $st[] = mail_clean($lk->label, 20);
+            }
+            if ($sw) { $h[] = '<p style="margin:0 0 18px;text-align:center">' . implode('', $sw) . '</p>'; $t[] = implode(' | ', $st); $t[] = ''; }
+        }
         if (isset($b->heading) && is_string($b->heading)) {
             $x = mail_clean($b->heading, 200);
             $t[] = $x; $t[] = str_repeat('-', min(40, mb_strlen($x, 'UTF-8')));
@@ -148,9 +162,9 @@ function mail_wrap($inner, $lang, $ref, $pre) {
         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f3ee"><tr><td align="center" style="padding:24px 12px">'
         . '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #ece6dc">'
         . '<tr><td align="center" style="background:#ece6dc;padding:22px 16px 16px;border-bottom:3px solid #161314">'
-        . '<a href="' . htmlspecialchars($site) . '" style="text-decoration:none"><img src="' . $logo . '" width="56" alt="Bagdi Kata" style="display:block;margin:0 auto 8px;border:0"></a>'
-        . '<div style="font-family:Georgia,\'Times New Roman\',serif;font-size:22px;letter-spacing:1px;color:#161314">Bagdi Kata</div>'
-        . '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b6b6b;margin-top:2px">' . $tag . '</div>'
+        . '<a href="' . htmlspecialchars($site) . '" style="text-decoration:none"><img src="' . $logo . '" width="' . (empty($GLOBALS['bk_mail_logo_only']) ? 56 : 72) . '" alt="Bagdi Kata" style="display:block;margin:0 auto ' . (empty($GLOBALS['bk_mail_logo_only']) ? 8 : 0) . 'px;border:0"></a>'
+        . (empty($GLOBALS['bk_mail_logo_only']) ? '<div style="font-family:Georgia,\'Times New Roman\',serif;font-size:22px;letter-spacing:1px;color:#161314">Bagdi Kata</div>'
+        . '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b6b6b;margin-top:2px">' . $tag . '</div>' : '')
         . '</td></tr>'
         . '<tr><td style="padding:24px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#222222">' . $inner . '</td></tr>'
         . '<tr><td style="background:#f6f3ee;padding:16px 28px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#6b6b6b;border-top:1px solid #ece6dc">'
