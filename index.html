@@ -26,12 +26,26 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <title>Bagdi Kata – kötött sapkák</title>
-    <script src="./assets/changelog.js?v=1.18.0"></script>
+    <script src="./assets/changelog.js?v=1.19.0"></script>
     <script src="./assets/parallax.js" defer></script>
     <script type="module" crossorigin src="./assets/index-0f-fFOYT.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/createLucideIcon-Bc0h7bbI.js">
     <link rel="stylesheet" crossorigin href="./assets/index-DxU-lOkS.css">
-  </head>
+  <style>
+.bk-rail{display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 2px 10px;outline:none}
+.bk-rail::-webkit-scrollbar{display:none}
+.bk-rail-item{flex:0 0 86%;scroll-snap-align:start;min-width:0}
+@media(min-width:560px){.bk-rail-item{flex:0 0 calc((100% - 24px)/2)}}
+@media(min-width:1024px){.bk-rail-item{flex:0 0 calc((100% - 48px)/3)}}
+.bk-rail-btn{position:absolute;top:38%;z-index:5;width:40px;height:40px;border-radius:50%;border:1px solid #e8e2d9;background:#fff;color:#161314;font-size:26px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);transition:opacity .2s}
+.bk-rail-btn:hover{background:#161314;color:#fff}
+.bk-rail-dots{display:flex;justify-content:center;gap:8px;margin-top:14px}
+.bk-rail-dots button{width:9px;height:9px;border-radius:50%;border:0;padding:0;background:#d6cfc4;cursor:pointer}
+.bk-rail-dots button.on{background:#bf1b2c;width:22px;border-radius:5px}
+@media(max-width:1100px){.bk-rail-btn{display:none}}
+@media(prefers-reduced-motion:reduce){.bk-rail{scroll-behavior:auto}}
+</style>
+</head>
   <body>
     <div id="root"></div>
   </body>
