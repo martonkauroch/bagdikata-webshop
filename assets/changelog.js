@@ -1,6 +1,7 @@
 /* Frissítési előzmények. A legfelső bejegyzés a jelenlegi verzió – ez látszik az oldal alján és az adminban.
    Új kiadásnál egy új sort kell a LISTA ELEJÉRE tenni (v = verzió, d = dátum, c = mi módosult). */
 window.__BK_CHANGELOG=[
+{v:"1.10.3",d:"2026-11-13",c:["Névjegykártya adatai (Textiltervező iparművész, telefon, e-mail) a láblécben és a Kapcsolat oldalon"]},
 {v:"1.10.2",d:"2026-11-13",c:["Logó a névjegykártya eredeti vektoros fájljából: piros szív (#BF1B2C), sötét BAGDIKATA felirat","Új favicon és e-mail logó ugyanezzel a szívvel"]},
 {v:"1.10.1",d:"2026-11-13",c:["Lábléc elrendezés javítása (szétcsúszás megszüntetve)","A feltöltött BAGDIKATA logó pontos vektoros változata, pirosban"]},
 {v:"1.10.0",d:"2026-11-13",c:["Verziószám az oldal alján és az adminban","Előzmények: két fül (Admin előzmények, Frissítési előzmények)","Friss hírek és akciók szekció a termékek alatt, adminból ki-be kapcsolható","Az euró árfolyam sor eltűnik a láblécből, ha az euró ki van kapcsolva"]},
