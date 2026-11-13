@@ -17,11 +17,12 @@ function rep_share_split($sh) {
     return count($parts) ? ' (' . implode(', ', $parts) . ')' : '';
 }
 function rep_range($days, $from, $to) {
-    $r = array('visitors' => 0, 'pageViews' => 0, 'impressions' => 0, 'clicks' => 0, 'views' => 0, 'addToCart' => 0, 'shares' => array('facebook' => 0, 'copy' => 0, 'native' => 0), 'products' => array());
+    $r = array('visitors' => 0, 'visits' => 0, 'pageViews' => 0, 'impressions' => 0, 'clicks' => 0, 'views' => 0, 'addToCart' => 0, 'shares' => array('facebook' => 0, 'copy' => 0, 'native' => 0), 'products' => array());
     for ($d = $from; $d <= $to; $d = rep_add_days($d, 1)) {
         if (!isset($days[$d]) || !is_array($days[$d])) { continue; }
         $x = $days[$d];
         $r['visitors'] += isset($x['visitors']) ? (int) $x['visitors'] : 0;
+        $r['visits'] += isset($x['visits']) ? (int) $x['visits'] : 0;
         $r['pageViews'] += isset($x['pageViews']) ? (int) $x['pageViews'] : 0;
         if (isset($x['products']) && is_array($x['products'])) {
             foreach ($x['products'] as $id => $p) {
@@ -93,7 +94,7 @@ function build_daily_report($date, $sections, $to) {
     if (!empty($sections['traffic'])) {
         $sh = $s['shares'];
         $f[] = (object) array('heading' => 'Forgalom', 'lines' => array(
-            'Látogatók: ' . $s['visitors'] . rep_delta($s['visitors'], $c['visitors']),
+            'Egyedi látogatók: ' . $s['visitors'] . rep_delta($s['visitors'], $c['visitors']) . ' · látogatások: ' . $s['visits'],
             'Oldalmegtekintések: ' . $s['pageViews'] . rep_delta($s['pageViews'], $c['pageViews']),
             'Termékoldal-megtekintések: ' . $s['views'] . ' · kattintások a listában: ' . $s['clicks'] . ' (átkattintás: ' . rep_pct($s['clicks'], $s['impressions']) . ')',
             'Kosárba tétel: ' . $s['addToCart'] . ' · megosztás: ' . array_sum($sh) . rep_share_split($sh)));
@@ -131,9 +132,42 @@ function build_daily_report($date, $sections, $to) {
     }
     $f[] = (object) array('links' => array(rep_link('Részletes statisztika az adminban', '/admin/statisztika')));
     return (object) array(
-        'kind' => 'daily', 'to' => $to,
-        'subject' => 'Napi jelentés – ' . rep_label($date) . ' · ' . $s['visitors'] . ' látogató · ' . count($dayOrders) . ' rendelés',
+        'kind' => 'daily', 'to' => $to, 'direct' => true,
+        'subject' => 'Napi jelentés – ' . rep_label($date) . ' · ' . $s['visitors'] . ' egyedi látogató · ' . count($dayOrders) . ' rendelés',
         'preheader' => $s['views'] . ' termékmegtekintés, ' . $s['clicks'] . ' kattintás, ' . rep_money($sum) . ' bevétel',
         'blocks' => $f);
 }
 function bk_cron_key($cfg) { return substr(hash_hmac('sha256', 'cron-daily', (string) $cfg['secret']), 0, 32); }
+
+// A beállított napi jelentések listája. Több, egymástól független jelentés is lehet (mindegyik saját címmel, időponttal, tartalommal).
+// Ha még nincs "dailyReports" lista, a régi egyetlen jelentés címzettjei adnak egy-egy jelentést.
+function bk_daily_reports() {
+    $raw = read_raw('settings'); $st = $raw !== null ? json_decode($raw) : null;
+    $out = array();
+    $def = array('traffic' => true, 'topProducts' => true, 'orders' => true, 'lowStock' => true);
+    if (is_object($st) && isset($st->notifications) && is_object($st->notifications)) {
+        $n = $st->notifications;
+        if (isset($n->dailyReports) && is_array($n->dailyReports)) {
+            foreach ($n->dailyReports as $r) {
+                if (!is_object($r) || !isset($r->id) || !is_string($r->id) || !isset($r->email) || !mail_valid($r->email)) { continue; }
+                $sec = $def;
+                if (isset($r->sections) && is_object($r->sections)) { foreach ($def as $k => $v) { if (isset($r->sections->$k)) { $sec[$k] = !empty($r->sections->$k); } } }
+                $time = (isset($r->time) && is_string($r->time) && preg_match('/^\d{1,2}:\d{2}$/', $r->time)) ? $r->time : '07:00';
+                $out[] = array('id' => substr($r->id, 0, 40), 'email' => strtolower(trim($r->email)), 'enabled' => !empty($r->enabled), 'time' => $time, 'sections' => $sec);
+            }
+        } elseif (isset($n->dailyReport) && is_object($n->dailyReport) && !empty($n->dailyReport->enabled) && isset($n->dailyReport->recipients) && is_array($n->dailyReport->recipients)) {
+            $dr = $n->dailyReport; $sec = $def;
+            if (isset($dr->sections) && is_object($dr->sections)) { foreach ($def as $k => $v) { if (isset($dr->sections->$k)) { $sec[$k] = !empty($dr->sections->$k); } } }
+            $time = (isset($dr->time) && is_string($dr->time) && preg_match('/^\d{1,2}:\d{2}$/', $dr->time)) ? $dr->time : '07:00';
+            foreach ($dr->recipients as $i => $e) { if (mail_valid($e)) { $out[] = array('id' => 'legacy' . $i, 'email' => strtolower(trim($e)), 'enabled' => true, 'time' => $time, 'sections' => $sec); } }
+        }
+    }
+    return $out;
+}
+function bk_daily_last() { $f = DATA_DIR . '/daily_last.json'; $a = is_file($f) ? json_decode((string) file_get_contents($f), true) : null; return (is_array($a) && isset($a['r']) && is_array($a['r'])) ? $a['r'] : array(); }
+function bk_daily_last_set($id, $date, $ok) {
+    $f = DATA_DIR . '/daily_last.json'; $a = is_file($f) ? json_decode((string) file_get_contents($f), true) : null;
+    if (!is_array($a) || !isset($a['r']) || !is_array($a['r'])) { $a = array('r' => array()); }
+    $a['r'][$id] = array('date' => $date, 'sentAt' => date('c'), 'ok' => $ok);
+    @file_put_contents($f, json_encode($a), LOCK_EX);
+}

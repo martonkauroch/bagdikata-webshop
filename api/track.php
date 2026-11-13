@@ -8,6 +8,10 @@ $cfg = load_config();
 if (!$cfg) { json_out(array('ok' => false), 503); }
 require_site($cfg);
 if (has_admin($cfg)) { json_out(array('ok' => true)); }   // az admin böngészését nem számoljuk
+// Európai (GDPR / ePrivacy) szemléletű, süti nélküli mérés: a Do Not Track / Global Privacy Control jelzést tiszteletben tartjuk, a botokat nem számoljuk.
+if ((isset($_SERVER['HTTP_DNT']) && $_SERVER['HTTP_DNT'] === '1') || (isset($_SERVER['HTTP_SEC_GPC']) && $_SERVER['HTTP_SEC_GPC'] === '1')) { json_out(array('ok' => true)); }
+$ua = isset($_SERVER['HTTP_USER_AGENT']) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
+if ($ua === '' || preg_match('/bot|crawl|spider|slurp|facebookexternalhit|headless|lighthouse|monitor|curl|wget|python|preview|pingdom|uptime/i', $ua)) { json_out(array('ok' => true)); }
 if (rl_blocked('track', 900, 3600)) { json_out(array('ok' => true)); }
 rl_hit('track', 3600);
 $d = body_json(2000);
@@ -39,8 +43,27 @@ if ($vid !== '' && ($type === 'vid' || ($type === 'pageview' && $newVisit))) {
     });
 }
 if ($type === 'vid') { json_out(array('ok' => true)); }
+// Egyedi látogatók és látogatások (munkamenetek): szerveroldali, tárolt azonosító nélkül.
+// A látogató napi, sózott lenyomata (IP + böngészőtípus + a nap sója) csak a mai napig él; a napváltáskor a lista törlődik,
+// a napok között nem kapcsolható össze, és semmilyen személyes adat nem marad meg.
+$isNewUnique = false; $isNewVisit = false;
+if ($type === 'pageview') {
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+    $hk = substr(hash_hmac('sha256', $today . '|' . $ip . '|' . $ua, $cfg['secret'] . '|daily'), 0, 16);
+    $now = time();
+    mutate_json('visitors_today', function ($cur) use ($hk, $today, $now, &$isNewUnique, &$isNewVisit) {
+        $v = $cur ? json_decode(json_encode($cur), true) : array();
+        if (!is_array($v) || !isset($v['date']) || $v['date'] !== $today) { $v = array('date' => $today, 'h' => array()); }
+        if (count($v['h']) > 50000) { return $v; }
+        if (!isset($v['h'][$hk])) { $isNewUnique = true; $isNewVisit = true; }
+        elseif ($now - (int) $v['h'][$hk] > 1800) { $isNewVisit = true; }
+        $v['h'][$hk] = $now;
+        return $v;
+    });
+}
+$newVisit = $isNewVisit;
 $keepFrom = date('Y-m-d', strtotime('-120 days'));
-mutate_json('analytics', function ($cur) use ($type, $pid, $ch, $newVisit, $today, $keepFrom) {
+mutate_json('analytics', function ($cur) use ($type, $pid, $ch, $newVisit, $isNewUnique, $today, $keepFrom) {
     $a = $cur ? json_decode(json_encode($cur), true) : array();
     if (!is_array($a)) { $a = array(); }
     foreach (array_keys($a) as $k) { if ($k < $keepFrom) { unset($a[$k]); } }
@@ -48,7 +71,8 @@ mutate_json('analytics', function ($cur) use ($type, $pid, $ch, $newVisit, $toda
     $day = &$a[$today];
     if ($type === 'pageview') {
         $day['pageViews'] = (isset($day['pageViews']) ? $day['pageViews'] : 0) + 1;
-        if ($newVisit) { $day['visitors'] = (isset($day['visitors']) ? $day['visitors'] : 0) + 1; }
+        if ($isNewUnique) { $day['visitors'] = (isset($day['visitors']) ? $day['visitors'] : 0) + 1; }
+        if ($newVisit) { $day['visits'] = (isset($day['visits']) ? $day['visits'] : 0) + 1; }
     } else {
         if (!isset($day['products']) || !is_array($day['products'])) { $day['products'] = array(); }
         if (!isset($day['products'][$pid])) { $day['products'][$pid] = array('impressions' => 0, 'clicks' => 0, 'views' => 0, 'addToCart' => 0, 'shares' => array('facebook' => 0, 'copy' => 0, 'native' => 0)); }

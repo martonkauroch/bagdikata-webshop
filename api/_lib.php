@@ -184,7 +184,7 @@ function redact_settings($v) {
     if (is_array($v)) { foreach ($v as $i => $x) { $v[$i] = redact_settings($x); } return $v; }
     if (!is_object($v)) { return $v; }
     foreach (get_object_vars($v) as $k => $x) {
-        if ($k === 'recipients') { $v->$k = array(); }
+        if ($k === 'recipients' || $k === 'dailyReports') { $v->$k = array(); }
         elseif (in_array($k, array('payeeEmail', 'username', 'clientNumber', 'pixelId', 'blockId', 'senderLabel'), true) && is_string($x)) { $v->$k = ''; }
         else { $v->$k = redact_settings($x); }
     }

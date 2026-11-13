@@ -240,4 +240,51 @@ function HistoryTabs({Audit}){
     tab==="admin"?h(Audit,null):h(UpdateHistory,null));
 }
 
-export{HistoryTabs,NewsAdminPage as AdminNewsPage,LanguagePage as AdminLanguagePage,CouponsPage as AdminCouponsPage,NewsletterPage as AdminNewsletterPage};
+
+/* ======================= NAPI JELENTÉSEK (több, független címzett) ======================= */
+var SEC_LABELS={traffic:"Forgalom",topProducts:"Legjobb termékek",orders:"Rendelések",lowStock:"Alacsony készlet"};
+function DailyReports(){
+  let{settings,save}=useSettings();
+  let legacy=settings.notifications.dailyReport;
+  let stored=settings.notifications.dailyReports;
+  let list=Array.isArray(stored)?stored:(legacy&&legacy.enabled?(legacy.recipients||[]).map((e,i)=>({id:"legacy"+i,email:e,enabled:true,time:legacy.time||"07:00",sections:{...legacy.sections},createdAt:""})):[]);
+  let[nw,setNw]=N.useState({email:"",time:"07:00",sections:{traffic:true,topProducts:true,orders:true,lowStock:true}});
+  let[msg,setMsg]=N.useState(null),[st,setSt]=N.useState({}),[busy,setBusy]=N.useState("");
+  let loadSt=()=>{if(!shared())return;api("reports.php",{action:"status"}).then(j=>setSt(j.last||{})).catch(()=>{})};
+  N.useEffect(loadSt,[Array.isArray(stored)?stored.length:-1]);
+  let commit=(next,text)=>{save({...settings,notifications:{...settings.notifications,dailyReports:next}});if(text)setMsg({t:text});window.setTimeout(()=>setMsg(null),5000)};
+  let add=()=>{let e=nw.email.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(e))return setMsg({e:1,t:"Adj meg érvényes e-mail-címet."});
+    if(list.some(r=>r.email===e&&r.time===nw.time))return setMsg({e:1,t:"Erre a címre már van azonos időpontú jelentés."});
+    if(list.length>=20)return setMsg({e:1,t:"Legfeljebb 20 jelentés állítható be."});
+    if(!Object.values(nw.sections).some(Boolean))return setMsg({e:1,t:"Jelölj ki legalább egy tartalmi részt."});
+    commit([...list,{id:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),email:e,enabled:true,time:nw.time,sections:{...nw.sections},createdAt:new Date().toISOString()}],"Jelentés létrehozva: "+e+", minden nap "+nw.time+"-kor.");
+    setNw({...nw,email:""})};
+  let del=r=>{if(window.confirm("Törlöd ezt a napi jelentést?\n"+r.email+" – "+r.time))commit(list.filter(x=>x.id!==r.id),"Jelentés törölve: "+r.email)};
+  let toggle=r=>commit(list.map(x=>x.id===r.id?{...x,enabled:!x.enabled}:x),(r.enabled?"Szüneteltetve: ":"Bekapcsolva: ")+r.email);
+  let sendTest=r=>{setBusy(r.id);setMsg(null);api("reports.php",{action:"send",id:r.id}).then(j=>{setBusy("");setMsg({t:"Teszt jelentés elküldve: "+j.to});loadSt()}).catch(e=>{setBusy("");setMsg({e:1,t:e.message})})};
+  let fmtLast=l=>l&&l.sentAt?(l.ok?"Utoljára elküldve: ":"Sikertelen küldés: ")+fmtDate(l.sentAt):"Még nem ment ki";
+  return h("section",{style:S.card,"data-testid":"daily-reports"},
+    h("header",{style:S.head},h("h2",{style:S.h2},"Napi jelentések e-mailben"),h("p",{style:S.sub},"Minden reggel összefoglaló az előző napról. Több jelentés is beállítható, akár több, egymástól független e-mail-címre, eltérő időponttal és tartalommal.")),
+    h("div",{style:S.body},
+      msg&&h("div",{style:msg.e?S.err:S.ok,role:"status"},msg.t),
+      !list.length&&h("p",{style:S.sub},"Még nincs beállított napi jelentés."),
+      list.map(r=>h("div",{key:r.id,"data-testid":"report-row",style:{border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 14px",marginBottom:10,background:r.enabled?"#fff":"#f9fafb",display:"flex",flexWrap:"wrap",gap:12,alignItems:"center"}},
+        h("div",{style:{flex:1,minWidth:240}},
+          h("div",{style:{fontWeight:600,fontSize:15,wordBreak:"break-all"}},r.email," ",h(Badge,{tone:r.enabled?"green":"gray"},r.enabled?"aktív":"szünetel")),
+          h("div",{style:{fontSize:13,color:"#4b5563",marginTop:3}},"Minden nap "+r.time+"-kor · "+Object.keys(SEC_LABELS).filter(k=>r.sections[k]).map(k=>SEC_LABELS[k]).join(", ")),
+          h("div",{style:{fontSize:12,color:"#6b7280",marginTop:2}},fmtLast(st[r.id])+(r.createdAt?" · létrehozva: "+fmtDate(r.createdAt):""))),
+        h("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},
+          h("button",{type:"button",style:S.btn,disabled:!shared()||busy===r.id||!Array.isArray(stored),onClick:()=>sendTest(r),title:Array.isArray(stored)?"":"Előbb hozz létre vagy módosíts egy jelentést, hogy a lista elmentődjön"},busy===r.id?"Küldés…":"Teszt küldése"),
+          h("button",{type:"button",style:S.btn,onClick:()=>toggle(r)},r.enabled?"Szüneteltet":"Bekapcsol"),
+          h("button",{type:"button",style:S.btnR,onClick:()=>del(r),"data-testid":"report-del"},"Törlés")))),
+      h("div",{style:{borderTop:"1px solid #e5e7eb",marginTop:16,paddingTop:16}},
+        h("div",{style:{fontWeight:600,marginBottom:10}},"Új jelentés létrehozása"),
+        h("div",{style:{display:"grid",gap:12,gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))"}},
+          h("label",null,h("span",{style:S.lab},"E-mail-cím"),h("input",{style:S.inp,type:"email",value:nw.email,placeholder:"pelda@email.hu",onChange:ev=>setNw({...nw,email:ev.target.value}),"data-testid":"report-email"})),
+          h("label",null,h("span",{style:S.lab},"Küldés ideje (naponta)"),h("input",{style:S.inp,type:"time",value:nw.time,onChange:ev=>setNw({...nw,time:ev.target.value||"07:00"})}))),
+        h("div",{style:{display:"flex",flexWrap:"wrap",gap:16,margin:"12px 0"}},Object.keys(SEC_LABELS).map(k=>h("label",{key:k,style:{display:"flex",gap:6,alignItems:"center",fontSize:14}},h("input",{type:"checkbox",checked:!!nw.sections[k],onChange:ev=>setNw({...nw,sections:{...nw.sections,[k]:ev.target.checked}})}),SEC_LABELS[k]))),
+        h("button",{type:"button",style:S.btnD,onClick:add,"data-testid":"report-add"},"Jelentés létrehozása")),
+      !shared()&&h("div",{style:{...S.warn,marginTop:14}},"A tényleges kiküldéshez az éles, szerveres működés és a cPanel időzített feladata (cron) szükséges.")));
+}
+
+export{DailyReports,HistoryTabs,NewsAdminPage as AdminNewsPage,LanguagePage as AdminLanguagePage,CouponsPage as AdminCouponsPage,NewsletterPage as AdminNewsletterPage};

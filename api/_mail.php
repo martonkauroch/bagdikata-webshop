@@ -333,6 +333,9 @@ function mail_dispatch($cfg, $items, $isAdmin) {
     $raw = read_raw('settings');
     $st = $raw !== null ? json_decode($raw) : null;
     if (is_object($st) && isset($st->notifications) && is_object($st->notifications)) {
+        if (isset($st->notifications->dailyReports) && is_array($st->notifications->dailyReports)) {
+            foreach ($st->notifications->dailyReports as $rp) { if (is_object($rp) && isset($rp->email) && mail_valid($rp->email)) { $allowed[] = strtolower($rp->email); } }
+        }
         foreach (array('orderEmail', 'dailyReport') as $k) {
             if (isset($st->notifications->$k->recipients) && is_array($st->notifications->$k->recipients)) {
                 foreach ($st->notifications->$k->recipients as $r) { if (mail_valid($r)) { $allowed[] = strtolower($r); } }
@@ -351,7 +354,7 @@ function mail_dispatch($cfg, $items, $isAdmin) {
             elseif ($kind === 'withdrawal' && $external < 1) { $to[$l] = $a; $external++; }
         }
         $mc = mail_cfg();
-        if ($kind === 'order' || $kind === 'daily') {
+        if (($kind === 'order' || $kind === 'daily') && empty($it->direct)) {
             $rt = array_merge(mail_route_list($mc, $kind), mail_settings_recipients($kind === 'order' ? 'orderEmail' : 'dailyReport'));
             if (count($rt)) { $to = array(); foreach ($rt as $a) { $to[strtolower($a)] = $a; } }
         }

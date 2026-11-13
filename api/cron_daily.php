@@ -16,29 +16,23 @@ if (!$cli) {
     if (!hash_equals(bk_cron_key($cfg), $key)) { http_response_code(403); echo "tiltott\n"; exit; }
 }
 $force = !$cli && isset($_GET['force']);
-$st = mail_settings_obj();
-$dr = ($st && isset($st->notifications->dailyReport) && is_object($st->notifications->dailyReport)) ? $st->notifications->dailyReport : null;
-if (!$dr || empty($dr->enabled)) { echo "a napi jelentés ki van kapcsolva (Statisztika > Napi jelentés)\n"; exit; }
-$time = (isset($dr->time) && is_string($dr->time) && preg_match('/^(\d{1,2}):(\d{2})$/', $dr->time, $m)) ? array((int) $m[1], (int) $m[2]) : array(7, 0);
+$reports = bk_daily_reports();
+$active = array_values(array_filter($reports, function ($r) { return $r['enabled']; }));
+if (!$active) { echo "nincs bekapcsolt napi jelentés (Statisztika > Napi jelentések)\n"; exit; }
 $today = date('Y-m-d');
-$due = mktime($time[0], $time[1], 0);
-$lastFile = DATA_DIR . '/daily_last.json';
-$last = is_file($lastFile) ? json_decode((string) file_get_contents($lastFile), true) : null;
-if (!$force) {
-    if (time() < $due) { echo "még nincs itt az ideje (" . sprintf('%02d:%02d', $time[0], $time[1]) . ")\n"; exit; }
-    if (is_array($last) && isset($last['date']) && $last['date'] === $today) { echo "ma már elment\n"; exit; }
-}
-$sections = array('traffic' => true, 'topProducts' => true, 'orders' => true, 'lowStock' => true);
-if (isset($dr->sections) && is_object($dr->sections)) { foreach ($sections as $k => $v) { if (isset($dr->sections->$k)) { $sections[$k] = !empty($dr->sections->$k); } } }
 $date = date('Y-m-d', strtotime('yesterday'));
-$to = array();
-if (isset($dr->recipients) && is_array($dr->recipients)) { foreach ($dr->recipients as $r) { if (mail_valid($r)) { $to[] = $r; } } }
-$item = build_daily_report($date, $sections, $to);
-$n = mail_dispatch($cfg, array($item), true);
-if ($n > 0) {
-    if (!$force) { @file_put_contents($lastFile, json_encode(array('date' => $today, 'sentAt' => date('c')))); }
-    echo "elküldve: " . $item->subject . "\n";
-} else {
-    echo "NEM sikerült elküldeni, lásd api/data/mail.log\n";
-    exit(2);
+$last = bk_daily_last();
+$fail = 0;
+foreach ($active as $r) {
+    $tm = array(7, 0);
+    if (preg_match('/^(\d{1,2}):(\d{2})$/', $r['time'], $m)) { $tm = array((int) $m[1], (int) $m[2]); }
+    if (!$force) {
+        if (time() < mktime($tm[0], $tm[1], 0)) { echo $r['email'] . ": még nincs itt az ideje (" . sprintf('%02d:%02d', $tm[0], $tm[1]) . ")\n"; continue; }
+        if (isset($last[$r['id']]['date']) && $last[$r['id']]['date'] === $today && !empty($last[$r['id']]['ok'])) { echo $r['email'] . ": ma már elment\n"; continue; }
+    }
+    $item = build_daily_report($date, $r['sections'], array($r['email']));
+    $n = mail_dispatch($cfg, array($item), true);
+    if ($n > 0) { if (!$force) { bk_daily_last_set($r['id'], $today, true); } echo $r['email'] . ": elküldve – " . $item->subject . "\n"; }
+    else { bk_daily_last_set($r['id'], $today, false); $fail++; echo $r['email'] . ": NEM sikerült elküldeni, lásd api/data/mail.log\n"; }
 }
+if ($fail) { exit(2); }
