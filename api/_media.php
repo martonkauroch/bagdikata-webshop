@@ -41,3 +41,45 @@ function media_usage_text() {
     foreach (array('store', 'content', 'settings') as $n) { $r = read_raw($n); if ($r) { $t .= $r; } }
     return $t;
 }
+
+// Nagy képek optimalizálása: leskálázás (hosszabb oldal max. 2000 px), JPEG újratömörítés, EXIF-forgatás megtartása.
+// Visszatérés: array(adat, kiterjesztés, optimalizálták-e). Ha nem jár előnnyel, az eredeti marad.
+function media_optimize($raw, $info, $ext) {
+    $MAX = 2000;
+    if (!function_exists('imagecreatefromstring') || $ext === 'gif') { return array($raw, $ext, false); }
+    $w = (int) $info[0]; $h = (int) $info[1];
+    if ($w < 1 || $h < 1 || $w * $h > 40000000) { return array($raw, $ext, false); }
+    $big = max($w, $h) > $MAX;
+    if (!$big && strlen($raw) < 1200000) { return array($raw, $ext, false); }
+    $im = @imagecreatefromstring($raw);
+    if (!$im) { return array($raw, $ext, false); }
+    if ($ext === 'jpg' && function_exists('exif_read_data')) {
+        $ex = @exif_read_data('data://image/jpeg;base64,' . base64_encode(substr($raw, 0, 262144)));
+        $o = (is_array($ex) && isset($ex['Orientation'])) ? (int) $ex['Orientation'] : 1;
+        $deg = ($o === 3) ? 180 : (($o === 6) ? -90 : (($o === 8) ? 90 : 0));
+        if ($deg !== 0) { $r = @imagerotate($im, $deg, 0); if ($r) { imagedestroy($im); $im = $r; } }
+    }
+    $cw = imagesx($im); $ch = imagesy($im);
+    if (max($cw, $ch) > $MAX) {
+        $k = $MAX / max($cw, $ch); $nw = max(1, (int) round($cw * $k)); $nh = max(1, (int) round($ch * $k));
+        $t = imagecreatetruecolor($nw, $nh);
+        if ($ext !== 'jpg') { imagealphablending($t, false); imagesavealpha($t, true); imagefill($t, 0, 0, imagecolorallocatealpha($t, 0, 0, 0, 127)); }
+        imagecopyresampled($t, $im, 0, 0, 0, 0, $nw, $nh, $cw, $ch); imagedestroy($im); $im = $t; $cw = $nw; $ch = $nh;
+    }
+    $out = $ext;
+    if ($ext === 'png' && strlen($raw) > 1000000) {
+        $alpha = false;
+        for ($y = 0; $y < 24 && !$alpha; $y++) { for ($x = 0; $x < 24; $x++) { if (((imagecolorat($im, (int) ($x * ($cw - 1) / 23), (int) ($y * ($ch - 1) / 23)) >> 24) & 127) > 0) { $alpha = true; break; } } }
+        if (!$alpha) { $out = 'jpg'; }
+    }
+    ob_start();
+    if ($out === 'jpg') { imageinterlace($im, true); $ok = imagejpeg($im, null, 85); }
+    elseif ($out === 'png') { imagesavealpha($im, true); $ok = imagepng($im, null, 7); }
+    elseif ($out === 'webp' && function_exists('imagewebp')) { imagesavealpha($im, true); $ok = imagewebp($im, null, 85); }
+    else { $ok = false; }
+    $data = ob_get_clean(); imagedestroy($im);
+    if (!$ok || $data === '' || $data === false) { return array($raw, $ext, false); }
+    if (strlen($data) >= strlen($raw) * 0.9 && !$big) { return array($raw, $ext, false); }
+    if (strlen($data) >= strlen($raw) && $out === $ext) { return array($raw, $ext, false); }
+    return array($data, $out, true);
+}

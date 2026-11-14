@@ -15,8 +15,11 @@ $hash = hash('sha256', $raw);
 $idx = media_sync();
 $dup = media_find_hash($idx, $hash);
 if ($dup !== null) { json_out(array('ok' => true, 'id' => $dup, 'dup' => true)); }
-$id = bin2hex(random_bytes(16)) . '.' . $types[$info['mime']];
-if (@file_put_contents(DATA_DIR . '/img/' . $id, $raw) === false) { fail(500, 'A kép nem menthető'); }
+$ext = $types[$info['mime']];
+list($data, $ext2, $opt) = media_optimize($raw, $info, $ext);
+$id = bin2hex(random_bytes(16)) . '.' . $ext2;
+if (@file_put_contents(DATA_DIR . '/img/' . $id, $data) === false) { fail(500, 'A kép nem menthető'); }
+if ($opt) { $info = @getimagesizefromstring($data) ?: $info; }
 $name = isset($_SERVER['HTTP_X_NAME']) ? mb_substr(trim(rawurldecode((string) $_SERVER['HTTP_X_NAME'])), 0, 120) : '';
-media_add($id, $hash, $name, $info, strlen($raw));
-json_out(array('ok' => true, 'id' => $id, 'dup' => false));
+media_add($id, $hash, $name, $info, strlen($data));
+json_out(array('ok' => true, 'id' => $id, 'dup' => false, 'optimized' => $opt, 'before' => strlen($raw), 'after' => strlen($data)));

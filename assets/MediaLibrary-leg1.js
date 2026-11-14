@@ -34,10 +34,10 @@ function useUploader(load){
     files=Array.from(files).filter(f=>/^image\//.test(f.type));
     if(!files.length)return;
     setBusy(b=>b+files.length);setMsg(null);
-    let dups=0,okn=0,errs=[],ids=[];
-    for(let f of files){try{let j=await up(f);ids.push(j.id);if(j.dup)dups++;else okn++}catch(e){errs.push(e.message)}finally{setBusy(b=>b-1)}}
+    let dups=0,okn=0,errs=[],ids=[],optn=0,bef=0,aft=0;
+    for(let f of files){try{let j=await up(f);ids.push(j.id);if(j.dup)dups++;else{okn++;if(j.optimized){optn++;bef+=j.before;aft+=j.after}}}catch(e){errs.push(e.message)}finally{setBusy(b=>b-1)}}
     setNew(ids);
-    let parts=[];if(okn)parts.push(okn+" új kép feltöltve");if(dups)parts.push(dups+" kép már szerepelt a fotótárban, nem töltöttem fel újra");
+    let parts=[];if(okn)parts.push(okn+" új kép feltöltve");if(optn)parts.push(optn+" kép automatikusan optimalizálva ("+kb(bef)+" → "+kb(aft)+")");if(dups)parts.push(dups+" kép már szerepelt a fotótárban, nem töltöttem fel újra");
     setMsg({ok:parts.join(" · "),err:errs.join(" ")});
     load();return ids
   };
@@ -47,7 +47,7 @@ function Drop({onFiles,busy}){
   let[over,setOver]=N.useState(false),id=N.useId();
   return h("label",{htmlFor:id,onDragOver:e=>{e.preventDefault();setOver(true)},onDragLeave:()=>setOver(false),onDrop:e=>{e.preventDefault();setOver(false);e.dataTransfer.files.length&&onFiles(e.dataTransfer.files)},style:{display:"block",border:"2px dashed "+(over?"#4f46e5":"#d1d5db"),background:over?"#eef2ff":"#fafafa",borderRadius:12,padding:"22px 16px",textAlign:"center",cursor:"pointer",marginBottom:16}},
     h("div",{style:{fontSize:14,fontWeight:600,color:"#374151"}},busy>0?"Feltöltés… ("+busy+" kép van hátra)":"Képek feltöltése – húzd ide, vagy kattints a tallózáshoz"),
-    h("div",{style:{fontSize:12,color:"#6b7280",marginTop:4}},"Több kép is kijelölhető · JPG, PNG, WebP · ugyanaz a kép csak egyszer kerül a tárba"),
+    h("div",{style:{fontSize:12,color:"#6b7280",marginTop:4}},"Több kép is kijelölhető · JPG, PNG, WebP · a nagy képeket automatikusan optimalizálja (max. 2000 px) · ugyanaz a kép csak egyszer kerül a tárba"),
     h("input",{id,type:"file",accept:"image/jpeg,image/png,image/webp,image/gif",multiple:true,style:{position:"absolute",width:1,height:1,opacity:0,overflow:"hidden"},onChange:e=>{e.target.files&&e.target.files.length&&onFiles(e.target.files);e.target.value=""}}))
 }
 function Msg({m}){return m?h(N.Fragment,{},m.ok&&h("p",{style:S.ok,role:"status"},m.ok),m.err&&h("p",{style:S.err,role:"alert"},m.err)):null}
