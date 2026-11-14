@@ -438,7 +438,6 @@ function ContactPage(){
     h("p",{style:{marginTop:"1.5rem"}},h("button",{type:"button",className:"btn-secondary",onClick:()=>{setF({name:"",email:"",message:"",website:""});setSt("form")}},T.another)));
   return h(Shell,{title:T.title},
     h("p",{className:"text-ink-soft"},T.intro),
-    h("div",{"data-testid":"contact-card",style:{marginTop:"1.25rem",border:"1px solid #e8e2d9",borderRadius:16,padding:"16px 20px",background:"#fff",lineHeight:1.9}},h("div",{style:{fontSize:12,letterSpacing:".12em",textTransform:"uppercase",color:"#6b6560"}},en?"Textile designer & craftsperson":"Textiltervező iparművész"),h("div",null,h("a",{href:"tel:+36202511487",className:"underline underline-offset-4"},"+36 20 25 11 487")),h("div",null,h("a",{href:"mailto:bagdisk@gmail.com",className:"underline underline-offset-4"},"bagdisk@gmail.com"))),
     st==="fail"&&h("p",{className:"rounded-lg bg-red-50 p-3 text-red-900",role:"alert",style:{marginTop:"1rem"}},T.fail+" ",mailLink),
     st==="local"&&h("p",{className:"rounded-lg bg-amber-50 p-3 text-amber-900",role:"status",style:{marginTop:"1rem"}},T.local+" ",mailLink),
     h("form",{noValidate:true,onSubmit:e=>{e.preventDefault();if(st!=="sending"&&validate())submit()}},
