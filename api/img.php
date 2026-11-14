@@ -50,7 +50,7 @@ function bk_watermarked($src, $ext, $id) {
     @rename($tmp, $cache); @file_put_contents($cache . '.v', $ver);
     return is_file($cache) ? $cache : null;
 }
-$out = bk_watermarked($f, $m[1], $id);
+$out = null; // vízjel kikapcsolva (v1.23.0)
 $send = $out ? $out : $f;
 header('Content-Type: ' . $mime[$m[1]]);
 header('Cache-Control: private, max-age=86400');
