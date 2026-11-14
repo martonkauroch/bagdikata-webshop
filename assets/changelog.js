@@ -1,6 +1,7 @@
 /* Frissítési előzmények. A legfelső bejegyzés a jelenlegi verzió – ez látszik az oldal alján és az adminban.
    Új kiadásnál egy új sort kell a LISTA ELEJÉRE tenni (v = verzió, d = dátum, c = mi módosult). */
 window.__BK_CHANGELOG=[
+{v:"1.24.0",d:"2026-11-14",c:["A teszt-belépés (oldal) jelszava az adminban, a Beállítások tetején módosítható (az admin jelszó megadásával megerősítve, azonnal él, külön Mentés nélkül)"]},
 {v:"1.23.0",d:"2026-11-14",c:["A logó vízjel kivéve a képekről (a termékfotók és a feltöltött képek is eredeti formájukban jelennek meg)"]},
 {v:"1.22.1",d:"2026-11-14",c:["Vízjel javítás: a termékkártyák (rács, Kedvenceink, Frissen a kollekcióból) levágták a kép jobb alsó sarkát, ezért nem látszott a logó – mostantól a látható kép sarkára kerül (sötét képen világos, világoson sötét változat)"]},
 {v:"1.22.0",d:"2026-11-13",c:["Admin: mobilbarát finomítások (nincs oldalirányú túlcsúszás az Áttekintésen, a szolgáltató-kártyák fejléce nem préselődik össze, nagyobb érintési felületek, 16 px-es beviteli mezők, hogy iPhone-on ne nagyítson rá a böngésző)"]},
