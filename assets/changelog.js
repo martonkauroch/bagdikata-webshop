@@ -1,6 +1,7 @@
 /* Frissítési előzmények. A legfelső bejegyzés a jelenlegi verzió – ez látszik az oldal alján és az adminban.
    Új kiadásnál egy új sort kell a LISTA ELEJÉRE tenni (v = verzió, d = dátum, c = mi módosult). */
 window.__BK_CHANGELOG=[
+{v:"1.22.1",d:"2026-11-14",c:["Vízjel javítás: a termékkártyák (rács, Kedvenceink, Frissen a kollekcióból) levágták a kép jobb alsó sarkát, ezért nem látszott a logó – mostantól a látható kép sarkára kerül (sötét képen világos, világoson sötét változat)"]},
 {v:"1.22.0",d:"2026-11-13",c:["Admin: mobilbarát finomítások (nincs oldalirányú túlcsúszás az Áttekintésen, a szolgáltató-kártyák fejléce nem préselődik össze, nagyobb érintési felületek, 16 px-es beviteli mezők, hogy iPhone-on ne nagyítson rá a böngésző)"]},
 {v:"1.21.0",d:"2026-11-13",c:["„Hamarosan” nyitóoldal: hírlevél-feliratkozás („Elsőként értesülhetsz a webshop indulásáról”), a teszt-belépés előtt is működik, kettős megerősítéssel és hozzájárulással"]},
 {v:"1.20.0",d:"2026-11-13",c:["Kezdőlap: számozott „Kedvenceink” termékajánló a lista tetején (3 legnépszerűbb), bento-elrendezésű „Frissen a kollekcióból” ajánló a lista alján (3 legújabb); a termékekre kattintva a megszokott termékoldal nyílik; a terméklista újra a hagyományos rács"]},
