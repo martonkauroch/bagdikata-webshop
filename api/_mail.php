@@ -1,5 +1,4 @@
 <?php
-// Levélküldés: SMTP (ha az api/data/mail.php-ben meg van adva), különben a tárhely PHP mail() függvénye.
 if (!defined('BK_API')) { exit; }
 
 function mail_cfg() {
@@ -20,7 +19,6 @@ function mail_settings_obj() {
     $st = $raw !== null ? json_decode($raw) : null;
     return is_object($st) ? $st : null;
 }
-// Az admin "Feladó címek" beállítása: alapértelmezett feladó, ha az a mail.php alapcíme vagy a felvett alternatívák egyike
 function mail_default_sender($mc) {
     $base = mail_from_addr($mc);
     $st = mail_settings_obj();
@@ -36,7 +34,6 @@ function mail_default_sender($mc) {
     }
     return $base;
 }
-// Az admin beállításában megadott címzettek (rendelési értesítő / napi jelentés); a régi alapcímek kimaradnak
 function mail_settings_recipients($key) {
     $st = mail_settings_obj();
     $out = array();
@@ -68,7 +65,6 @@ function mail_from_addr($mc) {
 }
 function mail_http_url($u) { return (is_string($u) && preg_match('#^https?://#i', $u) && strlen($u) < 500) ? $u : null; }
 
-// Az outbox-elem (kind, subject, preheader, blocks) -> [szöveges, HTML] törzs
 function mail_render($it) {
     $t = array();
     $h = array();
@@ -144,7 +140,6 @@ function mail_site_url() {
     return preg_match('#^https?://#i', $u) ? $u : 'https://bagdikata.hu';
 }
 
-// Arculatos levélkeret: fejléc logóval, tartalom, lábléc azonosítóval
 function mail_wrap($inner, $lang, $ref, $pre) {
     $en = ($lang === 'en');
     $site = mail_site_url();
@@ -174,7 +169,6 @@ function mail_wrap($inner, $lang, $ref, $pre) {
         . '</td></tr></table></td></tr></table></body></html>';
 }
 
-// Automatikus visszaigazolások (rögzített, kétnyelvű szöveggel)
 function mail_confirm_send($to, $kind, $lang, $ref, $subject, $heading, $paras, $table, $senderKind) {
     $mc = mail_cfg();
     $blocks = array();
@@ -258,7 +252,6 @@ function mail_send_smtp($s, $from, $fromName, $to, $headersRaw, $body) {
     @fclose($fp);
 }
 
-// Az admin "Kimenő levelek másolata" beállításának címei (rejtett másolat)
 function mail_copy_list($to) {
     if (!empty($GLOBALS['bk_mail_nocopy'])) { return array(); }
     $raw = read_raw('settings');
@@ -314,8 +307,6 @@ function mail_send($to, $subject, $text, $html, $replyTo, $fromOverride = null) 
     if (!$ok) { throw new Exception('a mail() függvény sikertelen (a tárhely letilthatja)'); }
 }
 
-// Új outbox-elemek tényleges kiküldése. Védelem: látogató csak a beállított címzetteknek (és az elállásnál az ügyfélnek) küldhet.
-// Sikeres statisztikai levél után bejegyzés az admin Előzmények oldalára (a levél tartalmával)
 function mail_audit_report($kind, $subject, $to, $text) {
     try {
         $entry = (object) array(

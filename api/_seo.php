@@ -1,5 +1,4 @@
 <?php
-// Közös segédfüggvények a keresőbarát termékoldalakhoz és a sitemaphoz.
 if (!defined('BK_API')) { exit; }
 
 function seo_site_url() { require_once __DIR__ . '/_mail.php'; return rtrim(mail_site_url(), '/'); }
@@ -16,7 +15,6 @@ function seo_is_bot() {
     $ua = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
     return (bool) preg_match('/bot|crawl|spider|slurp|facebookexternalhit|facebot|whatsapp|telegram|twitter|pinterest|linkedin|embedly|preview|skype|viber|discord|slack|google-inspectiontool|bingpreview|duckduck/i', $ua);
 }
-// Képforrás -> [abszolút URL, helyi fájl vagy null]
 function seo_image($src) {
     $site = seo_site_url();
     if (!is_string($src) || $src === '') { return array($site . '/assets/hero-1-DalRuRma.jpg', __DIR__ . '/../assets/hero-1-DalRuRma.jpg'); }

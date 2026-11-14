@@ -1,5 +1,4 @@
 <?php
-// Hírlevél: feliratkozók (api/data/newsletter.json), kettős megerősítés, leiratkozás, kampányok. Közvetlenül nem hívható.
 if (!defined('BK_API')) { exit; }
 require_once __DIR__ . '/_mail.php';
 
@@ -21,7 +20,6 @@ function nl_link($cfg, $id, $purpose) {
 function nl_privacy_url($lang) { return mail_site_url() . ($lang === 'en' ? '/#/en/hirlevel' : '/#/hirlevel'); }
 function nl_sender() { $mc = mail_cfg(); return mail_sender_for($mc, 'newsletter'); }
 
-// Feliratkozás indítása (nem megerősített állapot) + megerősítő levél. Soha nem árulja el, hogy a cím már szerepel-e.
 function nl_subscribe($cfg, $email, $name, $lang, $source) {
     $email = trim((string) $email);
     if (!mail_valid($email)) { return 'invalid'; }
@@ -85,7 +83,6 @@ function nl_send_confirm($cfg, $s) {
     catch (Throwable $e) { mail_log('HIBA hírlevél-megerősítő: ' . mail_clean($e->getMessage(), 120)); }
 }
 
-// Egy hírlevél-levél kiküldése egy feliratkozónak (leiratkozó lábléc, List-Unsubscribe fejlécek)
 function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     $en = (isset($s['lang']) && $s['lang'] === 'en');
     $hasEn = (!empty($camp['subjectEn']) && !empty($camp['bodyEn']));
@@ -95,7 +92,6 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     $mc = mail_cfg();
     $contact = (!empty($mc['senders']['contact']) && mail_valid($mc['senders']['contact'])) ? $mc['senders']['contact'] : 'info@bagdikata.hu';
     $imp = mail_site_url();
-    // Láblécblokk egy nyelven; kétnyelvű levélnél mindkét nyelven, az előfizető nyelve elöl
     $foot = function ($isEn) use ($s, $consent, $unsub) {
         $priv = nl_privacy_url($isEn ? 'en' : 'hu'); $impl = mail_site_url() . ($isEn ? '/#/en/impresszum' : '/#/impresszum');
         if ($isEn) {

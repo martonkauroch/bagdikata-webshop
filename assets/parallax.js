@@ -1,5 +1,3 @@
-/* Webshop háttér: halvány, pasztell, görgetésre „kibomló” animáció – fonalszálak rajzolódnak ki,
-   színes foltok lebegnek, apró szemek (kötésminta) jelennek meg. Az adminban nem látszik. */
 (function(){
   try{
     var NS='http://www.w3.org/2000/svg';

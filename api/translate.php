@@ -1,6 +1,4 @@
 <?php
-// Automatikus fordítás (Google Cloud Translation, v2). Csak adminnak.
-// A kulcs az api/data/translate.php fájlban él (a böngészőbe soha nem kerül ki), a fordítások gyorsítótárazva vannak.
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 ensure_data();
@@ -24,7 +22,6 @@ function tr_endpoint($c) {
     $e = isset($c['endpoint']) && is_string($c['endpoint']) && $c['endpoint'] !== '' ? $c['endpoint'] : 'https://translation.googleapis.com/language/translate/v2';
     return $e;
 }
-// Egy kérés a Google felé: $parts = szövegrészek tömbje. Visszaad: fordított tömb vagy hibaszöveg (string).
 function tr_call($c, $parts, $src, $dst) {
     $body = json_encode(array('q' => array_values($parts), 'source' => $src, 'target' => $dst, 'format' => 'text'), JSON_UNESCAPED_UNICODE);
     $url = tr_endpoint($c) . '?key=' . rawurlencode($c['key']);
@@ -50,7 +47,6 @@ function tr_call($c, $parts, $src, $dst) {
     if (count($out) !== count($parts)) { return 'Google Fordító hiba: hiányos válasz.'; }
     return $out;
 }
-// Hosszú szöveget bekezdések mentén ~4000 karakteres darabokra vág, majd fordítás után összefűzi.
 function tr_split($text) {
     $paras = preg_split('/(\n{2,})/', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
     $chunks = array(); $cur = '';
@@ -117,7 +113,6 @@ if ($act === 'translate') {
         if (isset($cache[$ck])) { $result[$i] = $cache[$ck]; continue; }
         $need[$i] = $t;
     }
-    // darabok gyűjtése
     $parts = array(); $map = array();
     foreach ($need as $i => $t) { foreach (tr_split($t) as $ch) { $parts[] = $ch; $map[] = $i; $chars += mb_strlen($ch); } }
     $err = '';

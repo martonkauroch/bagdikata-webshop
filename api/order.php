@@ -22,7 +22,6 @@ mutate_json('store', function ($cur) use ($o, &$isNew) {
     $orders = (isset($cur->orders) && is_array($cur->orders)) ? $cur->orders : array();
     foreach ($orders as $x) { if (is_object($x) && isset($x->id) && $x->id === $o->id) { return $cur; } }
     $isNew = true;
-    // Kupon: a számlálót a szerver növeli (zárolva); a vásárló által küldött adatból csak a kód és az összeg marad meg
     if (isset($o->coupon) && is_object($o->coupon)) {
         $code = isset($o->coupon->code) && is_string($o->coupon->code) ? coupon_code_norm($o->coupon->code) : '';
         $disc = (isset($o->coupon->discount) && is_numeric($o->coupon->discount)) ? max(0, (int) $o->coupon->discount) : 0;
@@ -50,11 +49,10 @@ mutate_json('store', function ($cur) use ($o, &$isNew) {
     }
     return $cur;
 });
-// Hírlevél: a vásárló a pénztárban külön jelölőnégyzettel kért feliratkozást -> megerősítő levél (kettős opt-in)
 if ($isNew && !empty($o->newsletter) && isset($o->customer) && is_object($o->customer) && isset($o->customer->email) && is_string($o->customer->email)) {
     try {
         nl_subscribe($cfg, $o->customer->email, isset($o->customer->name) && is_string($o->customer->name) ? $o->customer->name : '',
             (isset($o->locale) && $o->locale === 'en') ? 'en' : 'hu', 'checkout');
-    } catch (Throwable $e) { /* a rendelést ez nem akadályozhatja */ }
+    } catch (Throwable $e) {  }
 }
 json_out(array('ok' => true));

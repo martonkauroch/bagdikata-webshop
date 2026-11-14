@@ -1,5 +1,4 @@
 <?php
-// Látogatói események központi számlálása (napi összesítés). Csak a webshop kliens hívja.
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 ensure_data();
@@ -7,8 +6,7 @@ require_post();
 $cfg = load_config();
 if (!$cfg) { json_out(array('ok' => false), 503); }
 require_site($cfg);
-if (has_admin($cfg)) { json_out(array('ok' => true)); }   // az admin böngészését nem számoljuk
-// Európai (GDPR / ePrivacy) szemléletű, süti nélküli mérés: a Do Not Track / Global Privacy Control jelzést tiszteletben tartjuk, a botokat nem számoljuk.
+if (has_admin($cfg)) { json_out(array('ok' => true)); }
 if ((isset($_SERVER['HTTP_DNT']) && $_SERVER['HTTP_DNT'] === '1') || (isset($_SERVER['HTTP_SEC_GPC']) && $_SERVER['HTTP_SEC_GPC'] === '1')) { json_out(array('ok' => true)); }
 $ua = isset($_SERVER['HTTP_USER_AGENT']) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
 if ($ua === '' || preg_match('/bot|crawl|spider|slurp|facebookexternalhit|headless|lighthouse|monitor|curl|wget|python|preview|pingdom|uptime/i', $ua)) { json_out(array('ok' => true)); }
@@ -25,7 +23,6 @@ if ($type === 'share' && $ch === '') { json_out(array('ok' => false), 400); }
 $newVisit = !empty($d->newVisit);
 date_default_timezone_set('Europe/Budapest');
 $today = date('Y-m-d');
-// Visszatérő látogatók: csak akkor, ha a látogató elfogadta a statisztikai azonosítót (a böngésző küldi a vid-et); az azonosító sózott lenyomata kerül tárolásra
 $vid = (isset($d->vid) && is_string($d->vid) && preg_match('/^[a-f0-9]{16,40}$/', $d->vid)) ? $d->vid : '';
 if ($vid !== '' && ($type === 'vid' || ($type === 'pageview' && $newVisit))) {
     $vkey = substr(hash_hmac('sha256', $vid, $cfg['secret']), 0, 20);
@@ -43,9 +40,6 @@ if ($vid !== '' && ($type === 'vid' || ($type === 'pageview' && $newVisit))) {
     });
 }
 if ($type === 'vid') { json_out(array('ok' => true)); }
-// Egyedi látogatók és látogatások (munkamenetek): szerveroldali, tárolt azonosító nélkül.
-// A látogató napi, sózott lenyomata (IP + böngészőtípus + a nap sója) csak a mai napig él; a napváltáskor a lista törlődik,
-// a napok között nem kapcsolható össze, és semmilyen személyes adat nem marad meg.
 $isNewUnique = false; $isNewVisit = false;
 if ($type === 'pageview') {
     $ip = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';

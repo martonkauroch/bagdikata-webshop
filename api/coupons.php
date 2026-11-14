@@ -1,5 +1,4 @@
 <?php
-// Kuponok kezelése (csak admin): lista, létrehozás, módosítás, tiltás/engedélyezés, törlés.
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_coupon.php';

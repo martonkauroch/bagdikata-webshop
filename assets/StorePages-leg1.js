@@ -3,7 +3,6 @@ import{A as useContent,U as useNotifications,j as useStore,LocaleHook,LinkC}from
 var N=e(t(),1),P=n();
 var h=(type,props,...kids)=>{let{key:k,...rest}=props||{};if(kids.length===1)rest.children=kids[0];else if(kids.length>1)rest.children=kids;return k===void 0?P.jsx(type,rest):P.jsx(type,rest,k)};
 
-/* ---------------- Alapértelmezett (vázlat) szövegek ---------------- */
 var DRAFT_NOTE_HU="[VÁZLAT – a szögletes zárójeles részeket ki kell tölteni, a szöveget jogásszal át kell nézetni élesítés előtt.]";
 var DRAFT_NOTE_EN="[DRAFT – fill in the bracketed parts and have the text reviewed by a lawyer before going live.]";
 
@@ -325,7 +324,6 @@ In force from: [DATE].`;
 var LEGAL_DEFAULTS={terms:{hu:TERMS_HU,en:TERMS_EN},privacy:{hu:PRIVACY_HU,en:PRIVACY_EN},shipping:{hu:SHIPPING_HU,en:SHIPPING_EN},imprint:{hu:IMPRINT_HU,en:IMPRINT_EN},newsletter:{hu:NEWSLETTER_HU,en:NEWSLETTER_EN}};
 var LEGAL_TITLES={terms:{hu:"Általános szerződési feltételek (ÁSZF)",en:"Terms and Conditions"},privacy:{hu:"Adatkezelési tájékoztató",en:"Privacy Policy"},shipping:{hu:"Szállítási feltételek",en:"Shipping information"},imprint:{hu:"Impresszum",en:"Legal notice"},newsletter:{hu:"Hírlevél – adatkezelési tájékoztató",en:"Newsletter – privacy notice"}};
 
-/* ---------------- Megjelenítés (biztonságos, csak szöveg) ---------------- */
 function Rich({text}){
   let blocks=[],list=null;
   String(text||"").split("\n").forEach(raw=>{let l=raw.replace(/\s+$/,"");
@@ -354,7 +352,6 @@ function Legal({kind}){
 }
 var TermsPage=()=>h(Legal,{kind:"terms"}),PrivacyPage=()=>h(Legal,{kind:"privacy"}),ShippingPage=()=>h(Legal,{kind:"shipping"}),ImprintPage=()=>h(Legal,{kind:"imprint"}),NewsletterPage=()=>h(Legal,{kind:"newsletter"});
 
-/* ---------------- Elállás a szerződéstől ---------------- */
 var WKEY="bagdikata:withdrawals:v1";
 function loadW(){let b=window.__BK;if(b&&b.shared)return Array.isArray(b.data.withdrawals)?b.data.withdrawals:[];try{let v=JSON.parse(localStorage.getItem(WKEY)||"[]");return Array.isArray(v)?v:[]}catch{return[]}}
 function saveW(l){let b=window.__BK;if(b&&b.shared){b.set(WKEY,l.slice(0,500));return}try{localStorage.setItem(WKEY,JSON.stringify(l.slice(0,500)))}catch{}}
@@ -414,7 +411,6 @@ function WithdrawalPage(){
       h("p",{style:{marginTop:"1.5rem"}},h("button",{type:"submit",className:"btn-primary"},T.next))));
 }
 
-/* ---------------- Kapcsolat oldal ---------------- */
 function ContactPage(){
   let{locale}=LocaleHook(),en=locale==="en",MAIL="info@bagdikata.hu";
   let T=en?{title:"Contact",intro:"Do you have a question about our hats or your order? Write to us, we reply by e-mail.",direct:"You can also e-mail us directly:",name:"Your name",email:"Your e-mail address",message:"Message",req:"Required",badEmail:"Invalid e-mail address",short:"Please write a few words",send:"Send message",sending:"Sending…",doneTitle:"Thank you, your message was sent",doneText:"We will reply to the e-mail address you gave.",fail:"Sorry, the message could not be sent right now. Please e-mail us directly:",local:"The form works on the live server. Until then, please e-mail us directly:",another:"Send another message"}

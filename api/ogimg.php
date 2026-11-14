@@ -1,5 +1,4 @@
 <?php
-// Megosztási kép: a termékfotó 1200x630 (Facebook/WhatsApp/X ajánlott méret) krémszínű háttérre illesztve, gyorsítótárazva.
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_seo.php';
@@ -29,11 +28,9 @@ if (!is_file($cache)) {
     imagefill($dst, 0, 0, imagecolorallocate($dst, 246, 243, 238));
     $ratio = $sw / $sh; $target = $W / $H;
     if ($ratio >= $target * 0.85) {
-        // fekvő vagy közel 1.9:1 kép: kitöltés (középre vágás)
         $scale = max($W / $sw, $H / $sh); $cw = (int) round($W / $scale); $ch = (int) round($H / $scale);
         imagecopyresampled($dst, $src, 0, 0, (int) (($sw - $cw) / 2), (int) (($sh - $ch) / 2), $W, $H, $cw, $ch);
     } else {
-        // álló kép: nem vágjuk le (arc, sapka), középre illesztjük a háttéren
         $scale = $H / $sh; $nw = (int) round($sw * $scale);
         imagecopyresampled($dst, $src, (int) (($W - $nw) / 2), 0, 0, 0, $nw, $H, $sw, $sh);
     }

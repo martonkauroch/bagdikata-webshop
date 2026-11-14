@@ -1,6 +1,5 @@
-/* Frissítési előzmények. A legfelső bejegyzés a jelenlegi verzió – ez látszik az oldal alján és az adminban.
-   Új kiadásnál egy új sort kell a LISTA ELEJÉRE tenni (v = verzió, d = dátum, c = mi módosult). */
 window.__BK_CHANGELOG=[
+{v:"1.26.0",d:"2026-11-14",c:["Éles indulásra előkészítve: a demó feliratok kikerültek (pénztár, belépő oldal, admin), a „Teszt webshop” felirat a jelszavas belépőről, a demó adat-visszaállítás és demó fiók-törlés az adminból; a forráskódból a kommentek kikerültek, a mailtest/selftest segédfájlok törölve"]},
 {v:"1.25.0",d:"2026-11-14",c:["Új háttér: a kötőgépes kép helyett halvány, pasztell, görgetésre kibomló animáció (fonalszálak rajzolódnak ki, színes foltok lebegnek, apró kötésminta-szemek jelennek meg); csökkentett mozgás beállításnál statikus"]},
 {v:"1.24.0",d:"2026-11-14",c:["A teszt-belépés (oldal) jelszava az adminban, a Beállítások tetején módosítható (az admin jelszó megadásával megerősítve, azonnal él, külön Mentés nélkül)"]},
 {v:"1.23.0",d:"2026-11-14",c:["A logó vízjel kivéve a képekről (a termékfotók és a feltöltött képek is eredeti formájukban jelennek meg)"]},

@@ -1,5 +1,4 @@
 <?php
-// Kuponkezelés segédfüggvényei (api/data/coupons.json). Közvetlenül nem hívható.
 if (!defined('BK_API')) { exit; }
 
 function coupon_code_norm($c) {
@@ -11,7 +10,6 @@ function coupon_list() {
     $a = $raw !== null ? json_decode($raw, true) : array();
     return is_array($a) ? array_values($a) : array();
 }
-// 'ok' | 'unknown' | 'disabled' | 'exhausted'
 function coupon_state($c) {
     if (!is_array($c)) { return 'unknown'; }
     if (!empty($c['disabled'])) { return 'disabled'; }
@@ -25,13 +23,10 @@ function coupon_find($code) {
     foreach (coupon_list() as $c) { if (isset($c['code']) && $c['code'] === $code) { return $c; } }
     return null;
 }
-// Ellenőrzés beváltás nélkül -> array(állapot, kupon)
 function coupon_check($code) {
     $c = coupon_find($code);
     return array($c ? coupon_state($c) : 'unknown', $c);
 }
-// Beváltás (számláló növelése) zárolva, hogy az utolsó darabot ne válthassa be két vásárló egyszerre.
-// Visszatérés: array(állapot, százalék)
 function coupon_redeem($code) {
     $code = coupon_code_norm($code);
     $res = array('unknown', 0);

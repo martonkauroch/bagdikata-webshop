@@ -1,5 +1,4 @@
 <?php
-// Napi jelentések kezelése (csak admin): állapot (utolsó küldés) és azonnali teszt-küldés egy jelentéshez.
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_mail.php';

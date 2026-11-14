@@ -1,6 +1,4 @@
 <?php
-// Napi jelentés időzített küldése. A cPanel „Cron Jobs" hívja (lásd api/mailtest.php: kész parancsok).
-// Működés: a Beállítások > Értesítések > Napi jelentés időpontja után, naponta egyszer elküldi az előző napi jelentést.
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_mail.php';

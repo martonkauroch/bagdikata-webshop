@@ -1,5 +1,4 @@
 <?php
-// Hírlevél: nyilvános feliratkozás / megerősítés / leiratkozás, és az admin kezelő műveletei (lista, export, kampány).
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_newsletter.php';
@@ -25,7 +24,6 @@ function nl_set_status($id, $status) {
     return $found;
 }
 
-// ---- Megerősítő link (e-mailből, bejelentkezés nélkül) ----
 if ($method === 'GET' && isset($_GET['c'])) {
     $id = (string) $_GET['c']; $t = isset($_GET['t']) ? (string) $_GET['t'] : '';
     $lang = nl_find_lang($id); $en = ($lang === 'en');
@@ -34,7 +32,6 @@ if ($method === 'GET' && isset($_GET['c'])) {
     }
     nl_page($en ? 'Subscription confirmed' : 'Feliratkozás megerősítve', $en ? 'Thank you! You are now subscribed to the Bagdi Kata newsletter. You can unsubscribe at any time from the link at the bottom of each newsletter.' : 'Köszönjük! Mostantól kapod a Bagdi Kata hírlevelét. Bármikor leiratkozhatsz a hírlevelek alján lévő linkkel.', $lang);
 }
-// ---- Leiratkozás: GET = megerősítő oldal, POST = végrehajtás (űrlap vagy egykattintásos List-Unsubscribe-Post) ----
 if (($method === 'GET' && isset($_GET['u'])) || ($method === 'POST' && (isset($_POST['u']) || isset($_GET['u'])))) {
     $id = (string) (isset($_POST['u']) ? $_POST['u'] : $_GET['u']);
     $t = (string) (isset($_POST['t']) ? $_POST['t'] : (isset($_GET['t']) ? $_GET['t'] : ''));
@@ -50,7 +47,6 @@ if (($method === 'GET' && isset($_GET['u'])) || ($method === 'POST' && (isset($_
     nl_page($en ? 'Unsubscribe' : 'Leiratkozás a hírlevélről', $en ? 'Do you want to stop receiving the Bagdi Kata newsletter?' : 'Szeretnél leiratkozni a Bagdi Kata hírlevélről?', $lang, $btn);
 }
 
-// ---- Admin CSV-export ----
 if ($method === 'GET' && isset($_GET['export'])) {
     if (!has_admin($cfg)) { fail(401, 'Admin belépés szükséges'); }
     header('Content-Type: text/csv; charset=utf-8');
@@ -67,18 +63,16 @@ if ($method === 'GET' && isset($_GET['export'])) {
     exit;
 }
 
-// ---- Innen JSON-műveletek ----
 require_post();
 $d = body_json(40000);
 $act = (is_object($d) && isset($d->action) && is_string($d->action)) ? $d->action : '';
 
-// Nyilvános feliratkozás (lábléc űrlap)
 if ($act === 'subscribe') {
     $src = (isset($d->source) && $d->source === 'landing') ? 'landing' : 'footer';
-    if ($src !== 'landing') { require_site($cfg); }   // a „Hamarosan” oldalról belépés nélkül is lehet feliratkozni
+    if ($src !== 'landing') { require_site($cfg); }
     if (rl_blocked('nlsub', 8, 3600)) { fail(429, 'Túl sok próbálkozás. Próbáld később.'); }
     rl_hit('nlsub', 3600);
-    if (!empty($d->hp)) { json_out(array('ok' => true)); }                 // csaliűrlap-mező: botok
+    if (!empty($d->hp)) { json_out(array('ok' => true)); }
     if (empty($d->consent)) { fail(400, 'A feliratkozáshoz hozzájárulás szükséges.'); }
     if (!bot_verify(isset($d->captcha) ? $d->captcha : '')) { fail(400, 'A robotellenőrzés nem sikerült.'); }
     $email = (isset($d->email) && is_string($d->email)) ? $d->email : '';
@@ -173,7 +167,6 @@ if ($act === 'campaign_send' || $act === 'campaign_cancel') {
         });
         json_out(nl_snapshot());
     }
-    // a kampány zárolása (egyszerre csak egy kiküldő kérés futhat)
     $camp = null; $busy = false;
     mutate_json('nl_campaigns', function ($cur) use ($cid, &$camp, &$busy) {
         $a = is_array($cur) ? json_decode(json_encode($cur), true) : array(); if (!is_array($a)) { $a = array(); }
@@ -193,12 +186,12 @@ if ($act === 'campaign_send' || $act === 'campaign_cancel') {
     foreach (array_slice($camp['queue'], 0, 20) as $sid) {
         if (microtime(true) - $t0 > 25) { break; }
         $done[] = $sid;
-        if (!isset($byId[$sid]) || !isset($byId[$sid]['status']) || $byId[$sid]['status'] !== 'confirmed') { continue; }   // közben leiratkozott / törölve lett
+        if (!isset($byId[$sid]) || !isset($byId[$sid]['status']) || $byId[$sid]['status'] !== 'confirmed') { continue; }
         $err = nl_send_one($cfg, $camp, $byId[$sid]);
         if ($err) { $failed++; $streak++; $lastErr = $err; mail_log('HIBA hírlevél: ' . $err); if ($streak >= 3) { break; } }
         else { $sent++; $streak = 0; }
     }
-    if ($streak >= 3) { array_splice($done, -$streak); $failed -= $streak; }   // rendszerszintű hiba: a sikertelenek a sorban maradnak, a Folytatás újrapróbálja
+    if ($streak >= 3) { array_splice($done, -$streak); $failed -= $streak; }
     mutate_json('nl_campaigns', function ($cur) use ($cid, $done, $sent, $failed, $lastErr, $streak) {
         $a = is_array($cur) ? json_decode(json_encode($cur), true) : array(); if (!is_array($a)) { $a = array(); }
         foreach ($a as $i => $c) {

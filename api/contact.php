@@ -1,5 +1,4 @@
 <?php
-// Kapcsolatfelvételi űrlap: a látogató üzenete a mail.php-ban megadott "contact" címre (info@) megy.
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_mail.php';
@@ -7,12 +6,10 @@ ensure_data();
 require_post();
 $cfg = load_config();
 if (!$cfg) { fail(503, 'A szerver még nincs beállítva.'); }
-// a kapcsolatfelvétel az oldaljelszó nélkül is elérhető (a „Hamarosan” oldalról)
 if (rl_blocked('contact', 5, 3600)) { fail(429, 'Túl sok üzenet ebből a címről. Próbáld újra később.'); }
 $d = body_json(12000);
 if (!is_object($d)) { fail(400, 'Érvénytelen adat'); }
 function cf_str($d, $k, $max) { return (isset($d->$k) && is_string($d->$k)) ? mb_substr(trim($d->$k), 0, $max, 'UTF-8') : ''; }
-// rejtett csapdamező: ha kitöltötték, robot volt; úgy teszünk, mintha sikerült volna
 if (cf_str($d, 'website', 200) !== '') { json_out(array('ok' => true)); }
 if (!bot_verify(isset($d->captcha) ? $d->captcha : '')) { fail(400, 'A robotellenőrzés nem sikerült. Frissítsd az oldalt és próbáld újra.'); }
 $name = cf_str($d, 'name', 120);

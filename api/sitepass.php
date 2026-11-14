@@ -1,5 +1,4 @@
 <?php
-// Az oldaljelszó (teszt-belépés) módosítása az adminból. Csak bejelentkezett adminnak.
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 ensure_data();

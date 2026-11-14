@@ -1,5 +1,4 @@
 <?php
-// Visszatérő látogatók összesítése (csak admin). Forrás: api/data/returning.json (statisztikai azonosítót elfogadó böngészők).
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 ensure_data();
@@ -37,7 +36,6 @@ foreach ($all as $e) {
         $series[$x]['unique']++;
         if ($first === $x) { $series[$x]['new']++; } else { $series[$x]['returning']++; }
     }
-    // két egymást követő látogatási nap közötti idő (a vizsgált időszakban érkező visszatérésekre)
     $prev = null;
     foreach ($e['d'] as $x) {
         if ($prev !== null && $x >= $from && $x <= $to) {

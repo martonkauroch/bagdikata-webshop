@@ -9,7 +9,6 @@ $f = DATA_DIR . '/img/' . $id;
 if (!is_file($f)) { http_response_code(404); exit; }
 $mime = array('jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'gif' => 'image/gif');
 
-// Vízjel: a logó a jobb alsó sarokba kerül (megjelenítéskor, az eredeti feltöltött fájl érintetlen marad).
 function bk_watermarked($src, $ext, $id) {
     $wmLight = dirname(__DIR__) . '/assets/watermark.png';
     $wmDark = dirname(__DIR__) . '/assets/watermark-dark.png';
@@ -29,7 +28,6 @@ function bk_watermarked($src, $ext, $id) {
     $w0 = imagesx(imagecreatefrompng($wmLight)); $h0 = imagesy(imagecreatefrompng($wmLight));
     $w = max(60, (int) round($W * 0.12)); $h = (int) round($h0 * $w / $w0); $m = (int) round($W * 0.022);
     $x = $W - $w - $m; $y = $H - $h - $m;
-    // a sarok átlagos világossága dönt: sötét sarokra világos, világos sarokra sötét vízjel
     $rx = max(0, $x - (int) ($m / 2)); $ry = max(0, $y - (int) ($m / 2));
     $probe = imagecreatetruecolor(1, 1);
     imagecopyresampled($probe, $im, 0, 0, $rx, $ry, 1, 1, $W - $rx, $H - $ry);
@@ -50,7 +48,7 @@ function bk_watermarked($src, $ext, $id) {
     @rename($tmp, $cache); @file_put_contents($cache . '.v', $ver);
     return is_file($cache) ? $cache : null;
 }
-$out = null; // vízjel kikapcsolva (v1.23.0)
+$out = null;
 $send = $out ? $out : $f;
 header('Content-Type: ' . $mime[$m[1]]);
 header('Cache-Control: private, max-age=86400');

@@ -1,7 +1,4 @@
 <?php
-// Keresőbarát termék- és aloldal: /termek/<azonosító>, /en/termek/<azonosító>, /rolunk, ...
-// A megosztási előnézet (Facebook, Messenger, WhatsApp, Pinterest, X ...) és a Google ebből olvassa a címet, leírást, képet, árat.
-// Emberi látogatót átirányít a webshop alkalmazásba (#/ útvonal), a robotok a teljes tartalmat látják.
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_seo.php';
@@ -28,7 +25,7 @@ if ($id !== '') {
     $title = $name . ' – Bagdi Kata';
     $desc = trim(preg_replace('/\s+/', ' ', strip_tags($d)));
     list($img, $imgFile) = seo_image(isset($p->imageUrl) ? $p->imageUrl : '');
-    if ($imgFile && function_exists('imagecreatetruecolor')) { $img = $site . '/api/ogimg.php?id=' . rawurlencode($id); $imgFile = null; $ogW = 1200; $ogH = 630; }   // 1200x630 megosztási kép
+    if ($imgFile && function_exists('imagecreatetruecolor')) { $img = $site . '/api/ogimg.php?id=' . rawurlencode($id); $imgFile = null; $ogW = 1200; $ogH = 630; }
     $path = $prefix . '/termek/' . $id; $hash = ($en ? '/en' : '') . '/termek/' . $id;
     $price = isset($p->price) && is_numeric($p->price) ? (float) $p->price : null;
     $inStock = !isset($p->stock) || !is_numeric($p->stock) || $p->stock > 0;

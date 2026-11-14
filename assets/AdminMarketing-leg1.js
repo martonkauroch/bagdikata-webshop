@@ -34,7 +34,6 @@ var Card=({title,description,children})=>h("section",{style:S.card},h("header",{
 var NeedShared=()=>h("div",{style:S.warn},"Ez a funkció csak az éles, szerveres működésnél érhető el (api mappa feltöltve, admin belépéssel).");
 var scroll={overflowX:"auto"};
 
-/* ======================= KUPONOK ======================= */
 function genCode(){let a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="";let r=new Uint32Array(5);crypto.getRandomValues(r);for(let i=0;i<5;i++)s+=a[r[i]%a.length];return"KATA-"+s}
 function CouponsPage(){
   let{orders}=useStore();
@@ -78,7 +77,6 @@ function CouponsPage(){
       h("p",{style:{...S.sub,marginTop:12}},"A „Felhasználva” számláló a leadott rendelésekkel nő (törölt rendelésnél nem csökken). A „Adott kedvezmény” a nem törölt rendeléseken adott összeg.")));
 }
 
-/* ======================= HÍRLEVÉL ======================= */
 var SRC={checkout:"Pénztár",footer:"Weboldal",landing:"Hamarosan oldal"},STAT={confirmed:["green","Megerősített"],pending:["amber","Megerősítésre vár"],unsubscribed:["gray","Leiratkozott"]};
 var CSTAT={sending:["amber","Folyamatban"],paused:["red","Szünetel"],done:["green","Kész"],stopped:["gray","Leállítva"]};
 function NewsletterPage(){
@@ -155,7 +153,6 @@ function NewsletterPage(){
       subs.length>lim&&h("p",{style:{marginTop:12}},h("button",{type:"button",style:S.btn,onClick:()=>setLim(lim+100)},"További "+Math.min(100,subs.length-lim)+" megjelenítése"))));
 }
 
-/* ======================= NYELV ÉS PÉNZNEM ======================= */
 function LanguagePage(){
   let{settings,save}=useSettings();
   let eur=settings.currency?.eurEnabled!==false;
@@ -189,7 +186,6 @@ function LanguagePage(){
 }
 
 
-/* ======================= FRISS HÍREK ======================= */
 function NewsAdminPage(){
   let{content,save}=useContent();
   let init=()=>JSON.parse(JSON.stringify(content.news||{enabled:false,title:{hu:"Friss hírek és akciók",en:"News & offers"},items:[]}));
@@ -235,7 +231,6 @@ function NewsAdminPage(){
 }
 
 
-/* ======================= ESEMÉNYEK ======================= */
 function EventsAdminPage(){
   let{content,save}=useContent();
   let def={enabled:false,title:{hu:"Események",en:"Events"},items:[]};
@@ -283,7 +278,6 @@ function EventsAdminPage(){
     !dirty&&h("div",{style:{marginTop:8}},h("button",{type:"button",style:S.btnD,onClick:doSave,"data-testid":"events-save2"},"Mentés")));
 }
 
-/* ======================= FRISSÍTÉSI ELŐZMÉNYEK ======================= */
 function UpdateHistory(){
   let list=Array.isArray(window.__BK_CHANGELOG)?window.__BK_CHANGELOG:[];
   return h("div",{"data-testid":"updates-tab"},
@@ -305,7 +299,6 @@ function HistoryTabs({Audit}){
 }
 
 
-/* ======================= NAPI JELENTÉSEK (több, független címzett) ======================= */
 var SEC_LABELS={traffic:"Forgalom",topProducts:"Legjobb termékek",orders:"Rendelések",lowStock:"Alacsony készlet"};
 function DailyReports(){
   let{settings,save}=useSettings();

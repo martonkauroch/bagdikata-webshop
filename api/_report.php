@@ -1,6 +1,4 @@
 <?php
-// Napi jelentés összeállítása a szerveren (ugyanaz a tartalom, mint az admin felületen).
-// Szükséges: _lib.php, _mail.php betöltve.
 function rep_money($n) { return number_format((float) $n, 0, ',', "\xC2\xA0") . "\xC2\xA0Ft"; }
 function rep_add_days($d, $n) { $t = new DateTime($d . ' 00:00:00', new DateTimeZone('UTC')); $t->modify(($n >= 0 ? '+' : '') . $n . ' day'); return $t->format('Y-m-d'); }
 function rep_diff_days($a, $b) { return (int) round((strtotime($b . ' UTC') - strtotime($a . ' UTC')) / 86400); }
@@ -44,7 +42,6 @@ function rep_delta($e, $t) {
     return $n === 0 ? ' (változatlan)' : ' (' . ($n > 0 ? '+' : '') . $n . '% az előző naphoz képest)';
 }
 function rep_pct($e, $t) { return $t ? (round($e / $t * 1000) / 10) . '%' : '–'; }
-// "Népszerűek elöl" rangsor pontszámai
 function rep_scores($days, $products, $rank, $today) {
     $s = array();
     foreach ($products as $p) { $s[$p['id']] = 0.0; }
@@ -68,7 +65,6 @@ function rep_scores($days, $products, $rank, $today) {
 }
 function rep_link($label, $path) { return (object) array('label' => $label, 'appPath' => $path, 'href' => mail_site_url() . $path); }
 
-// A napi jelentés levélleírója ($date = a jelentett nap, pl. tegnap). Címzettet a mail_dispatch tölti.
 function build_daily_report($date, $sections, $to) {
     $today = date('Y-m-d');
     $raw = read_raw('analytics'); $days = $raw !== null ? json_decode($raw, true) : array();
@@ -139,8 +135,6 @@ function build_daily_report($date, $sections, $to) {
 }
 function bk_cron_key($cfg) { return substr(hash_hmac('sha256', 'cron-daily', (string) $cfg['secret']), 0, 32); }
 
-// A beállított napi jelentések listája. Több, egymástól független jelentés is lehet (mindegyik saját címmel, időponttal, tartalommal).
-// Ha még nincs "dailyReports" lista, a régi egyetlen jelentés címzettjei adnak egy-egy jelentést.
 function bk_daily_reports() {
     $raw = read_raw('settings'); $st = $raw !== null ? json_decode($raw) : null;
     $out = array();

@@ -1,5 +1,4 @@
 <?php
-// Közös segédfüggvények. Közvetlenül nem hívható.
 if (!defined('BK_API')) { http_response_code(403); exit; }
 @ini_set('display_errors', '0');
 error_reporting(E_ALL);
@@ -57,9 +56,7 @@ function put_cookie($name, $val, $ttl) {
         'path' => '/', 'secure' => is_https(), 'httponly' => true, 'samesite' => 'Lax',
     ));
 }
-// Az oldal állapota: nyilvános (nincs oldaljelszó) vagy jelszóval védett. A jelzőfájlt a save.php írja, amikor az admin a Beállításokban menti.
 function site_is_public() { return is_file(DATA_DIR . '/public.flag'); }
-// A „Hamarosan” oldal szerkeszthető tartalma (settings.access.landing), megtisztítva – az oldaljelszó nélküli látogatók is megkapják.
 function landing_public() {
     $raw = read_raw('settings'); $s = $raw ? json_decode($raw) : null;
     if (!is_object($s) || !isset($s->access) || !is_object($s->access) || !isset($s->access->landing) || !is_object($s->access->landing)) { return null; }
@@ -91,7 +88,6 @@ function landing_has_image($id) {
 }
 function has_site($cfg) { if (!$cfg) { return false; } if (site_is_public()) { return true; } return isset($_COOKIE['bk_site']) && check_token($cfg, 'site', $_COOKIE['bk_site']); }
 function has_admin($cfg) { return $cfg && isset($_COOKIE['bk_admin']) && check_token($cfg, 'admin', $_COOKIE['bk_admin']); }
-// Opcionális robotvédelem (Cloudflare Turnstile): ha az api/data/security.php-ban nincs kulcs, kikapcsolt.
 function bot_cfg() {
     $f = DATA_DIR . '/security.php';
     $c = is_file($f) ? @include $f : null;
@@ -105,7 +101,7 @@ function bot_verify($token) {
     $post = http_build_query(array('secret' => $c['turnstile_secret'], 'response' => $token, 'remoteip' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : ''));
     $ctx = stream_context_create(array('http' => array('method' => 'POST', 'header' => "Content-Type: application/x-www-form-urlencoded\r\n", 'content' => $post, 'timeout' => 6)));
     $r = @file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $ctx);
-    if ($r === false) { return true; }   // ha a Cloudflare nem elérhető, ne akadályozzuk a vásárlást (a rate limit így is véd)
+    if ($r === false) { return true; }
     $j = json_decode($r, true);
     return is_array($j) && !empty($j['success']);
 }

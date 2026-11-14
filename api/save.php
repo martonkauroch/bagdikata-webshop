@@ -31,7 +31,6 @@ if ($key === 'store') {
         }
         return union_by_id($cur, $val, $cap);
     });
-    // Az admin felületről indított statisztikai levelek (napi jelentés, teszt) itt mennek ki
     if ($key === 'outbox' && count($added)) {
         $send = array();
         foreach (array_slice($added, 0, 10) as $it) {
@@ -48,7 +47,6 @@ if ($key === 'store') {
 } else {
     write_raw($key, $raw);
     if ($key === 'settings') {
-        // oldal állapota: nyilvános / jelszóval védett (jelzőfájl a szerver és az .htaccess számára)
         $flag = DATA_DIR . '/public.flag';
         $pub = (is_object($val) && isset($val->access) && is_object($val->access) && isset($val->access->public) && $val->access->public === true);
         if ($pub) { @file_put_contents($flag, date('c')); } elseif (is_file($flag)) { @unlink($flag); }

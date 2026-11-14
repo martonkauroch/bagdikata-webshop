@@ -14,7 +14,6 @@ function Card({title,description,children}){
     h("div",{className:"p-5"},children));
 }
 
-/* ---------------- Jogi szövegek szerkesztése ---------------- */
 function AdminLegalPage(){
   let{content,save}=useContent();
   let initial=()=>{let o={};for(let k of KINDS){let st=(content.legal||{})[k];o[k]={hu:st&&typeof st.hu==="string"&&st.hu.trim()?st.hu:LEGAL_DEFAULTS[k].hu,en:st&&typeof st.en==="string"?st.en:LEGAL_DEFAULTS[k].en}}return o};
@@ -49,7 +48,6 @@ function AdminLegalPage(){
         dirty&&h("div",{className:"flex gap-2"},h("button",{onClick:()=>{setDraft(initial());setErrs({})},className:"btn-secondary"},"Elvetés"),h("button",{onClick:doSave,className:"btn-admin"},"Mentés")))));
 }
 
-/* ---------------- Elállások listája ---------------- */
 var WKEY="bagdikata:withdrawals:v1";
 function loadW(){let b=window.__BK;if(b&&b.shared)return Array.isArray(b.data.withdrawals)?b.data.withdrawals:[];try{let v=JSON.parse(localStorage.getItem(WKEY)||"[]");return Array.isArray(v)?v:[]}catch{return[]}}
 function AdminWithdrawalsPage(){

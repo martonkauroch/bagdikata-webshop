@@ -1,5 +1,4 @@
 <?php
-// sitemap.xml – a nyilvános módban lévő termékekből és aloldalakból generálódik (hu + en változat, hreflang)
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_seo.php';

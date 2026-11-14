@@ -1,7 +1,3 @@
-/* Bagdi Kata – nyitó logóanimáció (betöltés előtt, 3 mp, látogatónként egyszer)
-   Beillesztés: az index.html <head> részébe, a többi script ELÉ, defer nélkül (src="./bk-intro.js").
-   Önálló fájl: a logó képként benne van, más fájl nem kell hozzá.
-   Teszteléshez az oldal címe után: ?intro  -> mindig lejátssza (nem jegyzi meg). */
 (function () {
   var KEY = 'bk_intro_seen', force = /[?&]intro\b/.test(location.search) || window.BK_INTRO_FORCE === true;
   try { if (!force && localStorage.getItem(KEY)) return; } catch (e) {}
@@ -28,7 +24,6 @@
   de.className += ' bk-intro-on';
   de.appendChild(el);
 
-  // a rácsos szív 12 „szála” (a logó saját koordinátáiban: 105..199 × 85.5..176)
   var L = [[100,100,215,215],[90,295,210,175],[100,80,215,195],[90,275,210,155],[100,60,215,175],[90,255,210,135],
            [100,40,215,155],[90,235,210,115],[100,20,215,135],[90,215,210,95],[100,0,215,115],[90,195,210,75]];
   var mark = new Image(), ready = false;
@@ -46,7 +41,6 @@
     if (ready) {
       var sx = W / 94, sy = H / 90.5;
       ctx.globalAlpha = .13; ctx.drawImage(mark, 0, 0, W, H); ctx.globalAlpha = 1;
-      // szálak: mindegyik 0,1 mp késéssel, 0,55 mp alatt húzódik végig
       ox.globalCompositeOperation = 'source-over'; ox.clearRect(0, 0, W, H);
       ox.strokeStyle = '#000'; ox.lineCap = 'round'; ox.lineWidth = 22 * sx;
       for (var i = 0; i < L.length; i++) {
@@ -59,7 +53,6 @@
       var full = ease((t - 1.55) / .35);
       if (full > 0) { ctx.globalAlpha = full; ctx.drawImage(mark, 0, 0, W, H); ctx.globalAlpha = 1; }
     }
-    // felirat: balról jobbra előtűnik
     var w = ease((t - 1.7) / .7);
     word.style.opacity = w;
     var cp = 'inset(0 ' + ((1 - w) * 100).toFixed(1) + '% 0 0)';
