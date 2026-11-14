@@ -44,7 +44,7 @@ function media_usage_text() {
 
 // Nagy képek optimalizálása: leskálázás (hosszabb oldal max. 2000 px), JPEG újratömörítés, EXIF-forgatás megtartása.
 // Visszatérés: array(adat, kiterjesztés, optimalizálták-e). Ha nem jár előnnyel, az eredeti marad.
-function media_optimize($raw, $info, $ext) {
+function media_optimize($raw, $info, $ext, $allowConvert = true) {
     $MAX = 2000;
     if (!function_exists('imagecreatefromstring') || $ext === 'gif') { return array($raw, $ext, false); }
     $w = (int) $info[0]; $h = (int) $info[1];
@@ -67,7 +67,7 @@ function media_optimize($raw, $info, $ext) {
         imagecopyresampled($t, $im, 0, 0, 0, 0, $nw, $nh, $cw, $ch); imagedestroy($im); $im = $t; $cw = $nw; $ch = $nh;
     }
     $out = $ext;
-    if ($ext === 'png' && strlen($raw) > 1000000) {
+    if ($allowConvert && $ext === 'png' && strlen($raw) > 1000000) {
         $alpha = false;
         for ($y = 0; $y < 24 && !$alpha; $y++) { for ($x = 0; $x < 24; $x++) { if (((imagecolorat($im, (int) ($x * ($cw - 1) / 23), (int) ($y * ($ch - 1) / 23)) >> 24) & 127) > 0) { $alpha = true; break; } } }
         if (!$alpha) { $out = 'jpg'; }
@@ -82,4 +82,11 @@ function media_optimize($raw, $info, $ext) {
     if (strlen($data) >= strlen($raw) * 0.9 && !$big) { return array($raw, $ext, false); }
     if (strlen($data) >= strlen($raw) && $out === $ext) { return array($raw, $ext, false); }
     return array($data, $out, true);
+}
+
+function media_needs_opt($m) {
+    if (!empty($m['opt'])) { return false; }
+    $ext = strtolower(pathinfo(isset($m['_id']) ? $m['_id'] : '', PATHINFO_EXTENSION));
+    if ($ext === 'gif') { return false; }
+    return (isset($m['size']) && $m['size'] > 1200000) || (isset($m['w'], $m['h']) && max($m['w'], $m['h']) > 2000);
 }

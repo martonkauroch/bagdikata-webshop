@@ -23,10 +23,10 @@ var Card=({title,description,children})=>h("section",{style:S.card},h("header",{
 var kb=n=>n>1048576?(n/1048576).toFixed(1)+" MB":Math.max(1,Math.round(n/1024))+" KB";
 
 function useLibrary(){
-  let[items,setItems]=N.useState(null),[err,setErr]=N.useState(null);
-  let load=N.useCallback(()=>{api("media.php",{action:"list"}).then(j=>{setItems(j.items||[]);setErr(null)}).catch(e=>setErr(e.message))},[]);
+  let[items,setItems]=N.useState(null),[err,setErr]=N.useState(null),[opt,setOpt]=N.useState({n:0,b:0});
+  let load=N.useCallback(()=>{api("media.php",{action:"list"}).then(j=>{setItems(j.items||[]);setOpt({n:j.toOptimize||0,b:j.toOptimizeBytes||0});setErr(null)}).catch(e=>setErr(e.message))},[]);
   N.useEffect(()=>{if(shared())load()},[load]);
-  return{items,err,load,setErr}
+  return{items,err,load,setErr,opt}
 }
 function useUploader(load){
   let[busy,setBusy]=N.useState(0),[msg,setMsg]=N.useState(null),[newIds,setNew]=N.useState([]);
@@ -71,13 +71,19 @@ function AiCard(){
 
 export function AdminMediaPage(){
   if(!shared())return h("div",{style:S.warn},"A fotótár csak az éles, szerveres működésnél érhető el (api mappa feltöltve, admin belépéssel).");
-  let{items,err,load}=useLibrary(),upl=useUploader(load),[sel,setSel]=N.useState(null),[busy,setBusy]=N.useState(false),[msg,setMsg]=N.useState(null);
+  let{items,err,load,opt}=useLibrary(),upl=useUploader(load),[sel,setSel]=N.useState(null),[busy,setBusy]=N.useState(false),[msg,setMsg]=N.useState(null),[ob,setOb]=N.useState(null);
+  let optimizeAll=async()=>{setOb({run:1,b:0,a:0,n:0});let tb=0,ta=0,tn=0;try{for(let i=0;i<60;i++){let j=await api("media.php",{action:"optimize"});tb+=j.before;ta+=j.after;tn+=j.done;setOb({run:1,b:tb,a:ta,n:tn});if(!j.left||!j.done)break}setOb({done:1,b:tb,a:ta,n:tn})}catch(e){setOb({err:e.message})}load()};
   let del=it=>{if(!window.confirm("Biztosan törlöd ezt a képet a fotótárból?"))return;setBusy(true);setMsg(null);api("media.php",{action:"delete",id:it.id}).then(()=>{setSel(null);load()}).catch(e=>setMsg({err:e.message})).finally(()=>setBusy(false))};
   let ren=(it,name)=>api("media.php",{action:"rename",id:it.id,name}).then(()=>{load()}).catch(e=>setMsg({err:e.message}));
   return h(N.Fragment,{},
     h(PageHeader,{title:"Fotók",description:"Itt töltöd fel a képeket egyszer, a termékeknél pedig a fotótárból választasz. Ugyanaz a kép nem kerül be kétszer."}),
     h(Card,{title:"Fotótár"+(items?" ("+items.length+" kép)":"")},
       h(Drop,{onFiles:upl.run,busy:upl.busy}),h(Msg,{m:upl.msg}),h(Msg,{m:msg}),err&&h("p",{style:S.err},err),
+      (opt.n>0||ob)&&h("div",{style:{...S.warn,display:"flex",flexWrap:"wrap",gap:10,alignItems:"center"}},
+        ob&&ob.done?h("span",{},"Kész: "+ob.n+" kép átnézve, a mentett méret "+kb(ob.b)+" → "+kb(ob.a)+". Az eredeti fájlok biztonsági másolata a szerveren az img_orig mappában van, ha már nincs rájuk szükség, törölhető."):
+        ob&&ob.err?h("span",{style:{color:"#b91c1c"}},ob.err):
+        ob&&ob.run?h("span",{},"Optimalizálás folyamatban… "+ob.n+" kép kész"):
+        h(N.Fragment,{},h("span",{},opt.n+" korábban feltöltött kép ("+kb(opt.b)+") túl nagy, optimalizálható (max. 2000 px, újratömörítve)."),h("button",{type:"button",style:S.btn,onClick:optimizeAll},"Meglévő képek optimalizálása"))),
       !items?h("p",{style:S.sub},"Betöltés…"):items.length===0?h("p",{style:S.sub},"Még nincs kép a fotótárban."):
       h("ul",{style:{...S.grid,listStyle:"none",margin:0,padding:0}},items.map(it=>h("li",{key:it.id,style:{border:"1px solid "+(sel&&sel.id===it.id?"#4f46e5":"#e5e7eb"),borderRadius:10,overflow:"hidden",background:"#fff"}},
         h("button",{type:"button",onClick:()=>setSel(sel&&sel.id===it.id?null:it),style:{display:"block",width:"100%",padding:0,border:0,background:"#f3f4f6",cursor:"pointer"},"aria-label":"Kép kijelölése"},
