@@ -36,6 +36,7 @@ mutate_json('store', function ($cur) use ($o, &$isNew) {
             }
         }
     }
+    $o->test = !site_is_public();
     array_unshift($orders, $o);
     $cur->orders = array_slice($orders, 0, 2000);
     if (isset($cur->products) && is_array($cur->products)) {
