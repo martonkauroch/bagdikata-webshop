@@ -90,3 +90,16 @@ function media_needs_opt($m) {
     if ($ext === 'gif') { return false; }
     return (isset($m['size']) && $m['size'] > 1200000) || (isset($m['w'], $m['h']) && max($m['w'], $m['h']) > 2000);
 }
+
+// Közösségi/web hivatkozás tisztítása: http(s) URL, @név (Instagram) vagy domain/útvonal. Üres -> '', érvénytelen -> null.
+function media_clean_link($v) {
+    $v = trim($v);
+    if ($v === '') { return ''; }
+    if (strlen($v) > 300 || preg_match('/\s/', $v)) { return null; }
+    if ($v[0] === '@') { return preg_match('/^@[A-Za-z0-9._]{1,40}$/', $v) ? 'https://www.instagram.com/' . substr($v, 1) : null; }
+    if (!preg_match('#^https?://#i', $v)) { $v = 'https://' . $v; }
+    $p = @parse_url($v);
+    if (!$p || empty($p['host']) || !preg_match('/^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/', $p['host'])) { return null; }
+    if (isset($p['scheme']) && !in_array(strtolower($p['scheme']), array('http', 'https'), true)) { return null; }
+    return $v;
+}

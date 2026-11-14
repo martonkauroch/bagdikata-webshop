@@ -49,6 +49,34 @@ function bk_watermarked($src, $ext, $id) {
     return is_file($cache) ? $cache : null;
 }
 $out = null;
+$tw = isset($_GET['w']) ? (int) $_GET['w'] : 0;
+if (in_array($tw, array(160, 320, 640), true) && $m[1] !== 'gif' && function_exists('imagecreatetruecolor')) {
+    $dir = DATA_DIR . '/imgthumb';
+    $cache = $dir . '/' . $tw . '_' . $id . '.jpg';
+    if (!is_file($cache) || filemtime($cache) < filemtime($f)) {
+        $info = @getimagesize($f);
+        if ($info && $info[0] * $info[1] <= 40000000) {
+            if ($info[2] === IMAGETYPE_JPEG) { $im = @imagecreatefromjpeg($f); }
+            elseif ($info[2] === IMAGETYPE_PNG) { $im = @imagecreatefrompng($f); }
+            elseif ($info[2] === IMAGETYPE_WEBP && function_exists('imagecreatefromwebp')) { $im = @imagecreatefromwebp($f); }
+            else { $im = false; }
+            if ($im) {
+                $W = imagesx($im); $H = imagesy($im);
+                if (max($W, $H) > $tw) {
+                    $k = $tw / max($W, $H); $nw = max(1, (int) round($W * $k)); $nh = max(1, (int) round($H * $k));
+                    $t = imagecreatetruecolor($nw, $nh);
+                    imagefill($t, 0, 0, imagecolorallocate($t, 255, 255, 255));
+                    imagecopyresampled($t, $im, 0, 0, 0, 0, $nw, $nh, $W, $H); imagedestroy($im); $im = $t;
+                }
+                if (!is_dir($dir)) { @mkdir($dir, 0755, true); }
+                $tmp = $cache . '.tmp' . getmypid();
+                if (@imagejpeg($im, $tmp, 78)) { @rename($tmp, $cache); }
+                imagedestroy($im);
+            }
+        }
+    }
+    if (is_file($cache)) { header('Content-Type: image/jpeg'); header('Cache-Control: private, max-age=604800'); header('X-Content-Type-Options: nosniff'); header('Content-Length: ' . filesize($cache)); readfile($cache); exit; }
+}
 $send = $out ? $out : $f;
 header('Content-Type: ' . $mime[$m[1]]);
 header('Cache-Control: private, max-age=86400');

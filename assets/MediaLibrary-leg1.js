@@ -5,7 +5,7 @@ var h=(type,props,...kids)=>{let{key:k,...rest}=props||{};if(kids.length===1)res
 var shared=()=>!!(window.__BK&&window.__BK.shared&&window.__BK.admin);
 var api=(path,body)=>fetch(window.__BK.base+"api/"+path,{method:"POST",credentials:"same-origin",headers:{"X-BK":"1","Content-Type":"application/json"},body:JSON.stringify(body)}).then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j||!j.ok)throw new Error(j&&j.error||"Hiba ("+r.status+")");return j}));
 var up=(file)=>fetch(window.__BK.base+"api/upload.php",{method:"POST",credentials:"same-origin",headers:{"X-BK":"1","Content-Type":file.type||"application/octet-stream","X-Name":encodeURIComponent(file.name||"")},body:file}).then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j.id)throw new Error(j&&j.error||(file.name+": a feltöltés nem sikerült."));return j}));
-var src=id=>window.__BK.base+"api/img.php?id="+encodeURIComponent(id)+"&v=3";
+var src=(id,w)=>window.__BK.base+"api/img.php?id="+encodeURIComponent(id)+"&v=3"+(w?"&w="+w:"");
 var S={
   card:{background:"#fff",border:"1px solid #e5e7eb",borderRadius:12,boxShadow:"0 1px 2px rgba(0,0,0,.05)",marginBottom:24},
   head:{borderBottom:"1px solid #e5e7eb",padding:"14px 20px"},body:{padding:20},
@@ -69,6 +69,20 @@ function AiCard(){
         h("button",{style:{...S.btnD,opacity:busy||!key?.5:1},disabled:busy||!key,onClick:()=>act({action:"setkey",key},"Az API-kulcs elmentve, a generálás be van kapcsolva.")},"Kulcs mentése"))))
 }
 
+
+function CreditForm({it,onSaved}){
+  let c=it.credit||{},[v,setV]=N.useState({pn:c.pn||"",pl:c.pl||"",mn:c.mn||"",ml:c.ml||""}),[busy,setBusy]=N.useState(false),[msg,setMsg]=N.useState(null);
+  let set=k=>e=>setV(x=>({...x,[k]:e.target.value}));
+  let save=()=>{setBusy(true);setMsg(null);api("media.php",{action:"credit",id:it.id,...v}).then(()=>{setMsg({ok:"Elmentve. Ahol a kép megjelenik a terméknél, a vásárlók is látják."});onSaved()}).catch(e=>setMsg({err:e.message})).finally(()=>setBusy(false))};
+  let fld=(k,label,ph)=>h("label",{style:{display:"block",flex:"1 1 220px"}},h("span",{style:{display:"block",fontSize:12,color:"#4b5563",marginBottom:3}},label),h("input",{value:v[k],onChange:set(k),placeholder:ph,style:S.inp}));
+  return h("div",{style:{marginTop:12,padding:12,border:"1px solid #e5e7eb",borderRadius:10,background:"#fff"}},
+    h("strong",{style:{fontSize:14}},"Fotós és modell megnevezése"),
+    h("p",{style:{fontSize:12,color:"#6b7280",margin:"2px 0 10px"}},"Nem kötelező. Amit kitöltesz, az megjelenik a termékoldalon a képek alatt („Fotó: … · Modell: …”). A hivatkozás lehet weboldal, Instagram/Facebook cím vagy @felhasználónév."),
+    h(Msg,{m:msg}),
+    h("div",{style:{display:"flex",flexWrap:"wrap",gap:10,marginBottom:10}},fld("pn","Fotós neve","pl. Kovács Anna"),fld("pl","Fotós hivatkozása","@anna.foto vagy https://…")),
+    h("div",{style:{display:"flex",flexWrap:"wrap",gap:10,marginBottom:12}},fld("mn","Modell neve","pl. Nagy Réka"),fld("ml","Modell hivatkozása","@reka vagy https://…")),
+    h("button",{type:"button",style:{...S.btnD,opacity:busy?.6:1},disabled:busy,onClick:save},"Mentés"))
+}
 export function AdminMediaPage(){
   if(!shared())return h("div",{style:S.warn},"A fotótár csak az éles, szerveres működésnél érhető el (api mappa feltöltve, admin belépéssel).");
   let{items,err,load,opt}=useLibrary(),upl=useUploader(load),[sel,setSel]=N.useState(null),[busy,setBusy]=N.useState(false),[msg,setMsg]=N.useState(null),[ob,setOb]=N.useState(null);
@@ -87,21 +101,21 @@ export function AdminMediaPage(){
       !items?h("p",{style:S.sub},"Betöltés…"):items.length===0?h("p",{style:S.sub},"Még nincs kép a fotótárban."):
       h("ul",{style:{...S.grid,listStyle:"none",margin:0,padding:0}},items.map(it=>h("li",{key:it.id,style:{border:"1px solid "+(sel&&sel.id===it.id?"#4f46e5":"#e5e7eb"),borderRadius:10,overflow:"hidden",background:"#fff"}},
         h("button",{type:"button",onClick:()=>setSel(sel&&sel.id===it.id?null:it),style:{display:"block",width:"100%",padding:0,border:0,background:"#f3f4f6",cursor:"pointer"},"aria-label":"Kép kijelölése"},
-          h("img",{src:src(it.id),alt:it.name||"",loading:"lazy",style:{display:"block",width:"100%",aspectRatio:"1/1",objectFit:"cover"}})),
+          h("img",{src:src(it.id,320),alt:it.name||"",loading:"lazy",decoding:"async",style:{display:"block",width:"100%",aspectRatio:"1/1",objectFit:"cover"}})),
         h("div",{style:{padding:"6px 8px",fontSize:11,color:"#6b7280",lineHeight:1.35}},
           h("div",{style:{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",color:"#374151"},title:it.name},it.name||"névtelen"),
           h("div",{},it.w+"×"+it.h+" · "+kb(it.size)),
-          it.used&&h("div",{style:{color:"#047857",fontWeight:600}},"Használatban"))))),
+          it.used&&h("div",{style:{color:"#047857",fontWeight:600}},"Használatban"),it.credit&&h("div",{style:{color:"#4338ca",fontWeight:600}},"Forrás megadva"))))),
       sel&&h("div",{style:{marginTop:16,padding:12,border:"1px solid #e5e7eb",borderRadius:10,display:"flex",flexWrap:"wrap",gap:12,alignItems:"center",background:"#fafafa"}},
-        h("img",{src:src(sel.id),alt:"",style:{width:72,height:72,objectFit:"cover",borderRadius:8}}),
+        h("img",{src:src(sel.id,160),alt:"",style:{width:72,height:72,objectFit:"cover",borderRadius:8}}),
         h("input",{key:sel.id,defaultValue:sel.name,placeholder:"Kép neve (nem kötelező)",onBlur:e=>{let v=e.target.value.trim();if(v!==sel.name){ren(sel,v)}},style:{...S.inp,flex:"1 1 220px",width:"auto"}}),
         h("button",{style:S.btnR,disabled:busy||sel.used,title:sel.used?"Használatban lévő kép nem törölhető":"",onClick:()=>del(sel)},"Törlés"),
-        sel.used&&h("span",{style:{fontSize:12,color:"#6b7280"}},"Termékben vagy tartalomban szerepel, ezért nem törölhető."))),
+        sel.used&&h("span",{style:{fontSize:12,color:"#6b7280"}},"Termékben vagy tartalomban szerepel, ezért nem törölhető.")),sel&&h(CreditForm,{key:sel.id,it:sel,onSaved:load})),
     h(AiCard,{}))
 }
 
 export function MediaPicker({exclude=[],onClose,onPick}){
-  let{items,err,load}=useLibrary(),upl=useUploader(load),[sel,setSel]=N.useState([]);
+  let{items,err,load}=useLibrary(),upl=useUploader(load),[sel,setSel]=N.useState([]),[lim,setLim]=N.useState(36);
   N.useEffect(()=>{let k=e=>{if(e.key==="Escape")onClose()};window.addEventListener("keydown",k);return()=>window.removeEventListener("keydown",k)},[]);
   let toggle=id=>setSel(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
   let ex=new Set(exclude.map(x=>String(x).replace(/^srv:/,"")));
@@ -113,11 +127,11 @@ export function MediaPicker({exclude=[],onClose,onPick}){
       h("div",{style:{padding:18,overflowY:"auto",flex:1}},
         h(Drop,{onFiles:uploadAnd,busy:upl.busy}),h(Msg,{m:upl.msg}),err&&h("p",{style:S.err},err),
         !items?h("p",{style:S.sub},"Betöltés…"):items.length===0?h("p",{style:S.sub},"A fotótár még üres, tölts fel képeket fent."):
-        h("ul",{style:{...S.grid,gridTemplateColumns:"repeat(auto-fill,minmax(110px,1fr))",listStyle:"none",margin:0,padding:0}},items.map(it=>{let used=ex.has(it.id),on=sel.includes(it.id);
+        h("ul",{style:{...S.grid,gridTemplateColumns:"repeat(auto-fill,minmax(110px,1fr))",listStyle:"none",margin:0,padding:0}},items.slice(0,lim).map(it=>{let used=ex.has(it.id),on=sel.includes(it.id);
           return h("li",{key:it.id},h("button",{type:"button",disabled:used,onClick:()=>toggle(it.id),"aria-pressed":on,title:used?"Már hozzá van adva ehhez a termékhez":(it.name||""),style:{position:"relative",display:"block",width:"100%",padding:0,border:"3px solid "+(on?"#4f46e5":"transparent"),borderRadius:10,overflow:"hidden",background:"#f3f4f6",cursor:used?"not-allowed":"pointer",opacity:used?.4:1}},
-            h("img",{src:src(it.id),alt:it.name||"",loading:"lazy",style:{display:"block",width:"100%",aspectRatio:"1/1",objectFit:"cover"}}),
+            h("img",{src:src(it.id,320),alt:it.name||"",loading:"lazy",decoding:"async",style:{display:"block",width:"100%",aspectRatio:"1/1",objectFit:"cover"}}),
             on&&h("span",{style:{position:"absolute",top:4,right:4,background:"#4f46e5",color:"#fff",borderRadius:999,fontSize:12,fontWeight:700,width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center"}},sel.indexOf(it.id)+1),
-            used&&h("span",{style:{position:"absolute",left:4,bottom:4,background:"rgba(255,255,255,.9)",borderRadius:6,fontSize:10,padding:"1px 5px"}},"hozzáadva")))}))),
+            used&&h("span",{style:{position:"absolute",left:4,bottom:4,background:"rgba(255,255,255,.9)",borderRadius:6,fontSize:10,padding:"1px 5px"}},"hozzáadva")))})),items&&items.length>lim&&h("div",{style:{textAlign:"center",marginTop:14}},h("button",{type:"button",style:S.btn,onClick:()=>setLim(l=>l+36)},"Továbbiak ("+(items.length-lim)+")"))),
       h("div",{style:{padding:"12px 18px",borderTop:"1px solid #e5e7eb",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}},
         h("span",{style:{fontSize:13,color:"#6b7280"}},sel.length?sel.length+" kép kijelölve (a kijelölés sorrendjében kerülnek be)":"Jelöld ki a képeket"),
         h("button",{type:"button",disabled:!sel.length,style:{...S.btnD,opacity:sel.length?1:.5},onClick:()=>onPick(sel.map(i=>"srv:"+i))},"Hozzáadás"+(sel.length?" ("+sel.length+")":"")))))

@@ -16,7 +16,7 @@ if ($act === 'list') {
         $h = isset($m['hash']) ? $m['hash'] : $id;
         if (isset($seen[$h])) { continue; }
         $seen[$h] = true;
-        $out[] = array('id' => $id, 'name' => isset($m['name']) ? $m['name'] : '', 'w' => isset($m['w']) ? $m['w'] : 0, 'h' => isset($m['h']) ? $m['h'] : 0, 'size' => isset($m['size']) ? $m['size'] : 0, 'added' => isset($m['added']) ? $m['added'] : '', 'used' => strpos($use, 'srv:' . $id) !== false);
+        $out[] = array('id' => $id, 'name' => isset($m['name']) ? $m['name'] : '', 'w' => isset($m['w']) ? $m['w'] : 0, 'h' => isset($m['h']) ? $m['h'] : 0, 'size' => isset($m['size']) ? $m['size'] : 0, 'added' => isset($m['added']) ? $m['added'] : '', 'used' => strpos($use, 'srv:' . $id) !== false, 'credit' => isset($m['credit']) ? $m['credit'] : null);
     }
     $cand = 0; $savable = 0;
     foreach ($idx as $id => $m) { $m['_id'] = $id; if (media_needs_opt($m)) { $cand++; $savable += isset($m['size']) ? (int) $m['size'] : 0; } }
@@ -32,6 +32,21 @@ if ($act === 'delete') {
     $idx = media_index(); unset($idx[$id]);
     write_raw('media', json_encode($idx, JSON_UNESCAPED_UNICODE));
     json_out(array('ok' => true));
+}
+if ($act === 'credit') {
+    $id = (is_object($d) && isset($d->id) && is_string($d->id)) ? $d->id : '';
+    $idx = media_index();
+    if (!isset($idx[$id])) { fail(404, 'Nincs ilyen kép'); }
+    $c = array();
+    foreach (array('pn', 'pl', 'mn', 'ml') as $k) {
+        $v = (isset($d->$k) && is_string($d->$k)) ? trim($d->$k) : '';
+        if ($k === 'pl' || $k === 'ml') { $v = media_clean_link($v); if ($v === null) { fail(400, 'A hivatkozás legyen http(s):// webcím, @felhasználónév vagy instagram.com/… cím.'); } }
+        else { $v = mb_substr($v, 0, 80); }
+        if ($v !== '') { $c[$k] = $v; }
+    }
+    if ($c) { $idx[$id]['credit'] = $c; } else { unset($idx[$id]['credit']); }
+    write_raw('media', json_encode($idx, JSON_UNESCAPED_UNICODE));
+    json_out(array('ok' => true, 'credit' => $c ? $c : null));
 }
 if ($act === 'rename') {
     $id = (is_object($d) && isset($d->id) && is_string($d->id)) ? $d->id : '';
