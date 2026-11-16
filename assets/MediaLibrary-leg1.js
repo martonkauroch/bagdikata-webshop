@@ -91,6 +91,34 @@ function CreditForm({it,onSaved}){
     h("div",{style:{display:"flex",flexWrap:"wrap",gap:10,marginBottom:12}},fld("mn","Modell neve","pl. Nagy Réka"),fld("ml","Modell hivatkozása","@reka vagy https://…")),
     h("button",{type:"button",style:{...S.btnD,opacity:busy?.6:1},disabled:busy,onClick:save},"Mentés"))
 }
+function DupeCard({onDone}){
+  let[st,setSt]=N.useState(null),[off,setOff]=N.useState({});
+  let scan=async()=>{setSt({run:1});setOff({});try{let j;for(let i=0;i<40;i++){j=await api("media.php",{action:"dupes"});if(!j.pending)break;setSt({run:1,left:j.pending})}if(j.pending)throw new Error("A keresés nem fejeződött be, próbáld újra.");setSt({groups:j.groups})}catch(e){setSt({err:e.message})}};
+  let apply=async()=>{let gs=st.groups.filter((g,i)=>!off[i]).map(g=>({keep:g.keep.id,drop:g.drop.map(x=>x.id)}));if(!gs.length)return;
+    let n=gs.reduce((a,g)=>a+g.drop.length,0);if(!window.confirm(n+" duplikált kép törlődik, a termékekben és a tartalomban a megmaradó kép kerül a helyükre. Mehet?"))return;
+    setSt({...st,busy:1});try{let j=await api("media.php",{action:"dedupe",groups:gs});setSt({done:1,removed:j.removed,replaced:j.replaced});setTimeout(()=>window.location.reload(),2500)}catch(e){setSt({...st,busy:0,err:e.message})}};
+  let tile=(x,keep)=>h("div",{key:x.id,style:{width:110,flex:"0 0 auto",fontSize:11,lineHeight:1.35,color:"#6b7280"}},
+    h("div",{style:{position:"relative",borderRadius:8,overflow:"hidden",border:"2px solid "+(keep?"#10b981":"#fca5a5"),background:"#f3f4f6"}},
+      h(Thumb,{id:x.id,w:160,alt:x.name||"",style:{display:"block",width:"100%",aspectRatio:"1/1",objectFit:"cover"}}),
+      h("span",{style:{position:"absolute",left:4,top:4,background:keep?"#10b981":"#ef4444",color:"#fff",borderRadius:999,fontSize:10,fontWeight:700,padding:"2px 7px"}},keep?"Marad":"Törlődik")),
+    h("div",{style:{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",color:"#374151",marginTop:4},title:x.name},x.name||"névtelen"),
+    h("div",{},x.w+"×"+x.h+" · "+kb(x.size)),x.used&&h("div",{style:{color:"#047857",fontWeight:600}},"Használatban"));
+  let gs=st&&st.groups,cnt=gs?gs.filter((g,i)=>!off[i]).reduce((a,g)=>a+g.drop.length,0):0;
+  return h(Card,{title:"Duplikált képek",description:"Megkeresi azokat a képeket, amelyek ugyanazt a fotót tartalmazzák más méretben vagy tömörítéssel. A nagyobb felbontású (lehetőleg elnevezett) példány marad, a többi törlődik; ahol a törölt kép használatban volt, oda automatikusan a megmaradó kerül."},
+    st&&st.err&&h("p",{style:S.err},st.err),
+    st&&st.done?h("p",{style:S.ok,role:"status"},st.removed+" duplikált kép törölve, "+st.replaced+" hivatkozás átállítva a megmaradó képre. Az oldal újratölt…"):
+    st&&st.run?h("p",{style:S.sub},"Képek összehasonlítása…"+(st.left?" (még "+st.left+" kép)":"")):
+    gs?(gs.length===0?h(N.Fragment,{},h("p",{style:S.ok},"Nincs duplikált kép a fotótárban."),h("button",{type:"button",style:S.btn,onClick:scan},"Újrakeresés")):
+      h(N.Fragment,{},
+        h("p",{style:{fontSize:13,color:"#374151",margin:"0 0 12px"}},gs.length+" csoport, összesen "+gs.reduce((a,g)=>a+g.drop.length,0)+" duplikált kép. Ha egy csoport mégsem ugyanaz a kép, vedd ki a pipát."),
+        h("ul",{style:{listStyle:"none",margin:0,padding:0,display:"grid",gap:10}},gs.map((g,i)=>h("li",{key:g.keep.id,style:{display:"flex",gap:12,alignItems:"flex-start",padding:10,border:"1px solid #e5e7eb",borderRadius:10,opacity:off[i]?.45:1}},
+          h("input",{type:"checkbox",checked:!off[i],onChange:()=>setOff({...off,[i]:!off[i]}),"aria-label":"Csoport kijelölése",style:{marginTop:4,width:18,height:18}}),
+          h("div",{style:{display:"flex",gap:10,flexWrap:"wrap"}},tile(g.keep,!0),g.drop.map(x=>tile(x,!1)))))),
+        h("div",{style:{display:"flex",gap:10,marginTop:14,flexWrap:"wrap"}},
+          h("button",{type:"button",style:{...S.btnD,opacity:cnt&&!st.busy?1:.5},disabled:!cnt||st.busy,onClick:apply},st.busy?"Törlés…":"Kijelöltek törlése ("+cnt+" kép)"),
+          h("button",{type:"button",style:S.btn,disabled:st.busy,onClick:()=>setSt(null)},"Mégse")))):
+    h("button",{type:"button",style:S.btnD,onClick:scan},"Duplikált képek keresése"))
+}
 export function AdminMediaPage(){
   if(!shared())return h("div",{style:S.warn},"A fotótár csak az éles, szerveres működésnél érhető el (api mappa feltöltve, admin belépéssel).");
   let{items,err,load,opt}=useLibrary(),upl=useUploader(load),[sel,setSel]=N.useState(null),[busy,setBusy]=N.useState(false),[msg,setMsg]=N.useState(null),[ob,setOb]=N.useState(null);
@@ -119,7 +147,7 @@ export function AdminMediaPage(){
         h("input",{key:sel.id,defaultValue:sel.name,placeholder:"Kép neve (nem kötelező)",onBlur:e=>{let v=e.target.value.trim();if(v!==sel.name){ren(sel,v)}},style:{...S.inp,flex:"1 1 220px",width:"auto"}}),
         h("button",{style:S.btnR,disabled:busy||sel.used,title:sel.used?"Használatban lévő kép nem törölhető":"",onClick:()=>del(sel)},"Törlés"),
         sel.used&&h("span",{style:{fontSize:12,color:"#6b7280"}},"Termékben vagy tartalomban szerepel, ezért nem törölhető.")),sel&&h(CreditForm,{key:sel.id,it:sel,onSaved:load})),
-    h(AiCard,{}))
+    h(DupeCard,{onDone:load}),h(AiCard,{}))
 }
 
 export function MediaPicker({exclude=[],onClose,onPick}){

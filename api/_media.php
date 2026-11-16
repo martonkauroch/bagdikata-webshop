@@ -130,6 +130,51 @@ function media_thumb($f, $id, $tw) {
     return (is_file($cache) && filesize($cache) > 0) ? $cache : null;
 }
 
+// --- Vizuális duplikátumok -------------------------------------------------------------
+// Képaláírás: 16×16-os szürkeárnyalatos, fényerő/kontraszt szerint normalizált kép (256 bájt, base64) + oldalarány.
+// Ugyanaz a fotó más méretben / tömörítéssel / enyhe színkorrekcióval ~0–1 eltérést ad, két külön (akár sorozat-)
+// felvétel 15 fölöttit, így a 4-es küszöb biztonságos.
+function media_sig_of($f, $id) {
+    $src = media_thumb($f, $id, 320);
+    $p = $src !== null ? $src : $f;
+    $info = @getimagesize($p);
+    if (!$info || $info[0] * $info[1] > 40000000) { return null; }
+    @ini_set('memory_limit', '256M');
+    if ($info[2] === IMAGETYPE_JPEG) { $im = @imagecreatefromjpeg($p); }
+    elseif ($info[2] === IMAGETYPE_PNG) { $im = @imagecreatefrompng($p); }
+    elseif ($info[2] === IMAGETYPE_WEBP && function_exists('imagecreatefromwebp')) { $im = @imagecreatefromwebp($p); }
+    elseif ($info[2] === IMAGETYPE_GIF) { $im = @imagecreatefromgif($p); }
+    else { $im = false; }
+    if (!$im) { return null; }
+    $W = imagesx($im); $H = imagesy($im);
+    $t = imagecreatetruecolor(16, 16);
+    imagecopyresampled($t, $im, 0, 0, 0, 0, 16, 16, $W, $H); imagedestroy($im);
+    $a = array();
+    for ($y = 0; $y < 16; $y++) { for ($x = 0; $x < 16; $x++) { $c = imagecolorat($t, $x, $y); $a[] = 0.299 * (($c >> 16) & 255) + 0.587 * (($c >> 8) & 255) + 0.114 * ($c & 255); } }
+    imagedestroy($t);
+    $mean = array_sum($a) / 256; $v = 0; foreach ($a as $x) { $v += ($x - $mean) * ($x - $mean); }
+    $sd = sqrt($v / 256); if ($sd < 1) { $sd = 1; }
+    $b = '';
+    foreach ($a as $x) { $b .= chr(max(0, min(255, (int) round(($x - $mean) / $sd * 40 + 128)))); }
+    return array('sig' => base64_encode($b), 'ar' => round($W / max(1, $H), 3));
+}
+function media_sig_dist($a, $b) {
+    $x = base64_decode($a); $y = base64_decode($b);
+    if (strlen($x) !== 256 || strlen($y) !== 256) { return 999; }
+    $s = 0; for ($i = 0; $i < 256; $i++) { $s += abs(ord($x[$i]) - ord($y[$i])); }
+    return $s / 256;
+}
+function media_is_dupe($m1, $m2) {
+    if (isset($m1['hash'], $m2['hash']) && $m1['hash'] === $m2['hash']) { return true; }
+    if (empty($m1['sig']) || empty($m2['sig'])) { return false; }
+    if (abs($m1['ar'] - $m2['ar']) > 0.02) { return false; }
+    return media_sig_dist($m1['sig'], $m2['sig']) < 4.0;
+}
+// Melyik maradjon: nagyobb felbontás, aztán amelyiknek van neve, aztán a használatban lévő, aztán a régebbi.
+function media_keep_rank($m, $used) {
+    return array((int) $m['w'] * (int) $m['h'], (isset($m['name']) && $m['name'] !== '') ? 1 : 0, $used ? 1 : 0, -strtotime(isset($m['added']) ? $m['added'] : 'now'));
+}
+
 function media_needs_opt($m) {
     if (!empty($m['opt'])) { return false; }
     $ext = strtolower(pathinfo(isset($m['_id']) ? $m['_id'] : '', PATHINFO_EXTENSION));

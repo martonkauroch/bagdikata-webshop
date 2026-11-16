@@ -23,6 +23,96 @@ if ($act === 'list') {
     usort($out, function ($a, $b) { return strcmp($b['added'], $a['added']); });
     json_out(array('ok' => true, 'items' => $out, 'toOptimize' => $cand, 'toOptimizeBytes' => $savable));
 }
+if ($act === 'dupes') {
+    // 1) hiányzó képaláírások kiszámítása (időkorláttal, a kliens addig hívja, amíg pending 0)
+    @set_time_limit(60);
+    $idx = media_sync();
+    $dir = DATA_DIR . '/img';
+    $t0 = microtime(true); $pending = 0; $changed = false;
+    foreach ($idx as $id => $m) {
+        if (!empty($m['sig'])) { continue; }
+        if (microtime(true) - $t0 > 15) { $pending++; continue; }
+        $sg = media_sig_of($dir . '/' . $id, $id);
+        $idx[$id]['sig'] = $sg ? $sg['sig'] : 'x'; $idx[$id]['ar'] = $sg ? $sg['ar'] : 0; $changed = true;
+    }
+    if ($changed) {
+        mutate_json('media', function ($cur) use ($idx) {
+            $a = is_object($cur) ? json_decode(json_encode($cur), true) : array();
+            if (!is_array($a)) { $a = array(); }
+            foreach ($idx as $id => $m) { if (isset($a[$id]) && isset($m['sig'])) { $a[$id]['sig'] = $m['sig']; $a[$id]['ar'] = $m['ar']; } }
+            return $a;
+        });
+    }
+    if ($pending > 0) { json_out(array('ok' => true, 'pending' => $pending, 'groups' => array())); }
+    // 2) csoportosítás
+    $use = media_usage_text();
+    $ids = array_keys($idx); $n = count($ids); $par = array();
+    foreach ($ids as $id) { $par[$id] = $id; }
+    $find = function ($x) use (&$par) { while ($par[$x] !== $x) { $par[$x] = $par[$par[$x]]; $x = $par[$x]; } return $x; };
+    for ($i = 0; $i < $n; $i++) { for ($j = $i + 1; $j < $n; $j++) {
+        if (media_is_dupe($idx[$ids[$i]], $idx[$ids[$j]])) { $a = $find($ids[$i]); $b = $find($ids[$j]); if ($a !== $b) { $par[$b] = $a; } }
+    } }
+    $grp = array();
+    foreach ($ids as $id) { $grp[$find($id)][] = $id; }
+    $out = array();
+    foreach ($grp as $g) {
+        if (count($g) < 2) { continue; }
+        usort($g, function ($x, $y) use ($idx, $use) {
+            $a = media_keep_rank($idx[$x], strpos($use, 'srv:' . $x) !== false); $b = media_keep_rank($idx[$y], strpos($use, 'srv:' . $y) !== false);
+            return $a == $b ? 0 : ($a < $b ? 1 : -1);
+        });
+        $row = array();
+        foreach ($g as $id) { $m = $idx[$id]; $row[] = array('id' => $id, 'name' => isset($m['name']) ? $m['name'] : '', 'w' => $m['w'], 'h' => $m['h'], 'size' => $m['size'], 'used' => strpos($use, 'srv:' . $id) !== false); }
+        $out[] = array('keep' => $row[0], 'drop' => array_slice($row, 1));
+    }
+    json_out(array('ok' => true, 'pending' => 0, 'groups' => $out));
+}
+if ($act === 'dedupe') {
+    // A törlendő képek hivatkozásait (srv:<id>) a megtartott képre cseréli a termékekben, tartalomban, beállításokban,
+    // majd törli a duplikátumokat. Csak valóban duplikált párost hajt végre (szerver oldalon újraellenőrizve).
+    @set_time_limit(60);
+    $groups = (is_object($d) && isset($d->groups) && is_array($d->groups)) ? $d->groups : array();
+    $idx = media_index(); $map = array(); $drop = array();
+    foreach ($groups as $g) {
+        $keep = (is_object($g) && isset($g->keep) && is_string($g->keep)) ? $g->keep : '';
+        if (!isset($idx[$keep]) || !is_file(DATA_DIR . '/img/' . $keep)) { continue; }
+        $list = (isset($g->drop) && is_array($g->drop)) ? $g->drop : array();
+        foreach ($list as $id) {
+            if (!is_string($id) || $id === $keep || !isset($idx[$id]) || isset($drop[$id]) || isset($drop[$keep])) { continue; }
+            if (!media_is_dupe($idx[$keep], $idx[$id])) { continue; }
+            $map['srv:' . $id] = 'srv:' . $keep; $drop[$id] = $keep;
+        }
+    }
+    if (!$drop) { fail(400, 'Nincs törölhető duplikált kép.'); }
+    $replaced = 0;
+    foreach (array('store', 'content', 'settings') as $nm) {
+        if (read_raw($nm) === null) { continue; }
+        mutate_json($nm, function ($cur) use ($map, &$replaced) {
+            $j = json_encode($cur, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            foreach ($map as $from => $to) { $replaced += substr_count($j, $from); }
+            $new = json_decode(strtr($j, $map));
+            return $new === null ? $cur : $new;
+        });
+    }
+    foreach ($drop as $id => $keep) {
+        @unlink(DATA_DIR . '/img/' . $id); @unlink(DATA_DIR . '/imgwm/' . $id);
+        foreach (array(160, 320, 640) as $tw) { @unlink(DATA_DIR . '/imgthumb/' . $tw . '_' . $id . '.jpg'); }
+    }
+    mutate_json('media', function ($cur) use ($drop) {
+        $a = is_object($cur) ? json_decode(json_encode($cur), true) : array();
+        if (!is_array($a)) { $a = array(); }
+        foreach ($drop as $id => $keep) {
+            if (!isset($a[$id])) { continue; }
+            if (isset($a[$keep])) {
+                if ((!isset($a[$keep]['name']) || $a[$keep]['name'] === '') && !empty($a[$id]['name'])) { $a[$keep]['name'] = $a[$id]['name']; }
+                if (empty($a[$keep]['credit']) && !empty($a[$id]['credit'])) { $a[$keep]['credit'] = $a[$id]['credit']; }
+            }
+            unset($a[$id]);
+        }
+        return $a;
+    });
+    json_out(array('ok' => true, 'removed' => count($drop), 'replaced' => $replaced));
+}
 if ($act === 'delete') {
     $id = (is_object($d) && isset($d->id) && is_string($d->id)) ? $d->id : '';
     if (!preg_match('/^[a-f0-9]{32}\.(jpg|png|webp|gif)$/', $id)) { fail(400, 'Érvénytelen kép'); }
