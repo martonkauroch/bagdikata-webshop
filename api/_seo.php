@@ -6,13 +6,12 @@ function seo_h($s) { return htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBST
 function seo_products() {
     $raw = read_raw('store'); $st = $raw ? json_decode($raw) : null;
     $all = (is_object($st) && isset($st->products) && is_array($st->products)) ? $st->products : array();
-    // csak az aktív termékek: kézzel nincs kikapcsolva és van készlet (az elfogyott automatikusan inaktív)
+    // csak az aktív (adminban nem kikapcsolt) termékek; az elfogyott is látszik „Elfogyott” jelzéssel
     return array_values(array_filter($all, 'seo_product_on'));
 }
 function seo_product_on($p) {
     if (!is_object($p)) { return false; }
-    if (isset($p->active) && $p->active === false) { return false; }
-    return !(isset($p->stock) && is_numeric($p->stock) && $p->stock <= 0);
+    return !(isset($p->active) && $p->active === false);
 }
 function seo_find_product($id) {
     foreach (seo_products() as $p) { if (is_object($p) && isset($p->id) && $p->id === $id) { return $p; } }
