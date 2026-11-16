@@ -1,4 +1,5 @@
 window.__BK_CHANGELOG=[
+{v:"1.37.2",d:"2026-11-16",c:["Mobil: a süti-sáv nem takarja el a kosár „Tovább a pénztárhoz” gombját, és kompaktabb lett","Mobil: keskeny telefonon a logó nem csúszik a Ft/€ váltó mögé"]},
 {v:"1.37.1",d:"2026-11-16",c:["Webshop, mobilnézet: hiányzott a menü – hamburger gomb és lenyíló menü (Termékek, Rólam, Kapcsolat, Admin) került a fejlécbe; a Kapcsolat link asztali nézetben is megjelent"]},
 {v:"1.37.0",d:"2026-11-16",c:["Kezdőlap, „Frissen a kollekcióból”: mobilon a termékkártyák felirata nem lóg ki – a név és alatta az ár teljesen látszik, a hosszú név új sorba törik"]},
 {v:"1.36.0",d:"2026-11-16",c:["Admin menü átlátható csoportokba rendezve: Főoldal, Webshop (rendelések, termékek, fotók, kategóriák, kuponok, elállások), Tartalom, Beállítások – a csoportok lenyithatók, az aktuális oldal csoportja automatikusan nyitva van","Mobilnézet: nagyobb, ujjal könnyen kezelhető menüelemek, szélesebb fiók, a fejlécben látszik az aktuális oldal és csoport, valamint az új rendelések száma"]},
