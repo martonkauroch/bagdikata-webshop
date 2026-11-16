@@ -5,7 +5,14 @@ function seo_site_url() { require_once __DIR__ . '/_mail.php'; return rtrim(mail
 function seo_h($s) { return htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function seo_products() {
     $raw = read_raw('store'); $st = $raw ? json_decode($raw) : null;
-    return (is_object($st) && isset($st->products) && is_array($st->products)) ? $st->products : array();
+    $all = (is_object($st) && isset($st->products) && is_array($st->products)) ? $st->products : array();
+    // csak az aktív termékek: kézzel nincs kikapcsolva és van készlet (az elfogyott automatikusan inaktív)
+    return array_values(array_filter($all, 'seo_product_on'));
+}
+function seo_product_on($p) {
+    if (!is_object($p)) { return false; }
+    if (isset($p->active) && $p->active === false) { return false; }
+    return !(isset($p->stock) && is_numeric($p->stock) && $p->stock <= 0);
 }
 function seo_find_product($id) {
     foreach (seo_products() as $p) { if (is_object($p) && isset($p->id) && $p->id === $id) { return $p; } }
