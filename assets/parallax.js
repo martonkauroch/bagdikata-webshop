@@ -23,13 +23,12 @@
       var p=document.createElementNS(NS,'path');p.setAttribute('d',d);p.setAttribute('fill','none');
       p.setAttribute('stroke',COL[i]);p.setAttribute('stroke-width',i%2?5:7);p.setAttribute('stroke-linecap','round');p.setAttribute('opacity','.5');
       svg.appendChild(p);
-      var dot=document.createElementNS(NS,'circle');dot.setAttribute('r',i%2?7:9);dot.setAttribute('fill',COL[i]);dot.setAttribute('opacity','.75');svg.appendChild(dot);
+      var dot=document.createElementNS(NS,'circle');dot.setAttribute('r',i%2?7:9);dot.setAttribute('fill',COL[i]);dot.setAttribute('opacity','.75');
       return {p:p,dot:dot,len:1,k:i}});
     var stitches=[];
     for(var i=0;i<26;i++){
       var g=document.createElementNS(NS,'path');g.setAttribute('d','M0 0 L7 12 L14 0 M0 7 L7 19 L14 7');g.setAttribute('fill','none');
       g.setAttribute('stroke',COL[i%6]);g.setAttribute('stroke-width','2.4');g.setAttribute('stroke-linecap','round');g.setAttribute('stroke-linejoin','round');
-      svg.appendChild(g);
       stitches.push({el:g,x:(i*137)%960+20,y:(i*271)%940+20,sp:.25+((i*7)%10)/14,rot:((i*53)%60)-30,at:(i%13)/13*.85})}
     root.appendChild(svg);
     var cur=0,tgt=0,raf=0;

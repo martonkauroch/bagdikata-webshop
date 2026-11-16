@@ -1,4 +1,5 @@
 window.__BK_CHANGELOG=[
+{v:"1.40.2",d:"2026-11-16",c:["Háttér: a pöttyök és a nyíl/öltés jelek kikerültek, csak a halvány színes szálak és a színfoltok maradtak"]},
 {v:"1.40.1",d:"2026-11-16",c:["Termékek, mobilnézet: a kategóriaszűrő (Összes, Sapkák, Nyakmelegítők, Szettek…) nem lóg ki oldalra, hanem több sorba törik, így minden gomb látszik"]},
 {v:"1.40.0",d:"2026-11-16",c:["Napi statisztikai e-mail: új „Látogatottság” blokk – visszatérő látogatók, elmúlt 7 és 30 nap egyedi látogatói, látogatásai, oldalmegtekintései, az előző 7 naphoz viszonyított változás és napi átlag (a „Forgalom” szakasz bekapcsolásával jelenik meg)"]},
 {v:"1.39.0",d:"2026-11-16",c:["Napi statisztika: a kiküldés már nem függ kizárólag a cPanel cron-tól – az első oldalbetöltés a beállított időpont (pl. 7:00) után automatikusan elindítja az esedékes jelentést (háttérben, a látogatót nem lassítja); sikertelen küldés után 30 perc múlva újrapróbálja","A cron továbbra is működik, és ugyanazt a logikát használja"]},
