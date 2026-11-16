@@ -94,6 +94,17 @@ function build_daily_report($date, $sections, $to) {
             'Oldalmegtekintések: ' . $s['pageViews'] . rep_delta($s['pageViews'], $c['pageViews']),
             'Termékoldal-megtekintések: ' . $s['views'] . ' · kattintások a listában: ' . $s['clicks'] . ' (átkattintás: ' . rep_pct($s['clicks'], $s['impressions']) . ')',
             'Kosárba tétel: ' . $s['addToCart'] . ' · megosztás: ' . array_sum($sh) . rep_share_split($sh)));
+        // Látogatottság: visszatérők (csak hozzájárulással mért), 7 és 30 napos összesítés
+        $rr = read_raw('returning'); $ret = $rr !== null ? json_decode($rr, true) : array();
+        $rn = 0; $nw = 0;
+        if (is_array($ret)) { foreach ($ret as $e) { if (!is_array($e) || empty($e['d']) || !is_array($e['d']) || !in_array($date, $e['d'], true)) { continue; } if (isset($e['f']) && $e['f'] < $date) { $rn++; } else { $nw++; } } }
+        $r7 = rep_range($days, rep_add_days($date, -6), $date); $r30 = rep_range($days, rep_add_days($date, -29), $date);
+        $p7 = rep_range($days, rep_add_days($date, -13), rep_add_days($date, -7));
+        $d7 = $p7['visitors'] ? ' (' . ($r7['visitors'] >= $p7['visitors'] ? '+' : '') . (int) round(($r7['visitors'] - $p7['visitors']) / $p7['visitors'] * 100) . '% az előző 7 naphoz képest)' : '';
+        $f[] = (object) array('heading' => 'Látogatottság', 'lines' => array(
+            'Visszatérő látogatók (hozzájárulást adók közül): ' . $rn . ' · első alkalommal látott, hozzájárulást adó: ' . $nw,
+            'Elmúlt 7 nap: ' . $r7['visitors'] . ' egyedi látogató, ' . $r7['visits'] . ' látogatás, ' . $r7['pageViews'] . ' oldalmegtekintés' . $d7,
+            'Elmúlt 30 nap: ' . $r30['visitors'] . ' egyedi látogató, ' . $r30['visits'] . ' látogatás, ' . $r30['pageViews'] . ' oldalmegtekintés · napi átlag: ' . round($r30['visitors'] / 30, 1) . ' látogató'));
     }
     if (!empty($sections['topProducts'])) {
         $exist = array(); foreach ($products as $p) { $exist[$p['id']] = true; }
