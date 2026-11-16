@@ -84,6 +84,52 @@ function media_optimize($raw, $info, $ext, $allowConvert = true) {
     return array($data, $out, true);
 }
 
+// Kiskép (bélyegkép) készítése/visszaadása a gyorsítótárból. Egyszerre legfeljebb 2 készülhet (a tárhely
+// folyamat- és memóriakorlátja miatt); ha mindkét hely foglalt, rövid várakozás után null jön, és a hívó az eredetit adja.
+function media_thumb($f, $id, $tw) {
+    if (!function_exists('imagecreatetruecolor')) { return null; }
+    $dir = DATA_DIR . '/imgthumb';
+    $cache = $dir . '/' . $tw . '_' . $id . '.jpg';
+    if (is_file($cache) && filemtime($cache) >= filemtime($f) && filesize($cache) > 0) { return $cache; }
+    if (!is_dir($dir)) { @mkdir($dir, 0755, true); }
+    $lock = null;
+    for ($try = 0; $try < 30 && !$lock; $try++) {
+        for ($slot = 0; $slot < 2; $slot++) {
+            $h = @fopen($dir . '/.lock' . $slot, 'c');
+            if ($h && flock($h, LOCK_EX | LOCK_NB)) { $lock = $h; break; }
+            if ($h) { fclose($h); }
+        }
+        if (!$lock) { usleep(100000); clearstatcache(); if (is_file($cache) && filesize($cache) > 0 && filemtime($cache) >= filemtime($f)) { return $cache; } }
+    }
+    if (!$lock) { return null; }
+    clearstatcache();
+    if (!(is_file($cache) && filesize($cache) > 0 && filemtime($cache) >= filemtime($f))) {
+        $info = @getimagesize($f);
+        $im = false;
+        if ($info && $info[0] * $info[1] <= 40000000) {
+            @ini_set('memory_limit', '256M');
+            if ($info[2] === IMAGETYPE_JPEG) { $im = @imagecreatefromjpeg($f); }
+            elseif ($info[2] === IMAGETYPE_PNG) { $im = @imagecreatefrompng($f); }
+            elseif ($info[2] === IMAGETYPE_WEBP && function_exists('imagecreatefromwebp')) { $im = @imagecreatefromwebp($f); }
+        }
+        if ($im) {
+            $W = imagesx($im); $H = imagesy($im);
+            if (max($W, $H) > $tw) {
+                $k = $tw / max($W, $H); $nw = max(1, (int) round($W * $k)); $nh = max(1, (int) round($H * $k));
+                $t = imagecreatetruecolor($nw, $nh);
+                imagefill($t, 0, 0, imagecolorallocate($t, 255, 255, 255));
+                imagecopyresampled($t, $im, 0, 0, 0, 0, $nw, $nh, $W, $H); imagedestroy($im); $im = $t;
+            }
+            $tmp = $cache . '.tmp' . getmypid();
+            if (@imagejpeg($im, $tmp, 78)) { @rename($tmp, $cache); } else { @unlink($tmp); }
+            imagedestroy($im);
+        }
+    }
+    flock($lock, LOCK_UN); fclose($lock);
+    clearstatcache();
+    return (is_file($cache) && filesize($cache) > 0) ? $cache : null;
+}
+
 function media_needs_opt($m) {
     if (!empty($m['opt'])) { return false; }
     $ext = strtolower(pathinfo(isset($m['_id']) ? $m['_id'] : '', PATHINFO_EXTENSION));

@@ -22,4 +22,5 @@ if (@file_put_contents(DATA_DIR . '/img/' . $id, $data) === false) { fail(500, '
 if ($opt) { $info = @getimagesizefromstring($data) ?: $info; }
 $name = isset($_SERVER['HTTP_X_NAME']) ? mb_substr(trim(rawurldecode((string) $_SERVER['HTTP_X_NAME'])), 0, 120) : '';
 media_add($id, $hash, $name, $info, strlen($data));
+@media_thumb(DATA_DIR . '/img/' . $id, $id, 320); // a fotótár kisképe rögtön elkészül, később nem kell egyszerre sokat gyártani
 json_out(array('ok' => true, 'id' => $id, 'dup' => false, 'optimized' => $opt, 'before' => strlen($raw), 'after' => strlen($data)));

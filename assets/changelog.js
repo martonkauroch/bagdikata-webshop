@@ -1,4 +1,5 @@
 window.__BK_CHANGELOG=[
+{v:"1.37.3",d:"2026-11-16",c:["Fotótár: nincs több törött kép – ha a tárhely épp nem adja ki a kisképet, a fotótár magától újrapróbálja, végül az eredeti képet tölti be","A kisképek készítése a szerveren korlátozva (egyszerre legfeljebb 2), hogy sok kép egyidejű betöltése ne terhelje túl a tárhelyet; ha épp foglalt, az eredeti kép megy ki","Új feltöltésnél a fotótár kisképe azonnal elkészül"]},
 {v:"1.37.2",d:"2026-11-16",c:["Mobil: a süti-sáv nem takarja el a kosár „Tovább a pénztárhoz” gombját, és kompaktabb lett","Mobil: keskeny telefonon a logó nem csúszik a Ft/€ váltó mögé"]},
 {v:"1.37.1",d:"2026-11-16",c:["Webshop, mobilnézet: hiányzott a menü – hamburger gomb és lenyíló menü (Termékek, Rólam, Kapcsolat, Admin) került a fejlécbe; a Kapcsolat link asztali nézetben is megjelent"]},
 {v:"1.37.0",d:"2026-11-16",c:["Kezdőlap, „Frissen a kollekcióból”: mobilon a termékkártyák felirata nem lóg ki – a név és alatta az ár teljesen látszik, a hosszú név új sorba törik"]},

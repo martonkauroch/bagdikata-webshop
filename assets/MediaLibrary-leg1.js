@@ -6,6 +6,14 @@ var shared=()=>!!(window.__BK&&window.__BK.shared&&window.__BK.admin);
 var api=(path,body)=>fetch(window.__BK.base+"api/"+path,{method:"POST",credentials:"same-origin",headers:{"X-BK":"1","Content-Type":"application/json"},body:JSON.stringify(body)}).then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j||!j.ok)throw new Error(j&&j.error||"Hiba ("+r.status+")");return j}));
 var up=(file)=>fetch(window.__BK.base+"api/upload.php",{method:"POST",credentials:"same-origin",headers:{"X-BK":"1","Content-Type":file.type||"application/octet-stream","X-Name":encodeURIComponent(file.name||"")},body:file}).then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j.id)throw new Error(j&&j.error||(file.name+": a feltöltés nem sikerült."));return j}));
 var src=(id,w)=>window.__BK.base+"api/img.php?id="+encodeURIComponent(id)+"&v=3"+(w?"&w="+w:"");
+// Kiskép újrapróbálással: ha a tárhely épp nem adja ki (sok kép töltődik egyszerre), pár másodpercen belül újrakéri,
+// végül az eredeti képet tölti be – így nem marad törött kép a fotótárban.
+var Thumb=(p)=>{let[n,setN]=N.useState(0),[ok,setOk]=N.useState(!1);N.useEffect(()=>{setN(0),setOk(!1)},[p.id]);
+  let u=n<3?src(p.id,p.w||320)+(n?"&r="+n:""):src(p.id)+"&r="+n;
+  return h("img",{key:p.id+"-"+n,src:u,alt:p.alt||"",loading:"lazy",decoding:"async",
+    onLoad:()=>setOk(!0),
+    onError:()=>{if(n<5)setTimeout(()=>setN(x=>x===n?n+1:x),700*(n+1)+Math.random()*800)},
+    style:{...p.style,opacity:ok?1:0,transition:"opacity .2s"}})};
 var S={
   card:{background:"#fff",border:"1px solid #e5e7eb",borderRadius:12,boxShadow:"0 1px 2px rgba(0,0,0,.05)",marginBottom:24},
   head:{borderBottom:"1px solid #e5e7eb",padding:"14px 20px"},body:{padding:20},
@@ -101,13 +109,13 @@ export function AdminMediaPage(){
       !items?h("p",{style:S.sub},"Betöltés…"):items.length===0?h("p",{style:S.sub},"Még nincs kép a fotótárban."):
       h("ul",{style:{...S.grid,listStyle:"none",margin:0,padding:0}},items.map(it=>h("li",{key:it.id,style:{border:"1px solid "+(sel&&sel.id===it.id?"#4f46e5":"#e5e7eb"),borderRadius:10,overflow:"hidden",background:"#fff"}},
         h("button",{type:"button",onClick:()=>setSel(sel&&sel.id===it.id?null:it),style:{display:"block",width:"100%",padding:0,border:0,background:"#f3f4f6",cursor:"pointer"},"aria-label":"Kép kijelölése"},
-          h("img",{src:src(it.id,320),alt:it.name||"",loading:"lazy",decoding:"async",style:{display:"block",width:"100%",aspectRatio:"1/1",objectFit:"cover"}})),
+          h(Thumb,{id:it.id,alt:it.name||"",style:{display:"block",width:"100%",aspectRatio:"1/1",objectFit:"cover"}})),
         h("div",{style:{padding:"6px 8px",fontSize:11,color:"#6b7280",lineHeight:1.35}},
           h("div",{style:{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",color:"#374151"},title:it.name},it.name||"névtelen"),
           h("div",{},it.w+"×"+it.h+" · "+kb(it.size)),
           it.used&&h("div",{style:{color:"#047857",fontWeight:600}},"Használatban"),it.credit&&h("div",{style:{color:"#4338ca",fontWeight:600}},"Forrás megadva"))))),
       sel&&h("div",{style:{marginTop:16,padding:12,border:"1px solid #e5e7eb",borderRadius:10,display:"flex",flexWrap:"wrap",gap:12,alignItems:"center",background:"#fafafa"}},
-        h("img",{src:src(sel.id,160),alt:"",style:{width:72,height:72,objectFit:"cover",borderRadius:8}}),
+        h(Thumb,{id:sel.id,w:160,alt:"",style:{width:72,height:72,objectFit:"cover",borderRadius:8}}),
         h("input",{key:sel.id,defaultValue:sel.name,placeholder:"Kép neve (nem kötelező)",onBlur:e=>{let v=e.target.value.trim();if(v!==sel.name){ren(sel,v)}},style:{...S.inp,flex:"1 1 220px",width:"auto"}}),
         h("button",{style:S.btnR,disabled:busy||sel.used,title:sel.used?"Használatban lévő kép nem törölhető":"",onClick:()=>del(sel)},"Törlés"),
         sel.used&&h("span",{style:{fontSize:12,color:"#6b7280"}},"Termékben vagy tartalomban szerepel, ezért nem törölhető.")),sel&&h(CreditForm,{key:sel.id,it:sel,onSaved:load})),
@@ -129,7 +137,7 @@ export function MediaPicker({exclude=[],onClose,onPick}){
         !items?h("p",{style:S.sub},"Betöltés…"):items.length===0?h("p",{style:S.sub},"A fotótár még üres, tölts fel képeket fent."):
         h("ul",{style:{...S.grid,gridTemplateColumns:"repeat(auto-fill,minmax(110px,1fr))",listStyle:"none",margin:0,padding:0}},items.slice(0,lim).map(it=>{let used=ex.has(it.id),on=sel.includes(it.id);
           return h("li",{key:it.id},h("button",{type:"button",disabled:used,onClick:()=>toggle(it.id),"aria-pressed":on,title:used?"Már hozzá van adva ehhez a termékhez":(it.name||""),style:{position:"relative",display:"block",width:"100%",padding:0,border:"3px solid "+(on?"#4f46e5":"transparent"),borderRadius:10,overflow:"hidden",background:"#f3f4f6",cursor:used?"not-allowed":"pointer",opacity:used?.4:1}},
-            h("img",{src:src(it.id,320),alt:it.name||"",loading:"lazy",decoding:"async",style:{display:"block",width:"100%",aspectRatio:"1/1",objectFit:"cover"}}),
+            h(Thumb,{id:it.id,alt:it.name||"",style:{display:"block",width:"100%",aspectRatio:"1/1",objectFit:"cover"}}),
             on&&h("span",{style:{position:"absolute",top:4,right:4,background:"#4f46e5",color:"#fff",borderRadius:999,fontSize:12,fontWeight:700,width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center"}},sel.indexOf(it.id)+1),
             used&&h("span",{style:{position:"absolute",left:4,bottom:4,background:"rgba(255,255,255,.9)",borderRadius:6,fontSize:10,padding:"1px 5px"}},"hozzáadva")))})),items&&items.length>lim&&h("div",{style:{textAlign:"center",marginTop:14}},h("button",{type:"button",style:S.btn,onClick:()=>setLim(l=>l+36)},"Továbbiak ("+(items.length-lim)+")"))),
       h("div",{style:{padding:"12px 18px",borderTop:"1px solid #e5e7eb",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}},
