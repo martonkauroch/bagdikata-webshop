@@ -165,3 +165,45 @@ function bk_daily_last_set($id, $date, $ok) {
     $a['r'][$id] = array('date' => $date, 'sentAt' => date('c'), 'ok' => $ok);
     @file_put_contents($f, json_encode($a), LOCK_EX);
 }
+
+// Napi jelentések esedékes kiküldése. Hívja a cron (cron_daily.php) és tartalékként az oldal-betöltés (bk_daily_tick).
+function bk_daily_run($cfg, $force, $retryAfter) {
+    $lines = array(); $fail = 0;
+    $active = array_values(array_filter(bk_daily_reports(), function ($r) { return $r['enabled']; }));
+    if (!$active) { return array('lines' => array('nincs bekapcsolt napi jelentés (Statisztika > Napi jelentések)'), 'fail' => 0, 'sent' => 0); }
+    $today = date('Y-m-d'); $date = date('Y-m-d', strtotime('yesterday'));
+    $last = bk_daily_last(); $sent = 0;
+    foreach ($active as $r) {
+        $tm = array(7, 0);
+        if (preg_match('/^(\d{1,2}):(\d{2})$/', $r['time'], $m)) { $tm = array((int) $m[1], (int) $m[2]); }
+        if (!$force) {
+            if (time() < mktime($tm[0], $tm[1], 0)) { $lines[] = $r['email'] . ': még nincs itt az ideje (' . sprintf('%02d:%02d', $tm[0], $tm[1]) . ')'; continue; }
+            if (isset($last[$r['id']]['date']) && $last[$r['id']]['date'] === $today) {
+                if (!empty($last[$r['id']]['ok'])) { $lines[] = $r['email'] . ': ma már elment'; continue; }
+                if ($retryAfter > 0 && isset($last[$r['id']]['sentAt']) && time() - strtotime($last[$r['id']]['sentAt']) < $retryAfter) { $lines[] = $r['email'] . ': sikertelen kísérlet után várakozás'; continue; }
+            }
+        }
+        $item = build_daily_report($date, $r['sections'], array($r['email']));
+        $n = mail_dispatch($cfg, array($item), true);
+        if ($n > 0) { $sent++; if (!$force) { bk_daily_last_set($r['id'], $today, true); } $lines[] = $r['email'] . ': elküldve – ' . $item->subject; }
+        else { bk_daily_last_set($r['id'], $today, false); $fail++; $lines[] = $r['email'] . ': NEM sikerült elküldeni, lásd api/data/mail.log'; }
+    }
+    return array('lines' => $lines, 'fail' => $fail, 'sent' => $sent);
+}
+// Cron nélküli tartalék: az első oldalbetöltés a beállított időpont után elindítja az esedékes jelentést (válasz után, a látogatót nem lassítja).
+function bk_daily_tick() {
+    register_shutdown_function(function () {
+        try {
+            if (function_exists('fastcgi_finish_request')) { @fastcgi_finish_request(); }
+            ignore_user_abort(true);
+            $lock = DATA_DIR . '/daily_tick.lock';
+            if (is_file($lock) && time() - filemtime($lock) < 120) { return; }
+            @touch($lock);
+            $cfg = load_config(); if (!$cfg) { return; }
+            if (!function_exists('mail_dispatch')) { require_once __DIR__ . '/_mail.php'; }
+            date_default_timezone_set('Europe/Budapest');
+            $r = bk_daily_run($cfg, false, 1800);
+            if ($r['sent'] || $r['fail']) { mail_log('napi jelentés (oldalbetöltés-trigger): ' . $r['sent'] . ' elküldve, ' . $r['fail'] . ' hiba'); }
+        } catch (Throwable $e) { }
+    });
+}

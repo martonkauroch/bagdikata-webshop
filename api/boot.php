@@ -2,6 +2,10 @@
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 ensure_data();
+require_once __DIR__ . '/_mail.php';
+require_once __DIR__ . '/_report.php';
+date_default_timezone_set('Europe/Budapest');
+bk_daily_tick();
 $cfg = load_config();
 $landing = landing_public();
 $out = array('shared' => true, 'configured' => (bool) $cfg, 'site' => false, 'public' => false, 'admin' => false, 'turnstile' => bot_site_key(), 'adminEmail' => '', 'landing' => $landing, 'data' => new stdClass());
