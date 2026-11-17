@@ -1,4 +1,5 @@
 window.__BK_CHANGELOG=[
+{v:"1.40.9",d:"2026-11-17",c:["Kezdőlap, „Frissen a kollekcióból”: a 3 termék egyforma, álló (4:5) kártyán jelenik meg, a szöveges blokk mellett egy sorban – a képek teteje (fej) nem vágódik le; a név és az ár sötét átmenetes feliratként a kép alján; mobilon a szöveg felül, alatta 1 nagy + 2 kisebb kártya"]},
 {v:"1.40.8",d:"2026-11-17",c:["Kezdőlap: a „Kedvenceink” rész kikerült; a „Frissen a kollekcióból” blokk (a 3 legújabb elérhető termék) a termékek tetejére került, a szűrők és a lista fölé"]},
 {v:"1.40.7",d:"2026-11-17",c:["Admin › Fotók: a weboldalhoz eredetileg mellékelt termék- és hősképek is megjelennek a fotótárban (automatikusan, duplikáció nélkül), „Használatban” jelzéssel, így ezek közül is lehet választani"]},
 {v:"1.40.6",d:"2026-11-17",c:["„Hamarosan” oldal képei: nagyításnál/kicsinyítésnél a teljes eredeti képpel dolgozik (nem a már kivágott változattal) – kicsinyítésnél a kép többi része is előjön; a legkisebb érték az egész kép, az admin csúszka ezt automatikusan beállítja"]},
