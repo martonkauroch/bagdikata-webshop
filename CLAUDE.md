@@ -19,7 +19,7 @@ Bagdi Kata kézzel kötött sapka webshopja, kétnyelvű (HU/EN), cPanel PHP tá
 4. Éles telepítés a felhasználó részéről: cPanel Git „Update from Remote” → „Deploy HEAD Commit” → Ctrl+F5. `.cpanel.yml` a gyökérfájlokat, `assets/`-t és `api/*.php`-t másolja; `api/data` nem.
 
 ## Tesztelés
-- Helyi teszt: a repó másolata egy mappába (pl. `/tmp/site2`) + `php -S 127.0.0.1:8766`; Playwright (Chromium). Admin teszthez az `api/data/config.php` `admin_hash`-ét ideiglenesen `password_hash("adminpw")`-re kell cserélni, utána visszaállítani; a belépés gombja `button:has-text("Belépés")`.
+- Helyi teszt: a repó másolata egy mappába (pl. `/tmp/site2`) + `php -S 127.0.0.1:8766`; Playwright (Chromium). Admin teszthez az `api/data/config.php` `admin_hash`-ét ideiglenesen `password_hash("adminpw")`-re kell cserélni, utána visszaállítani; a belépés gombja `button:has-text("Belépés")`. A jelszó után **kétlépcsős kód** kell (szerveren: `api/_mfa.php`, `api/mfa.php`, adat: `api/data/mfa.json`): tesztben az `mfa.json` törlése után a belépés QR-kódos beállítással indul, a kulcs a `[data-testid=totp-secret]` elemből olvasható, a kód Node `crypto`-val (HMAC-SHA1, 30 mp) számolható. Vészkijárat élesben: `api/data/mfa.json` törlése (cPanel File Manager).
 - Jelszófal tesztjéhez a `api/data/public.flag` fájlt kell eltávolítani (visszarakni utána).
 - Az éles oldal a fejlesztői környezetből nem biztos, hogy elérhető.
 

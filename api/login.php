@@ -1,6 +1,7 @@
 <?php
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
+require __DIR__ . '/_mfa.php';
 ensure_data();
 require_post();
 $cfg = load_config();
@@ -18,5 +19,7 @@ if (!($okEmail && $okPw)) {
     fail(401, 'Hibás felhasználónév vagy jelszó.');
 }
 rl_clear('admin');
-put_cookie('bk_admin', make_token($cfg, 'admin', 8 * 3600), 8 * 3600);
-json_out(array('ok' => true, 'email' => $cfg['admin_email']));
+// a jelszó csak az 1. lépés: az admin belépéshez a hitelesítő alkalmazás kódja is kell (mfa.php)
+put_cookie('bk_admin', '', 0);
+$stage = mfa_start_pre($cfg);
+json_out(array('ok' => true, 'mfa' => $stage));
