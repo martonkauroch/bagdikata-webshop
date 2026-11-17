@@ -32,6 +32,22 @@ function media_sync() {
         $idx[$f] = array('hash' => hash_file('sha256', $p), 'name' => '', 'w' => $info ? (int) $info[0] : 0, 'h' => $info ? (int) $info[1] : 0, 'size' => (int) @filesize($p), 'added' => gmdate('c', (int) @filemtime($p)));
         $changed = true;
     }
+    // A weboldalhoz mellékelt (régi) termékfotók felvétele a fotótárba, hogy ezek közül is lehessen választani.
+    $have = array();
+    foreach ($idx as $m) { if (isset($m['src'])) { $have[$m['src']] = true; } }
+    $ad = dirname(__DIR__) . '/assets';
+    foreach (is_dir($ad) ? scandir($ad) : array() as $f) {
+        if (!preg_match('/^(.+)-[A-Za-z0-9_-]{8}\.(jpg|jpeg)$/', $f, $mm) || preg_match('/^watermark/', $f)) { continue; }
+        $rel = 'assets/' . $f; if (isset($have[$rel])) { continue; }
+        $p = $ad . '/' . $f; $hash = hash_file('sha256', $p);
+        $dup = media_find_hash($idx, $hash);
+        if ($dup !== null) { $idx[$dup]['src'] = $rel; $changed = true; continue; }
+        $nid = substr($hash, 0, 32) . '.jpg';
+        if (!@copy($p, $dir . '/' . $nid)) { continue; }
+        $info = @getimagesize($p);
+        $idx[$nid] = array('hash' => $hash, 'name' => str_replace('-', ' ', $mm[1]), 'w' => $info ? (int) $info[0] : 0, 'h' => $info ? (int) $info[1] : 0, 'size' => (int) @filesize($p), 'added' => gmdate('c', 1700000000), 'src' => $rel);
+        $changed = true;
+    }
     foreach ($idx as $id => $m) { if (!is_file($dir . '/' . $id)) { unset($idx[$id]); $changed = true; } }
     if ($changed) { write_raw('media', json_encode($idx, JSON_UNESCAPED_UNICODE)); }
     return $idx;

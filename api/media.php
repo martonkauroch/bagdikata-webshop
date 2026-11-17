@@ -16,7 +16,7 @@ if ($act === 'list') {
         $h = isset($m['hash']) ? $m['hash'] : $id;
         if (isset($seen[$h])) { continue; }
         $seen[$h] = true;
-        $out[] = array('id' => $id, 'name' => isset($m['name']) ? $m['name'] : '', 'w' => isset($m['w']) ? $m['w'] : 0, 'h' => isset($m['h']) ? $m['h'] : 0, 'size' => isset($m['size']) ? $m['size'] : 0, 'added' => isset($m['added']) ? $m['added'] : '', 'used' => strpos($use, 'srv:' . $id) !== false, 'credit' => isset($m['credit']) ? $m['credit'] : null);
+        $out[] = array('id' => $id, 'name' => isset($m['name']) ? $m['name'] : '', 'w' => isset($m['w']) ? $m['w'] : 0, 'h' => isset($m['h']) ? $m['h'] : 0, 'size' => isset($m['size']) ? $m['size'] : 0, 'added' => isset($m['added']) ? $m['added'] : '', 'used' => strpos($use, 'srv:' . $id) !== false || (isset($m['src']) && strpos($use, $m['src']) !== false), 'credit' => isset($m['credit']) ? $m['credit'] : null);
     }
     $cand = 0; $savable = 0;
     foreach ($idx as $id => $m) { $m['_id'] = $id; if (media_needs_opt($m)) { $cand++; $savable += isset($m['size']) ? (int) $m['size'] : 0; } }
