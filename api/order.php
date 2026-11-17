@@ -15,26 +15,85 @@ foreach ($o->items as $it) {
     if (!is_object($it) || !isset($it->productId) || !is_string($it->productId) || !isset($it->quantity) || !is_numeric($it->quantity) || $it->quantity < 1 || $it->quantity > 999) { fail(400, 'Érvénytelen tétel'); }
 }
 if (!bot_verify(isset($d->captcha) ? $d->captcha : '')) { fail(400, 'A robotellenőrzés nem sikerült.'); }
+
+// --- Árak és végösszeg a szerveren: a böngészőből jövő összegeknek nem hiszünk ---------------
+$store = json_decode((string) read_raw('store'));
+$byId = array();
+if (is_object($store) && isset($store->products) && is_array($store->products)) {
+    foreach ($store->products as $p) { if (is_object($p) && isset($p->id) && is_string($p->id)) { $byId[$p->id] = $p; } }
+}
+$items = array();
+$sub = 0;
+foreach ($o->items as $it) {
+    if (strpos($it->productId, '__') === 0) { continue; } // kupon-sor: alább újraszámoljuk
+    $p = isset($byId[$it->productId]) ? $byId[$it->productId] : null;
+    if (!$p || (isset($p->active) && $p->active === false) || !isset($p->price) || !is_numeric($p->price) || $p->price < 0) {
+        fail(409, 'Egy termék már nem elérhető. Kérjük, ellenőrizd a kosarat.');
+    }
+    $q = (int) $it->quantity;
+    $pname = (isset($p->name) && is_string($p->name)) ? $p->name : 'Termék';
+    if (isset($p->stock) && is_numeric($p->stock) && $q > (int) $p->stock) {
+        fail(409, $pname . ': csak ' . max(0, (int) $p->stock) . ' db van készleten.');
+    }
+    $it->unitPrice = (int) round($p->price);
+    $it->quantity = $q;
+    $it->name = $pname;
+    $items[] = $it;
+    $sub += $it->unitPrice * $q;
+}
+if (!count($items)) { fail(400, 'A kosár üres.'); }
+$set = json_decode((string) read_raw('settings'));
+$sh = (is_object($set) && isset($set->shipping) && is_object($set->shipping)) ? $set->shipping : new stdClass();
+$SHIP = array('foxpost' => array('foxpost', 1290, true), 'packeta' => array('packeta', 1390, true), 'gls_haz' => array('gls', 1990, true), 'szemelyes' => array('pickup', 0, false));
+$sm = (isset($o->shippingMethod) && is_string($o->shippingMethod)) ? $o->shippingMethod : '';
+if (!isset($SHIP[$sm])) { fail(400, 'Érvénytelen szállítási mód.'); }
+list($sk, $fee, $codDef) = $SHIP[$sm];
+$sc = (isset($sh->$sk) && is_object($sh->$sk)) ? $sh->$sk : new stdClass();
+if (isset($sc->enabled) && $sc->enabled === false) { fail(400, 'Ez a szállítási mód jelenleg nem elérhető.'); }
+if (isset($sc->fee) && is_numeric($sc->fee)) { $fee = max(0, (int) round($sc->fee)); }
+$codOk = $sk === 'pickup' ? false : (isset($sc->codEnabled) ? $sc->codEnabled !== false : $codDef);
+$pm = (isset($o->paymentMethod) && is_string($o->paymentMethod)) ? $o->paymentMethod : '';
+if (!in_array($pm, array('kartya', 'atutalas', 'utanvet'), true)) { fail(400, 'Érvénytelen fizetési mód.'); }
+if ($pm === 'utanvet' && (!$codOk || (isset($o->currency) && $o->currency !== 'HUF'))) { fail(400, 'Utánvét ennél a szállítási módnál nem választható.'); }
+$free = (isset($sh->freeShippingFrom) && is_numeric($sh->freeShippingFrom)) ? (int) $sh->freeShippingFrom : 20000;
+$codFee = (isset($sh->codFee) && is_numeric($sh->codFee)) ? max(0, (int) $sh->codFee) : 490;
+$shipFee = ($sub >= $free ? 0 : $fee) + ($pm === 'utanvet' ? $codFee : 0);
+$clientTotal = (isset($o->total) && is_numeric($o->total)) ? (int) round($o->total) : null;
 rl_hit('order', 3600);
 $isNew = false;
-mutate_json('store', function ($cur) use ($o, &$isNew) {
+mutate_json('store', function ($cur) use ($o, &$isNew, $items, $sub, $shipFee, $clientTotal) {
     if (!is_object($cur)) { $cur = new stdClass(); }
     $orders = (isset($cur->orders) && is_array($cur->orders)) ? $cur->orders : array();
     foreach ($orders as $x) { if (is_object($x) && isset($x->id) && $x->id === $o->id) { return $cur; } }
     $isNew = true;
+    $disc = 0;
     if (isset($o->coupon) && is_object($o->coupon)) {
         $code = isset($o->coupon->code) && is_string($o->coupon->code) ? coupon_code_norm($o->coupon->code) : '';
-        $disc = (isset($o->coupon->discount) && is_numeric($o->coupon->discount)) ? max(0, (int) $o->coupon->discount) : 0;
         if ($code === '') { unset($o->coupon); }
         else {
             list($cs, $cpct) = coupon_redeem($code);
-            $o->coupon = (object) array('code' => $code, 'percent' => $cpct, 'discount' => $disc);
+            $pct = $cs === 'ok' ? min(90, max(0, (int) $cpct)) : 0;
+            $disc = (int) round($sub * $pct / 100);
+            $o->coupon = (object) array('code' => $code, 'percent' => $pct, 'discount' => $disc);
             if ($cs !== 'ok') {
                 $o->coupon->invalid = true;
                 $why = array('unknown' => 'ismeretlen', 'disabled' => 'letiltva', 'exhausted' => 'elfogyott');
-                $o->note = trim(((isset($o->note) && is_string($o->note)) ? $o->note . ' ' : '') . '[FIGYELEM: a(z) ' . $code . ' kupon a leadáskor már nem volt érvényes (' . (isset($why[$cs]) ? $why[$cs] : $cs) . ')]');
+                $o->note = trim(((isset($o->note) && is_string($o->note)) ? $o->note . ' ' : '') . '[FIGYELEM: a(z) ' . $code . ' kupon a leadáskor már nem volt érvényes (' . (isset($why[$cs]) ? $why[$cs] : $cs) . '), kedvezmény nélkül rögzítve]');
             }
         }
+    }
+    $all = $items;
+    if ($disc > 0) {
+        $all[] = (object) array('productId' => '__coupon', 'name' => 'Kupon: ' . $o->coupon->code . ' (−' . $o->coupon->percent . '%)', 'unitPrice' => -$disc, 'quantity' => 1,
+            'vatRate' => isset($items[0]->vatRate) ? $items[0]->vatRate : null);
+    }
+    $o->items = $all;
+    $o->subtotal = $sub - $disc;
+    $o->shippingFee = $shipFee;
+    $o->total = $sub - $disc + $shipFee;
+    if ($clientTotal !== null && abs($clientTotal - $o->total) >= 1) {
+        $o->note = trim(((isset($o->note) && is_string($o->note)) ? $o->note . ' ' : '') . '[FIGYELEM: a böngészőből ' . $clientTotal . ' Ft végösszeg érkezett, a szerver az aktuális árakkal ' . $o->total . ' Ft-ot számolt – ez rögzült]');
+        $o->priceCorrected = true;
     }
     $o->test = !site_is_public();
     array_unshift($orders, $o);
