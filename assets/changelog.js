@@ -1,4 +1,5 @@
 window.__BK_CHANGELOG=[
+{v:"1.40.3",d:"2026-11-17",c:["Admin › Fotók: a képre kattintva nagy előnézet nyílik popupban (nyilakkal lapozható, Esc vagy × zárja, mobilon is használható; a név, méret és fájlméret látszik)"]},
 {v:"1.40.2",d:"2026-11-16",c:["Háttér: a pöttyök és a nyíl/öltés jelek kikerültek, csak a halvány színes szálak és a színfoltok maradtak"]},
 {v:"1.40.1",d:"2026-11-16",c:["Termékek, mobilnézet: a kategóriaszűrő (Összes, Sapkák, Nyakmelegítők, Szettek…) nem lóg ki oldalra, hanem több sorba törik, így minden gomb látszik"]},
 {v:"1.40.0",d:"2026-11-16",c:["Napi statisztikai e-mail: új „Látogatottság” blokk – visszatérő látogatók, elmúlt 7 és 30 nap egyedi látogatói, látogatásai, oldalmegtekintései, az előző 7 naphoz viszonyított változás és napi átlag (a „Forgalom” szakasz bekapcsolásával jelenik meg)"]},
