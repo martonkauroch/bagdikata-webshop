@@ -198,9 +198,9 @@ function NewsAdminPage(){
   let doSave=()=>{let n={...d,items:d.items.filter(it=>(it.title.hu||"").trim()||(it.text.hu||"").trim())};setD(n);save({...content,news:n});setMsg(shared()?"Mentve – az angol szöveg automatikusan frissül.":"Mentve.");window.setTimeout(()=>setMsg(null),4000)};
   let two={display:"grid",gap:12,gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))"};
   return h("div",{style:{maxWidth:900,paddingBottom:90}},
-    h(PageHeader,{title:"Friss hírek és akciók",description:"A termékek alatt megjelenő szekció a nyitóoldalon."}),
+    h(PageHeader,{title:"Friss hírek és akciók",description:"Külön „Hírek” oldal (#/hirek). A felső menüben a „Hírek” pont csak akkor jelenik meg, ha be van kapcsolva és van aktív (le nem járt) bejegyzés."}),
     h(Card,{title:"Megjelenítés"},
-      h("label",{style:{display:"flex",gap:10,alignItems:"center",fontSize:15}},h("input",{type:"checkbox",checked:!!d.enabled,onChange:ev=>setD({...d,enabled:ev.target.checked}),"data-testid":"news-toggle"}),d.enabled?"Bekapcsolva – a szekció látszik a webshopban (ha van aktív bejegyzés)":"Kikapcsolva – a szekció nem látszik"),
+      h("label",{style:{display:"flex",gap:10,alignItems:"center",fontSize:15}},h("input",{type:"checkbox",checked:!!d.enabled,onChange:ev=>setD({...d,enabled:ev.target.checked}),"data-testid":"news-toggle"}),d.enabled?"Bekapcsolva – a Hírek oldal és a menüpont látszik (ha van aktív bejegyzés)":"Kikapcsolva – a Hírek menüpont nem látszik"),
       h("div",{style:{...two,marginTop:14}},
         h("label",null,h("span",{style:S.lab},"Szekció címe (magyar)"),h("input",{style:S.inp,value:d.title.hu,maxLength:80,onChange:ev=>setD({...d,title:{...d.title,hu:ev.target.value}})})),
         h("label",null,h("span",{style:S.lab},"Title (English)"),h("input",{style:S.inp,value:d.title.en,maxLength:80,onChange:ev=>setD({...d,title:{...d.title,en:ev.target.value}})})))),
@@ -246,7 +246,7 @@ function EventsAdminPage(){
   let two={display:"grid",gap:12,gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))"};
   let fb=content.social&&content.social.facebookUrl;
   return h("div",{style:{maxWidth:900,paddingBottom:90}},
-    h(PageHeader,{title:"Események",description:"Facebook-események megjelenítése a nyitóoldalon, a friss hírek alatt."}),
+    h(PageHeader,{title:"Események",description:"Facebook-események megjelenítése a nyitóoldalon, a termékek alatt."}),
     h(Card,{title:"Megjelenítés"},
       h("label",{style:{display:"flex",gap:10,alignItems:"center",fontSize:15}},h("input",{type:"checkbox",checked:!!d.enabled,onChange:ev=>setD({...d,enabled:ev.target.checked}),"data-testid":"events-toggle"}),d.enabled?"Bekapcsolva – az Események blokk látszik a webshopban (ha van közelgő esemény)":"Kikapcsolva – a blokk nem látszik"),
       h("div",{style:{...two,marginTop:14}},
