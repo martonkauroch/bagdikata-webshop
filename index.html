@@ -27,7 +27,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <title>Bagdi Kata – kötött sapkák</title>
     <script src="./bk-intro.js"></script>
-    <script src="./assets/changelog.js?v=1.41.0"></script>
+    <script src="./assets/changelog.js?v=1.42.0"></script>
     <script src="./assets/parallax.js?v=3" defer></script>
     <script type="module" crossorigin src="./assets/index-0f-fFOYT.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/createLucideIcon-Bc0h7bbI.js">
@@ -63,6 +63,14 @@
 .bk-bn-intro a{align-self:flex-start;color:#fff;font-size:14px;border-bottom:1px solid #fff;padding-bottom:2px;text-decoration:none}
 @media(max-width:900px){.bk-ft{grid-template-columns:1fr}.bk-ft .bk-fc{height:340px}.bk-bn{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.bk-bn-intro{grid-column:1/-1;padding:22px}.bk-bn .bk-fc-pill{padding:40px 12px 12px}.bk-bn .bk-fc-pill b{font-size:15px}}
 @media(max-width:600px){.bk-bn{grid-template-columns:repeat(2,minmax(0,1fr))}.bk-bn .bk-fc-wide{grid-column:1/-1;aspect-ratio:4/3}.bk-bn .bk-fc-pill{flex-direction:column;border-radius:0}}
+@keyframes slide-zoom{0%{opacity:0;transform:scale(1.18)}to{opacity:1;transform:scale(1)}}
+@keyframes slide-zoomout{0%{opacity:0;transform:scale(.82);border-radius:24px}to{opacity:1;transform:scale(1);border-radius:0}}
+@keyframes slide-blur{0%{opacity:0;filter:blur(22px) saturate(1.3)}60%{opacity:1}to{opacity:1;filter:blur(0) saturate(1)}}
+@keyframes slide-rise{0%{clip-path:inset(100% 0 0 0);transform:translateY(8%)}to{clip-path:inset(0);transform:translateY(0)}}
+@keyframes slide-wipeleft{0%{clip-path:inset(0 100% 0 0);transform:translate(-6%)}to{clip-path:inset(0);transform:translate(0)}}
+@keyframes slide-split{0%{clip-path:inset(0 50% 0 50%)}to{clip-path:inset(0 0 0 0)}}
+@keyframes slide-diamond{0%{clip-path:polygon(var(--fx) var(--fy),var(--fx) var(--fy),var(--fx) var(--fy),var(--fx) var(--fy))}to{clip-path:polygon(var(--fx) calc(var(--fy) - 210%),calc(var(--fx) + 210%) var(--fy),var(--fx) calc(var(--fy) + 210%),calc(var(--fx) - 210%) var(--fy))}}
+@keyframes slide-swirl{0%{opacity:0;transform:rotate(-5deg) scale(1.22)}to{opacity:1;transform:rotate(0) scale(1)}}
 </style>
 <style>
 /* Admin mobilbarát finomítások */
