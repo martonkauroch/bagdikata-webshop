@@ -1,4 +1,5 @@
 window.__BK_CHANGELOG=[
+{v:"1.40.5",d:"2026-11-17",c:["„Hamarosan” oldal képei: a vízszintes mozgatás mellé függőleges középpont és nagyítás/kicsinyítés (50–250%) is állítható, képenként „Alaphelyzet” gombbal; a változás az éles oldalon is megjelenik"]},
 {v:"1.40.4",d:"2026-11-17",c:["Beállítások › „Hamarosan” oldal szerkesztése: a képeket a fotótárból (Admin › Fotók) lehet kiválasztani – több kép egyszerre is –, a termékképes lista helyett; a saját kép feltöltése megmaradt"]},
 {v:"1.40.3",d:"2026-11-17",c:["Admin › Fotók: a képre kattintva nagy előnézet nyílik popupban (nyilakkal lapozható, Esc vagy × zárja, mobilon is használható; a név, méret és fájlméret látszik)"]},
 {v:"1.40.2",d:"2026-11-16",c:["Háttér: a pöttyök és a nyíl/öltés jelek kikerültek, csak a halvány színes szálak és a színfoltok maradtak"]},
