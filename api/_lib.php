@@ -75,7 +75,7 @@ function landing_public() {
             if (!preg_match('#^(assets/[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)|srv:[a-f0-9]{32}\.(jpg|png|webp|gif))$#', $im->src)) { continue; }
             $pos = isset($im->pos) && is_numeric($im->pos) ? max(0, min(100, (int) $im->pos)) : 50;
             $py = isset($im->y) && is_numeric($im->y) ? max(0, min(100, (int) $im->y)) : 50;
-            $zm = isset($im->zoom) && is_numeric($im->zoom) ? max(0.5, min(2.5, round((float) $im->zoom, 2))) : 1;
+            $zm = isset($im->zoom) && is_numeric($im->zoom) ? max(0.3, min(2.5, round((float) $im->zoom, 2))) : 1;
             $imgs[] = array('src' => $im->src, 'pos' => $pos, 'y' => $py, 'zoom' => $zm);
         }
         $out['images'] = $imgs;
