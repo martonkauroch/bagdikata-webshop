@@ -4,6 +4,17 @@ DirectoryIndex index.html
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # --- Mindig HTTPS (titkosított kapcsolat) -------------------------------------
+  # http:// → https:// végleges átirányítás; helyi tesztnél (localhost) és a
+  # tanúsítvány-ellenőrzésnél (.well-known, AutoSSL) nem irányít át.
+  # Cloudflare / proxy mögött az X-Forwarded-Proto fejlécet is figyeli.
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
+  RewriteCond %{REQUEST_URI} !^/\.well-known/
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
   RewriteCond %{DOCUMENT_ROOT}/api/data/public.flag -f
   RewriteRule .* - [E=BKPUBLIC:1]
   RewriteCond %{ENV:BKPUBLIC} =1
