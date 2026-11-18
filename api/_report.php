@@ -215,6 +215,9 @@ function bk_daily_tick() {
             date_default_timezone_set('Europe/Budapest');
             $r = bk_daily_run($cfg, false, 1800);
             if ($r['sent'] || $r['fail']) { mail_log('napi jelentés (oldalbetöltés-trigger): ' . $r['sent'] . ' elküldve, ' . $r['fail'] . ' hiba'); }
+            // napi biztonsági mentés (ha ma még nem készült)
+            if (!function_exists('bk_backup_run')) { require_once __DIR__ . '/_backup.php'; }
+            bk_backup_run(false, false);
         } catch (Throwable $e) { }
     });
 }

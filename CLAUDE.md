@@ -10,6 +10,7 @@ Bagdi Kata kézzel kötött sapka webshopja, kétnyelvű (HU/EN), cPanel PHP tá
 - Adatok: `api/data/` (**nincs a repóban**, gitignore): `config.php` (admin_hash, site_hash, admin_email), `store/content/settings/media.json`, `img/` stb. Képek `srv:<32hex>.<ext>` néven.
 - `save.php` a rendeléseket egyesíti (union merge) → törlés csak dedikált szerver-végponttal.
 - Admin API minta: `fetch(window.__BK.base+'api/x.php',{method:'POST',credentials:'same-origin',headers:{'X-BK':'1','Content-Type':'application/json'}})`, a válaszban `ok:true` kell.
+- Napi biztonsági mentés: `_backup.php` (adatok naponta/14 db, képek hetente/4 db → `api/data/backups/`), indítja `cron_daily.php` és `bk_daily_tick`; admin: `backup.php` + Beállítások › „Biztonsági mentések” kártya.
 - Napi jelentés: cPanel cron óránként (`/usr/local/bin/php <gyökér>/api/cron_daily.php`) + tartalék: oldalbetöltés-trigger (`bk_daily_tick`).
 
 ## Kiadási szabály (minden módosításnál)
