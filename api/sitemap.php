@@ -11,7 +11,7 @@ $urls = array(array('/', null, 'weekly', '1.0'));
 foreach (seo_pages() as $k => $v) { $urls[] = array('/' . $k, null, 'monthly', '0.4'); }
 foreach (seo_products() as $p) {
     if (!is_object($p) || !isset($p->id) || !preg_match('/^[A-Za-z0-9_-]{1,80}$/', $p->id)) { continue; }
-    $urls[] = array('/termek/' . $p->id, isset($p->createdAt) && preg_match('/^\d{4}-\d{2}-\d{2}/', $p->createdAt) ? substr($p->createdAt, 0, 10) : null, 'weekly', '0.8');
+    $urls[] = array('/termek/' . seo_product_slug($p), isset($p->createdAt) && preg_match('/^\d{4}-\d{2}-\d{2}/', $p->createdAt) ? substr($p->createdAt, 0, 10) : null, 'weekly', '0.8');
 }
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">' . "\n";
 foreach ($urls as $u) {

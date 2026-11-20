@@ -20,16 +20,19 @@ if ($id !== '') {
         echo '<!doctype html><meta charset="utf-8"><title>404 – Bagdi Kata</title><p>' . ($en ? 'Product not found.' : 'A termék nem található.') . ' <a href="' . seo_h($site) . '/">Bagdi Kata</a></p>';
         exit;
     }
+    // régi, azonosítós cím (pl. /termek/p-rozsda) → végleges átirányítás a keresőbarát címre
+    $slug = seo_product_slug($p);
+    if ($id !== $slug) { header('Location: ' . $site . $prefix . '/termek/' . rawurlencode($slug), true, 301); exit; }
     $name = $en && !empty($p->nameEn) ? $p->nameEn : (isset($p->name) ? $p->name : $id);
     $d = $en && !empty($p->descriptionEn) ? $p->descriptionEn : (isset($p->description) ? $p->description : '');
     $title = $name . ' – Bagdi Kata';
     $desc = trim(preg_replace('/\s+/', ' ', strip_tags($d)));
     list($img, $imgFile) = seo_image(isset($p->imageUrl) ? $p->imageUrl : '');
-    if ($imgFile && function_exists('imagecreatetruecolor')) { $img = $site . '/api/ogimg.php?id=' . rawurlencode($id); $imgFile = null; $ogW = 1200; $ogH = 630; }
-    $path = $prefix . '/termek/' . $id; $hash = ($en ? '/en' : '') . '/termek/' . $id;
+    if ($imgFile && function_exists('imagecreatetruecolor')) { $img = $site . '/api/ogimg.php?id=' . rawurlencode($p->id); $imgFile = null; $ogW = 1200; $ogH = 630; }
+    $path = $prefix . '/termek/' . $slug; $hash = ($en ? '/en' : '') . '/termek/' . $slug;
     $price = isset($p->price) && is_numeric($p->price) ? (float) $p->price : null;
     $inStock = !isset($p->stock) || !is_numeric($p->stock) || $p->stock > 0;
-    $ld = array('@context' => 'https://schema.org', '@type' => 'Product', 'name' => $name, 'description' => $desc, 'image' => $img ? array($img) : array(), 'sku' => $id, 'brand' => array('@type' => 'Brand', 'name' => 'Bagdi Kata'), 'url' => $site . $path);
+    $ld = array('@context' => 'https://schema.org', '@type' => 'Product', 'name' => $name, 'description' => $desc, 'image' => $img ? array($img) : array(), 'sku' => $p->id, 'brand' => array('@type' => 'Brand', 'name' => 'Bagdi Kata'), 'url' => $site . $path);
     if ($price !== null) { $ld['offers'] = array('@type' => 'Offer', 'url' => $site . $path, 'priceCurrency' => 'HUF', 'price' => (string) $price, 'availability' => $inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock', 'itemCondition' => 'https://schema.org/NewCondition'); }
     $body = '<h1>' . seo_h($name) . '</h1>' . ($img ? '<p><img src="' . seo_h($img) . '" alt="' . seo_h($name) . '" style="max-width:100%;height:auto;border-radius:8px"></p>' : '')
         . ($price !== null ? '<p class="price">' . seo_h(seo_money($price, $lang)) . '</p>' : '') . '<p>' . seo_h($d) . '</p>';

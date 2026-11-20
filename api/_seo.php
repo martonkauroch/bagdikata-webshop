@@ -15,8 +15,42 @@ function seo_product_on($p) {
 }
 function seo_find_product($id) {
     foreach (seo_products() as $p) { if (is_object($p) && isset($p->id) && $p->id === $id) { return $p; } }
+    // keresőbarát cím (slug) alapján is
+    $m = seo_slug_map();
+    foreach (seo_products() as $p) { if (isset($m[$p->id]) && $m[$p->id] === $id) { return $p; } }
     return null;
 }
+// Keresőbarát cím a termék nevéből: kisbetű, ékezet nélkül, szóköz és írásjel helyett „_” (pl. „Rozsda melanzs sapka” → rozsda_melanzs_sapka).
+// Ugyanígy számolja a webshop felülete is (index-…js: bkSlug / bkSlugMap) – a kettőnek egyeznie kell.
+function seo_slug($s) {
+    $s = (string) $s;
+    if (class_exists('Normalizer')) {
+        $s = preg_replace('/\p{Mn}+/u', '', Normalizer::normalize(mb_strtolower($s, 'UTF-8'), Normalizer::FORM_D));
+    } else {
+        $s = strtr(mb_strtolower($s, 'UTF-8'), array('á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ö' => 'o', 'ő' => 'o', 'ú' => 'u', 'ü' => 'u', 'ű' => 'u',
+            'à' => 'a', 'â' => 'a', 'ä' => 'a', 'ã' => 'a', 'å' => 'a', 'ç' => 'c', 'è' => 'e', 'ê' => 'e', 'ë' => 'e', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ñ' => 'n', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ù' => 'u', 'û' => 'u', 'ý' => 'y', 'ÿ' => 'y', 'č' => 'c', 'ć' => 'c', 'š' => 's', 'ž' => 'z', 'ř' => 'r', 'ě' => 'e', 'ł' => 'l', 'ś' => 's', 'ź' => 'z', 'ż' => 'z', 'ń' => 'n', 'ę' => 'e', 'ą' => 'a'));
+    }
+    $s = str_replace('ß', 'ss', $s);
+    $s = trim(preg_replace('/[^a-z0-9]+/', '_', $s), '_');
+    return rtrim(substr($s, 0, 80), '_');
+}
+// minden termék (a kikapcsoltak is, a tárolt sorrendben) → egyedi cím; azonos névnél _2, _3 …
+function seo_slug_map() {
+    static $map = null;
+    if ($map !== null) { return $map; }
+    $raw = read_raw('store'); $st = $raw ? json_decode($raw) : null;
+    $all = (is_object($st) && isset($st->products) && is_array($st->products)) ? $st->products : array();
+    $map = array(); $used = array();
+    foreach ($all as $p) {
+        if (!is_object($p) || !isset($p->id) || !is_string($p->id) || $p->id === '') { continue; }
+        $b = seo_slug(isset($p->name) ? $p->name : ''); if ($b === '') { $b = seo_slug($p->id); } if ($b === '') { $b = 'termek'; }
+        $x = $b; $i = 2; while (isset($used[$x])) { $x = $b . '_' . $i++; }
+        $used[$x] = true; $map[$p->id] = $x;
+    }
+    return $map;
+}
+function seo_product_slug($p) { $m = seo_slug_map(); return isset($m[$p->id]) ? $m[$p->id] : $p->id; }
 function seo_is_bot() {
     $ua = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
     return (bool) preg_match('/bot|crawl|spider|slurp|facebookexternalhit|facebot|whatsapp|telegram|twitter|pinterest|linkedin|embedly|preview|skype|viber|discord|slack|google-inspectiontool|bingpreview|duckduck/i', $ua);

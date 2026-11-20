@@ -5,6 +5,7 @@ Bagdi Kata kézzel kötött sapka webshopja, kétnyelvű (HU/EN), cPanel PHP tá
 ## Felépítés
 - Frontend: lefordított (Vite+React) csomag az `assets/` mappában, **nincs forráskód**. A módosítás a minifikált JS-ek szövegcseréjével történik (Python `str.replace`, mindig `assert count==1`). Tailwind le van tisztítva → új UI inline stílussal vagy `index.html` `<style>` blokkba.
 - Fő csomag: `assets/index-0f-fFOYT.js` (nyilvános oldal, útvonalak). Admin darabok: `ProtectedAdminLayout-fotos1.js` (menü, csoportosított), `SettingsPage-*.js`, `MediaLibrary-leg1.js` (Fotók), `ProductsPage-*.js`, `OrdersPage-*.js`, `ContentPage-*.js`, `AdminMarketing-leg1.js` stb.
+- Termékcímek (slug): a névből, ékezet nélkül, `_` elválasztóval; JS: `bkSlug`/`bkSlugMap`/`bkPS` (fő csomag), PHP: `seo_slug`/`seo_slug_map` (`_seo.php`) – a kettőnek egyeznie kell; régi id-s cím → 301 a slugra (`p.php`).
 - Hash-útvonalak: `#/admin/...`. Szerveres mód: `window.__BK` (`base`, `shared`, `admin`).
 - Szerver: `api/*.php` (PHP 8). Segédek: `_lib.php` (`require_admin`, `read_raw`, `write_raw`, `mutate_json`, `load_config`, `json_out`, `fail`), `_media.php` (fotótár), `_report.php` + `cron_daily.php` (napi statisztikai mail), `_mail.php`.
 - Adatok: `api/data/` (**nincs a repóban**, gitignore): `config.php` (admin_hash, site_hash, admin_email), `store/content/settings/media.json`, `img/` stb. Képek `srv:<32hex>.<ext>` néven.
