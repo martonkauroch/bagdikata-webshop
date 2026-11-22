@@ -77,6 +77,7 @@ function bk_backup_run($force = false, $withImages = false) {
     if (is_file($lock) && time() - filemtime($lock) < 600) { return array('lines' => array('mentés: épp folyamatban'), 'fail' => 0); }
     @touch($lock);
     try {
+        if (function_exists('rl_cleanup')) { $c = rl_cleanup(); if ($c) { $lines[] = 'régi próbálkozás-számlálók törölve: ' . $c; } }
         $list = bk_backup_list();
         $today = date('Y-m-d');
         $hasToday = false; $lastImg = 0;

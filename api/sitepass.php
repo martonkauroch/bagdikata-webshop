@@ -12,7 +12,9 @@ $new = (is_object($d) && isset($d->password) && is_string($d->password)) ? $d->p
 $adm = (is_object($d) && isset($d->adminPassword) && is_string($d->adminPassword)) ? $d->adminPassword : '';
 rl_hit('sitepass', 900);
 if (!isset($cfg['admin_hash']) || !password_verify($adm, $cfg['admin_hash'])) { usleep(400000); fail(403, 'Az admin jelszó nem egyezik.'); }
-if (strlen($new) < 6) { fail(400, 'Az új jelszó legalább 6 karakter legyen.'); }
+if (mb_strlen($new, 'UTF-8') < 10) { fail(400, 'Az új jelszó legalább 10 karakter legyen.'); }
+if (!preg_match('/\pL/u', $new) || !preg_match('/\d/', $new)) { fail(400, 'Az új jelszóban betű és szám is legyen.'); }
+if (password_verify($new, $cfg['admin_hash'])) { fail(400, 'Az oldaljelszó ne egyezzen az admin jelszóval.'); }
 if (strlen($new) > 200) { fail(400, 'Az új jelszó túl hosszú.'); }
 $cfg['site_hash'] = password_hash($new, PASSWORD_DEFAULT);
 $f = DATA_DIR . '/config.php';

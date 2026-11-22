@@ -37,6 +37,11 @@ DirectoryIndex index.html
   RewriteRule ^(rolunk|kapcsolat|szallitas|aszf|adatvedelem|elallas|impresszum)/?$ api/p.php?page=$1 [L,QSA]
 </IfModule>
 
+# --- Tömörítés: a szöveges fájlok (JS, CSS, HTML, JSON, SVG) kb. harmadakkora méretben mennek ki --------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml text/javascript application/javascript application/x-javascript application/json application/xml image/svg+xml
+</IfModule>
+
 # a segédfájlok (_lib.php, _mail.php ...) közvetlenül nem hívhatók
 <FilesMatch "^_.*\.php$">
   <IfModule mod_authz_core.c>

@@ -70,7 +70,7 @@ $act = (is_object($d) && isset($d->action) && is_string($d->action)) ? $d->actio
 if ($act === 'subscribe') {
     $src = (isset($d->source) && $d->source === 'landing') ? 'landing' : 'footer';
     if ($src !== 'landing') { require_site($cfg); }
-    if (rl_blocked('nlsub', 8, 3600)) { fail(429, 'Túl sok próbálkozás. Próbáld később.'); }
+    if (rl_blocked('nlsub', 20, 3600)) { fail(429, 'Túl sok próbálkozás. Próbáld később.'); }
     rl_hit('nlsub', 3600);
     if (!empty($d->hp)) { json_out(array('ok' => true)); }
     if (empty($d->consent)) { fail(400, 'A feliratkozáshoz hozzájárulás szükséges.'); }
