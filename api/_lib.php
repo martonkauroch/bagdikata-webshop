@@ -147,7 +147,6 @@ function rl_hit($bucket, $window) {
     $keep[] = $now;
     @file_put_contents($f, json_encode($keep));
 }
-// a lejárt próbálkozás-számlálók törlése (naponta, a napi időzítésből) – különben látogatónként gyűlnének
 function rl_cleanup() {
     $n = 0;
     foreach (glob(DATA_DIR . '/rl_*.json') ?: array() as $f) { if (@filemtime($f) < time() - 2 * 86400 && @unlink($f)) { $n++; } }

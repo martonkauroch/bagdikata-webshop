@@ -1,10 +1,4 @@
 <?php
-// Automatikus biztonsági mentés az api/data mappáról → api/data/backups/ (kívülről nem elérhető).
-//  - naponta:  adatok-ÉÉÉÉ-HH-NN.zip  (minden .json + a szerverbeállítások), 14 db marad meg
-//  - hetente:  kepek-ÉÉÉÉ-HH-NN.zip   (feltöltött képek: api/data/img), 4 db marad meg
-// Indítja: cron_daily.php (cPanel cron) és tartalékként az oldalbetöltés (bk_daily_tick), naponta egyszer.
-// VISSZAÁLLÍTÁS: cPanel File Manager → api/data/backups → a kívánt zip → Extract az api/data mappába
-// (a meglévő fájlok felülírásával). A képek zipjét is az api/data mappába kell kibontani (img/ almappát tartalmaz).
 if (!defined('BK_API')) { http_response_code(403); exit; }
 
 const BK_BACKUP_KEEP_DATA = 14;
@@ -32,7 +26,6 @@ function bk_backup_prune($kind, $keep) {
     $l = array_values(array_filter(bk_backup_list(), function ($x) use ($kind) { return $x['kind'] === $kind; }));
     foreach (array_slice($l, $keep) as $x) { @unlink(bk_backup_dir() . '/' . $x['name']); }
 }
-// a mentendő adatfájlok (gyökérszint): .json, .php beállítások, public.flag – a számlálók, zárak, naplók nélkül
 function bk_backup_data_files() {
     $files = array();
     foreach (scandir(DATA_DIR) ?: array() as $n) {
@@ -60,7 +53,7 @@ function bk_backup_zip($kind, $suffix = '') {
         foreach (is_dir($img) ? (scandir($img) ?: array()) : array() as $f) {
             if (!is_file($img . '/' . $f) || $f[0] === '.') { continue; }
             $z->addFile($img . '/' . $f, 'img/' . $f);
-            if (method_exists($z, 'setCompressionName')) { $z->setCompressionName('img/' . $f, ZipArchive::CM_STORE); } // a képek már tömörítettek
+            if (method_exists($z, 'setCompressionName')) { $z->setCompressionName('img/' . $f, ZipArchive::CM_STORE); }
             $n++;
         }
     }
@@ -70,7 +63,6 @@ function bk_backup_zip($kind, $suffix = '') {
     if (!@rename($tmp, $dir . '/' . $name)) { @unlink($tmp); return array(false, 'a mentés nem nevezhető át'); }
     return array(true, $name . ' (' . $n . ' fájl, ' . round(filesize($dir . '/' . $name) / 1024) . ' KB)');
 }
-// $force: azonnali mentés (admin gomb) – ilyenkor időbélyeg kerül a névbe, hogy a napi ne íródjon felül
 function bk_backup_run($force = false, $withImages = false) {
     $lines = array(); $fail = 0;
     $lock = DATA_DIR . '/backup.lock';

@@ -1,11 +1,7 @@
 <?php
-// Kétlépcsős admin belépés (TOTP – Google/Microsoft Authenticator, 1Password …), a szerveren ellenőrizve.
-// Adat: api/data/mfa.json  { secret, enrolledAt, lastCounter, recovery:[hash…], pending:{secret, created} }
-// VÉSZKIJÁRAT: ha elveszett a telefon ÉS a helyreállító kódok is, a cPanel File Managerben töröld az
-// api/data/mfa.json fájlt – a következő (jelszavas) belépéskor újra be kell olvasni egy QR-kódot.
 if (!defined('BK_API')) { http_response_code(403); exit; }
 
-const MFA_PRE_TTL = 600;          // jelszó után ennyi mp áll rendelkezésre a kód megadására
+const MFA_PRE_TTL = 600;
 const MFA_ISSUER = 'Bagdi Kata Admin';
 
 function mfa_data() {
@@ -34,7 +30,6 @@ function totp_at($secret, $counter) {
     $n = ((ord($h[$o]) & 0x7f) << 24) | (ord($h[$o + 1]) << 16) | (ord($h[$o + 2]) << 8) | ord($h[$o + 3]);
     return str_pad((string) ($n % 1000000), 6, '0', STR_PAD_LEFT);
 }
-// visszaadja az elfogadott időablak számát, vagy null-t (±30 mp tűrés, egy kód csak egyszer használható)
 function totp_check($secret, $code, $last = -1) {
     $code = preg_replace('/\D/', '', (string) $code);
     if (strlen($code) !== 6) { return null; }
@@ -57,13 +52,11 @@ function mfa_recovery_codes() {
 }
 function mfa_norm_recovery($c) { return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) $c)); }
 
-// jelszóval már igazolt, de kódra váró állapot (rövid életű süti)
 function mfa_has_pre($cfg) { return $cfg && isset($_COOKIE['bk_pre']) && check_token($cfg, 'pre', $_COOKIE['bk_pre']); }
 function mfa_start_pre($cfg) {
     put_cookie('bk_pre', make_token($cfg, 'pre', MFA_PRE_TTL), MFA_PRE_TTL);
     $d = mfa_data();
     if (!mfa_enrolled($d)) {
-        // új titkos kulcs a beállításhoz (1 órán belül ugyanazt adjuk vissza, hogy a QR-kód ne változzon)
         if (!isset($d['pending']['secret'], $d['pending']['created']) || $d['pending']['created'] < time() - 3600) {
             $d['pending'] = array('secret' => b32_encode(random_bytes(20)), 'created' => time());
             mfa_save($d);
@@ -72,7 +65,6 @@ function mfa_start_pre($cfg) {
     }
     return 'challenge';
 }
-// boot.php-nak: a belépési képernyő melyik lépést mutassa
 function mfa_boot_state($cfg) {
     if (!mfa_has_pre($cfg)) { return null; }
     $d = mfa_data();

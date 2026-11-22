@@ -6,8 +6,6 @@ var shared=()=>!!(window.__BK&&window.__BK.shared&&window.__BK.admin);
 var api=(path,body)=>fetch(window.__BK.base+"api/"+path,{method:"POST",credentials:"same-origin",headers:{"X-BK":"1","Content-Type":"application/json"},body:JSON.stringify(body)}).then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j||!j.ok)throw new Error(j&&j.error||"Hiba ("+r.status+")");return j}));
 var up=(file)=>fetch(window.__BK.base+"api/upload.php",{method:"POST",credentials:"same-origin",headers:{"X-BK":"1","Content-Type":file.type||"application/octet-stream","X-Name":encodeURIComponent(file.name||"")},body:file}).then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j.id)throw new Error(j&&j.error||(file.name+": a feltöltés nem sikerült."));return j}));
 var src=(id,w)=>window.__BK.base+"api/img.php?id="+encodeURIComponent(id)+"&v=3"+(w?"&w="+w:"");
-// Kiskép újrapróbálással: ha a tárhely épp nem adja ki (sok kép töltődik egyszerre), pár másodpercen belül újrakéri,
-// végül az eredeti képet tölti be – így nem marad törött kép a fotótárban.
 var Thumb=(p)=>{let[n,setN]=N.useState(0),[ok,setOk]=N.useState(!1);N.useEffect(()=>{setN(0),setOk(!1)},[p.id]);
   let u=n<3?src(p.id,p.w||320)+(n?"&r="+n:""):src(p.id)+"&r="+n;
   return h("img",{key:p.id+"-"+n,src:u,alt:p.alt||"",loading:"lazy",decoding:"async",

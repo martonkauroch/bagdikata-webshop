@@ -1,5 +1,4 @@
 <?php
-// Admin: biztonsági mentések listája (GET), letöltése (GET ?dl=név), azonnali mentés (POST {action:"run", images:bool})
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_backup.php';

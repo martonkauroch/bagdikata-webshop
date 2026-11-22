@@ -1,5 +1,4 @@
 <?php
-// Admin jelszó módosítása: { current, password, code } – a régi jelszó és egy friss ellenőrző kód is kell.
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_mfa.php';
@@ -22,7 +21,6 @@ if (mfa_enrolled($m)) {
     $m['lastCounter'] = $c;
     mfa_save($m);
 }
-// erős jelszó: legalább 12 karakter, betű és szám is, nem lehet a régi és nem tartalmazhatja az e-mail cím elejét
 if (strlen($new) > 200) { fail(400, 'Az új jelszó túl hosszú.'); }
 if (mb_strlen($new, 'UTF-8') < 12) { fail(400, 'Az új jelszó legalább 12 karakter legyen.'); }
 if (!preg_match('/\pL/u', $new) || !preg_match('/\d/', $new)) { fail(400, 'Az új jelszóban betű és szám is legyen.'); }

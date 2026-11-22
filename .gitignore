@@ -1,4 +1,3 @@
-# Az éles adatok és titkok soha nem kerülnek a tárolóba
 api/data/*
 !api/data/*.example
 .env

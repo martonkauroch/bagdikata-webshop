@@ -19,7 +19,6 @@ if (!($okEmail && $okPw)) {
     fail(401, 'Hibás felhasználónév vagy jelszó.');
 }
 rl_clear('admin');
-// a jelszó csak az 1. lépés: az admin belépéshez a hitelesítő alkalmazás kódja is kell (mfa.php)
 put_cookie('bk_admin', '', 0);
 $stage = mfa_start_pre($cfg);
 json_out(array('ok' => true, 'mfa' => $stage));

@@ -1,14 +1,9 @@
-# Bagdi Kata – tesztverzió (Apache / cPanel tárhely)
 Options -Indexes
 DirectoryIndex index.html
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # --- Mindig HTTPS (titkosított kapcsolat) -------------------------------------
-  # http:// → https:// végleges átirányítás; helyi tesztnél (localhost) és a
-  # tanúsítvány-ellenőrzésnél (.well-known, AutoSSL) nem irányít át.
-  # Cloudflare / proxy mögött az X-Forwarded-Proto fejlécet is figyeli.
   RewriteCond %{HTTPS} !=on
   RewriteCond %{HTTP:X-Forwarded-Proto} !=https
   RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
@@ -20,15 +15,12 @@ DirectoryIndex index.html
   RewriteCond %{ENV:BKPUBLIC} =1
   RewriteRule ^robots\.txt$ robots-public.txt [L]
 
-  # --- Botok és szkennerek kizárása ---------------------------------------------
   RewriteCond %{HTTP_USER_AGENT} (sqlmap|nikto|nmap|masscan|acunetix|nessus|havij|zgrab|wpscan|dirbuster|gobuster|netsparker|fimap|jaeles|nuclei|libwww-perl) [NC]
   RewriteRule .* - [F,L]
-  # rejtett fájlok (.git, .env ...), mentések, naplók, és tipikus kártevő-próbálkozások
   RewriteRule (^|/)\.(?!well-known) - [F,L]
   RewriteRule \.(bak|old|orig|sql|log|ini|sh|env|swp|dist)$ - [F,L]
   RewriteRule ^(wp-admin|wp-login\.php|wp-content|wp-includes|xmlrpc\.php|phpmyadmin|pma|vendor|cgi-bin) - [F,L]
 
-  # --- Keresőbarát címek ----------------------------------------------------------
   RewriteRule ^sitemap\.xml$ api/sitemap.php [L]
   RewriteRule ^en/?$ /#/en/ [R=302,NE,L]
   RewriteRule ^en/termek/([A-Za-z0-9_-]+)/?$ api/p.php?lang=en&id=$1 [L,QSA]
@@ -37,12 +29,10 @@ DirectoryIndex index.html
   RewriteRule ^(rolunk|kapcsolat|szallitas|aszf|adatvedelem|elallas|impresszum)/?$ api/p.php?page=$1 [L,QSA]
 </IfModule>
 
-# --- Tömörítés: a szöveges fájlok (JS, CSS, HTML, JSON, SVG) kb. harmadakkora méretben mennek ki --------
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml text/javascript application/javascript application/x-javascript application/json application/xml image/svg+xml
 </IfModule>
 
-# a segédfájlok (_lib.php, _mail.php ...) közvetlenül nem hívhatók
 <FilesMatch "^_.*\.php$">
   <IfModule mod_authz_core.c>
     Require all denied
@@ -53,7 +43,6 @@ DirectoryIndex index.html
 </FilesMatch>
 
 <IfModule mod_headers.c>
-  # Jelszóval védett módban nem indexelhető; nyilvános módban (api/data/public.flag) igen
   Header set X-Robots-Tag "noindex, nofollow" env=!BKPUBLIC
   Header set X-Content-Type-Options "nosniff"
   Header set X-Frame-Options "SAMEORIGIN"
@@ -68,17 +57,7 @@ DirectoryIndex index.html
   <FilesMatch "index\.html$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
-  # a JS/CSS fájlok minden betöltéskor ellenőrzésre kerülnek (a frissítések azonnal látszanak)
   <FilesMatch "\.(js|css)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
 </IfModule>
-
-# --- Erősebb, tárhely szintű jelszó (ajánlott) ---------------------------------
-# A cPanelben: „Directory Privacy” / „Jelszóval védett könyvtárak” → pipa + felhasználó.
-# Vagy kézzel: töltsd fel a .htpasswd fájlt a nyilvános mappán KÍVÜLRE, írd be az elérési útját,
-# majd töröld a # jeleket az alábbi 4 sor elől. (Lásd TELEPITES.md)
-# AuthType Basic
-# AuthName "Bagdi Kata tesztverzio"
-# AuthUserFile /home/FELHASZNALO/.htpasswd
-# Require valid-user

@@ -24,7 +24,6 @@ if ($act === 'list') {
     json_out(array('ok' => true, 'items' => $out, 'toOptimize' => $cand, 'toOptimizeBytes' => $savable));
 }
 if ($act === 'dupes') {
-    // 1) hiányzó képaláírások kiszámítása (időkorláttal, a kliens addig hívja, amíg pending 0)
     @set_time_limit(60);
     $idx = media_sync();
     $dir = DATA_DIR . '/img';
@@ -44,7 +43,6 @@ if ($act === 'dupes') {
         });
     }
     if ($pending > 0) { json_out(array('ok' => true, 'pending' => $pending, 'groups' => array())); }
-    // 2) csoportosítás
     $use = media_usage_text();
     $ids = array_keys($idx); $n = count($ids); $par = array();
     foreach ($ids as $id) { $par[$id] = $id; }
@@ -68,8 +66,6 @@ if ($act === 'dupes') {
     json_out(array('ok' => true, 'pending' => 0, 'groups' => $out));
 }
 if ($act === 'dedupe') {
-    // A törlendő képek hivatkozásait (srv:<id>) a megtartott képre cseréli a termékekben, tartalomban, beállításokban,
-    // majd törli a duplikátumokat. Csak valóban duplikált párost hajt végre (szerver oldalon újraellenőrizve).
     @set_time_limit(60);
     $groups = (is_object($d) && isset($d->groups) && is_array($d->groups)) ? $d->groups : array();
     $idx = media_index(); $map = array(); $drop = array();

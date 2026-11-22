@@ -18,7 +18,6 @@ function media_add($id, $hash, $name, $info, $size) {
         return $a;
     });
 }
-// A képmappában lévő, még nem indexelt fájlok felvétele (korábbi feltöltések), duplikátumok jelölése.
 function media_sync() {
     $idx = media_index();
     $dir = DATA_DIR . '/img';
@@ -32,7 +31,6 @@ function media_sync() {
         $idx[$f] = array('hash' => hash_file('sha256', $p), 'name' => '', 'w' => $info ? (int) $info[0] : 0, 'h' => $info ? (int) $info[1] : 0, 'size' => (int) @filesize($p), 'added' => gmdate('c', (int) @filemtime($p)));
         $changed = true;
     }
-    // A weboldalhoz mellékelt (régi) termékfotók felvétele a fotótárba, hogy ezek közül is lehessen választani.
     $have = array();
     foreach ($idx as $m) { if (isset($m['src'])) { $have[$m['src']] = true; } }
     $ad = dirname(__DIR__) . '/assets';
@@ -58,8 +56,6 @@ function media_usage_text() {
     return $t;
 }
 
-// Nagy képek optimalizálása: leskálázás (hosszabb oldal max. 2000 px), JPEG újratömörítés, EXIF-forgatás megtartása.
-// Visszatérés: array(adat, kiterjesztés, optimalizálták-e). Ha nem jár előnnyel, az eredeti marad.
 function media_optimize($raw, $info, $ext, $allowConvert = true) {
     $MAX = 2000;
     if (!function_exists('imagecreatefromstring') || $ext === 'gif') { return array($raw, $ext, false); }
@@ -100,8 +96,6 @@ function media_optimize($raw, $info, $ext, $allowConvert = true) {
     return array($data, $out, true);
 }
 
-// Kiskép (bélyegkép) készítése/visszaadása a gyorsítótárból. Egyszerre legfeljebb 2 készülhet (a tárhely
-// folyamat- és memóriakorlátja miatt); ha mindkét hely foglalt, rövid várakozás után null jön, és a hívó az eredetit adja.
 function media_thumb($f, $id, $tw) {
     if (!function_exists('imagecreatetruecolor')) { return null; }
     $dir = DATA_DIR . '/imgthumb';
@@ -146,10 +140,6 @@ function media_thumb($f, $id, $tw) {
     return (is_file($cache) && filesize($cache) > 0) ? $cache : null;
 }
 
-// --- Vizuális duplikátumok -------------------------------------------------------------
-// Képaláírás: 16×16-os szürkeárnyalatos, fényerő/kontraszt szerint normalizált kép (256 bájt, base64) + oldalarány.
-// Ugyanaz a fotó más méretben / tömörítéssel / enyhe színkorrekcióval ~0–1 eltérést ad, két külön (akár sorozat-)
-// felvétel 15 fölöttit, így a 4-es küszöb biztonságos.
 function media_sig_of($f, $id) {
     $src = media_thumb($f, $id, 320);
     $p = $src !== null ? $src : $f;
@@ -186,7 +176,6 @@ function media_is_dupe($m1, $m2) {
     if (abs($m1['ar'] - $m2['ar']) > 0.02) { return false; }
     return media_sig_dist($m1['sig'], $m2['sig']) < 4.0;
 }
-// Melyik maradjon: nagyobb felbontás, aztán amelyiknek van neve, aztán a használatban lévő, aztán a régebbi.
 function media_keep_rank($m, $used) {
     return array((int) $m['w'] * (int) $m['h'], (isset($m['name']) && $m['name'] !== '') ? 1 : 0, $used ? 1 : 0, -strtotime(isset($m['added']) ? $m['added'] : 'now'));
 }
@@ -198,7 +187,6 @@ function media_needs_opt($m) {
     return (isset($m['size']) && $m['size'] > 1200000) || (isset($m['w'], $m['h']) && max($m['w'], $m['h']) > 2000);
 }
 
-// Közösségi/web hivatkozás tisztítása: http(s) URL, @név (Instagram) vagy domain/útvonal. Üres -> '', érvénytelen -> null.
 function media_clean_link($v) {
     $v = trim($v);
     if ($v === '') { return ''; }

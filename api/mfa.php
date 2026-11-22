@@ -1,5 +1,4 @@
 <?php
-// Kétlépcsős belépés – 2. lépés: { action: "confirm" | "verify", code }
 define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_mfa.php';
@@ -16,7 +15,6 @@ $code = (is_object($d) && isset($d->code) && is_string($d->code)) ? trim($d->cod
 $m = mfa_data();
 
 if ($action === 'confirm') {
-    // első beállítás: a QR-kód beolvasása utáni első kód
     if (mfa_enrolled($m)) { fail(409, 'A kétlépcsős azonosítás már be van állítva.'); }
     if (!isset($m['pending']['secret'])) { fail(409, 'A beállítás lejárt, jelentkezz be újra.'); }
     $c = totp_check($m['pending']['secret'], $code);

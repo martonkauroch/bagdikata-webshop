@@ -1,7 +1,3 @@
-/* Webshop háttér (Admin › Kezdőlap és tartalom › Webshop háttér).
-   Stílus: yarn (fonalminta) | blobs (pasztell foltok) | strands (fonalszálak, öltések) | image (saját kép) | plain (egyszínű)
-   Mozgás: scroll (görgetésre, parallax) | drift (folyamatos lebegés) | static (mozdulatlan)
-   API: window.__bkBgSet(cfg, szín) – élő oldal; window.__bkBgPreview(elem, cfg, szín) – admin előnézet */
 (function(){
   try{
     var NS='http://www.w3.org/2000/svg';
@@ -26,7 +22,6 @@
     ];
     function ease(t){return t<0?0:t>1?1:t*t*(3-2*t)}
 
-    /* egy háttér-példány: fixed = teljes képernyős (webshop), különben a megadott dobozt tölti ki (előnézet) */
     function make(host,fixed){
       var root=document.createElement('div');root.setAttribute('aria-hidden','true');
       root.style.cssText=(fixed?'position:fixed;z-index:-1;':'position:absolute;z-index:0;')+'inset:0;pointer-events:none;overflow:hidden;background:#f6f3ee';
@@ -65,7 +60,6 @@
           img.style.backgroundPosition=(f.x!=null?f.x:50)+'% '+(f.y!=null?f.y:50)+'%';img.style.opacity=Math.min(1,.45*cfg.intensity)}
         else img.style.display='none';
         size()}
-      /* p: görgetési arány (0..1), t: idő mp-ben */
       function draw(p,t){
         var I=cfg.intensity,V=cfg.speed,m=reduce?'static':cfg.motion,stat=m==='static',drift=m==='drift';
         if(stat)p=.35;
@@ -95,7 +89,6 @@
       return{root:root,apply:apply,draw:draw,size:size,cfg:function(){return cfg},destroy:function(){root.remove()}};
     }
 
-    /* --- élő webshop háttér --- */
     var main=null,cur=0,tgt=0,raf=0,T0=performance.now();
     function admin(){return /^#\/admin/.test(location.hash)}
     function loop(){raf=0;if(!main)return;var c=main.cfg(),m=reduce?'static':c.motion,hid=main.root.style.display==='none';
@@ -113,7 +106,6 @@
       setInterval(measure,1500)}
     add();
 
-    /* --- admin előnézet: a görgetést automatikus fel-le mozgás mutatja --- */
     window.__bkBgPreview=function(el,c,bg){
       var inst=make(el,false),r=0,on=true,t0=performance.now();inst.apply(c,bg);
       function tick(){if(!on)return;var t=(performance.now()-t0)/1000;inst.draw(.5-.5*Math.cos(t*.45),t);r=requestAnimationFrame(tick)}

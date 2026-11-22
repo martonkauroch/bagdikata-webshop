@@ -54,7 +54,6 @@ if (in_array($tw, array(160, 320, 640), true) && $m[1] !== 'gif') {
     require_once __DIR__ . '/_media.php';
     $cache = media_thumb($f, $id, $tw);
     if ($cache !== null) { header('Content-Type: image/jpeg'); header('Cache-Control: private, max-age=604800'); header('X-Content-Type-Options: nosniff'); header('Content-Length: ' . filesize($cache)); readfile($cache); exit; }
-    // ha most nem készülhetett kiskép (pl. épp sok készül egyszerre), az eredeti kép megy ki – így sosem marad üres a hely
 }
 $send = $out ? $out : $f;
 header('Content-Type: ' . $mime[$m[1]]);

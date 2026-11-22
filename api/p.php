@@ -20,7 +20,6 @@ if ($id !== '') {
         echo '<!doctype html><meta charset="utf-8"><title>404 – Bagdi Kata</title><p>' . ($en ? 'Product not found.' : 'A termék nem található.') . ' <a href="' . seo_h($site) . '/">Bagdi Kata</a></p>';
         exit;
     }
-    // régi, azonosítós cím (pl. /termek/p-rozsda) → végleges átirányítás a keresőbarát címre
     $slug = seo_product_slug($p);
     if ($id !== $slug) { header('Location: ' . $site . $prefix . '/termek/' . rawurlencode($slug), true, 301); exit; }
     $name = $en && !empty($p->nameEn) ? $p->nameEn : (isset($p->name) ? $p->name : $id);

@@ -6,7 +6,6 @@ function seo_h($s) { return htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBST
 function seo_products() {
     $raw = read_raw('store'); $st = $raw ? json_decode($raw) : null;
     $all = (is_object($st) && isset($st->products) && is_array($st->products)) ? $st->products : array();
-    // csak az aktív (adminban nem kikapcsolt) termékek; az elfogyott is látszik „Elfogyott” jelzéssel
     return array_values(array_filter($all, 'seo_product_on'));
 }
 function seo_product_on($p) {
@@ -15,13 +14,10 @@ function seo_product_on($p) {
 }
 function seo_find_product($id) {
     foreach (seo_products() as $p) { if (is_object($p) && isset($p->id) && $p->id === $id) { return $p; } }
-    // keresőbarát cím (slug) alapján is
     $m = seo_slug_map();
     foreach (seo_products() as $p) { if (isset($m[$p->id]) && $m[$p->id] === $id) { return $p; } }
     return null;
 }
-// Keresőbarát cím a termék nevéből: kisbetű, ékezet nélkül, szóköz és írásjel helyett „_” (pl. „Rozsda melanzs sapka” → rozsda_melanzs_sapka).
-// Ugyanígy számolja a webshop felülete is (index-…js: bkSlug / bkSlugMap) – a kettőnek egyeznie kell.
 function seo_slug($s) {
     $s = (string) $s;
     if (class_exists('Normalizer')) {
@@ -35,7 +31,6 @@ function seo_slug($s) {
     $s = trim(preg_replace('/[^a-z0-9]+/', '_', $s), '_');
     return rtrim(substr($s, 0, 80), '_');
 }
-// minden termék (a kikapcsoltak is, a tárolt sorrendben) → egyedi cím; azonos névnél _2, _3 …
 function seo_slug_map() {
     static $map = null;
     if ($map !== null) { return $map; }

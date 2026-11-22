@@ -16,7 +16,6 @@ foreach ($o->items as $it) {
 }
 if (!bot_verify(isset($d->captcha) ? $d->captcha : '')) { fail(400, 'A robotellenőrzés nem sikerült.'); }
 
-// --- Árak és végösszeg a szerveren: a böngészőből jövő összegeknek nem hiszünk ---------------
 $store = json_decode((string) read_raw('store'));
 $byId = array();
 if (is_object($store) && isset($store->products) && is_array($store->products)) {
@@ -25,7 +24,7 @@ if (is_object($store) && isset($store->products) && is_array($store->products)) 
 $items = array();
 $sub = 0;
 foreach ($o->items as $it) {
-    if (strpos($it->productId, '__') === 0) { continue; } // kupon-sor: alább újraszámoljuk
+    if (strpos($it->productId, '__') === 0) { continue; }
     $p = isset($byId[$it->productId]) ? $byId[$it->productId] : null;
     if (!$p || (isset($p->active) && $p->active === false) || !isset($p->price) || !is_numeric($p->price) || $p->price < 0) {
         fail(409, 'Egy termék már nem elérhető. Kérjük, ellenőrizd a kosarat.');

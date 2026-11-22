@@ -62,7 +62,7 @@ BK.toast=function(msg,bad){try{var b=document.createElement('div');b.setAttribut
 BK.trErr='';window.__bkTrErr=function(){return BK.trErr};
 BK.tr=function(texts){if(!BK.shared||!BK.admin||!texts.length){BK.trErr='';return Promise.resolve(null)}
  return api('translate.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'translate',texts:texts,source:'hu',target:'en'})}).then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(r.ok&&j&&j.ok&&Array.isArray(j.texts)){BK.trErr='';return j.texts}BK.trErr=(j&&j.error)||('Fordítási hiba ('+r.status+')');return null})}).catch(function(){BK.trErr='A fordító szolgáltatás nem érhető el.';return null})};
-/* Párok: {hu,en,oldHu,oldEn}. Fordít, ha az angol üres, vagy a magyar változott és az angolt közben senki sem írta át kézzel. */
+
 window.__bkTrItems=function(items){var need=[],idx=[];items.forEach(function(it,i){var hu=(it.hu||''),en=(it.en||'');if(!hu.trim())return;if(!en.trim()||(hu!==it.oldHu&&en===it.oldEn)){need.push(hu);idx.push(i)}});
  if(!need.length)return Promise.resolve(items.map(function(it){return it.en||''}));
  return BK.tr(need).then(function(out){var res=items.map(function(it){return it.en||''});if(out)idx.forEach(function(i,k){res[i]=out[k]||res[i]});return res})};
@@ -70,7 +70,7 @@ window.__bkTrProd=function(p,orig){var items=[{hu:p.name,en:p.nameEn,oldHu:orig&
  return window.__bkTrItems(items).then(function(r){var q=Object.assign({},p);if(r[0]&&r[0]!==p.nameEn)q.nameEn=r[0];if(r[1]&&r[1]!==p.descriptionEn)q.descriptionEn=r[1];if(BK.trErr)BK.toast('Az angol fordítás most nem sikerült: '+BK.trErr,true);return q})};
 function walk(o,path,fn){if(Array.isArray(o)){o.forEach(function(x,i){walk(x,path.concat(i),fn)})}else if(o&&typeof o==='object'){if(typeof o.hu==='string'&&typeof o.en==='string'&&!('__x' in o)){fn(path,o)}else Object.keys(o).forEach(function(k){walk(o[k],path.concat(k),fn)})}}
 function at(o,path){for(var i=0;i<path.length&&o!=null;i++)o=o[path[i]];return o}
-/* Tartalom mentésekor: a megváltozott magyar mezők angolját frissíti. Visszaad egy javító függvényt. */
+
 window.__bkTrContent=function(oldC,newC){var list=[];walk(newC,[],function(path,o){var ob=at(oldC,path);list.push({path:path,hu:o.hu,en:o.en,oldHu:ob&&typeof ob.hu==='string'?ob.hu:undefined,oldEn:ob&&typeof ob.en==='string'?ob.en:undefined})});
  var cand=list.filter(function(it){return it.hu.trim()&&(!it.en.trim()||(it.hu!==it.oldHu&&it.en===it.oldEn))});
  if(!cand.length||!BK.shared||!BK.admin)return Promise.resolve(null);

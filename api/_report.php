@@ -94,7 +94,6 @@ function build_daily_report($date, $sections, $to) {
             'Oldalmegtekintések: ' . $s['pageViews'] . rep_delta($s['pageViews'], $c['pageViews']),
             'Termékoldal-megtekintések: ' . $s['views'] . ' · kattintások a listában: ' . $s['clicks'] . ' (átkattintás: ' . rep_pct($s['clicks'], $s['impressions']) . ')',
             'Kosárba tétel: ' . $s['addToCart'] . ' · megosztás: ' . array_sum($sh) . rep_share_split($sh)));
-        // Látogatottság: visszatérők (csak hozzájárulással mért), 7 és 30 napos összesítés
         $rr = read_raw('returning'); $ret = $rr !== null ? json_decode($rr, true) : array();
         $rn = 0; $nw = 0;
         if (is_array($ret)) { foreach ($ret as $e) { if (!is_array($e) || empty($e['d']) || !is_array($e['d']) || !in_array($date, $e['d'], true)) { continue; } if (isset($e['f']) && $e['f'] < $date) { $rn++; } else { $nw++; } } }
@@ -177,7 +176,6 @@ function bk_daily_last_set($id, $date, $ok) {
     @file_put_contents($f, json_encode($a), LOCK_EX);
 }
 
-// Napi jelentések esedékes kiküldése. Hívja a cron (cron_daily.php) és tartalékként az oldal-betöltés (bk_daily_tick).
 function bk_daily_run($cfg, $force, $retryAfter) {
     $lines = array(); $fail = 0;
     $active = array_values(array_filter(bk_daily_reports(), function ($r) { return $r['enabled']; }));
@@ -201,7 +199,6 @@ function bk_daily_run($cfg, $force, $retryAfter) {
     }
     return array('lines' => $lines, 'fail' => $fail, 'sent' => $sent);
 }
-// Cron nélküli tartalék: az első oldalbetöltés a beállított időpont után elindítja az esedékes jelentést (válasz után, a látogatót nem lassítja).
 function bk_daily_tick() {
     register_shutdown_function(function () {
         try {
@@ -215,7 +212,6 @@ function bk_daily_tick() {
             date_default_timezone_set('Europe/Budapest');
             $r = bk_daily_run($cfg, false, 1800);
             if ($r['sent'] || $r['fail']) { mail_log('napi jelentés (oldalbetöltés-trigger): ' . $r['sent'] . ' elküldve, ' . $r['fail'] . ' hiba'); }
-            // napi biztonsági mentés (ha ma még nem készült)
             if (!function_exists('bk_backup_run')) { require_once __DIR__ . '/_backup.php'; }
             bk_backup_run(false, false);
         } catch (Throwable $e) { }
