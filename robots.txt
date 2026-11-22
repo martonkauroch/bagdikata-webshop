@@ -1,2 +1,16 @@
+User-agent: facebookexternalhit
+User-agent: Facebot
+User-agent: Twitterbot
+User-agent: LinkedInBot
+User-agent: WhatsApp
+User-agent: TelegramBot
+User-agent: Pinterestbot
+User-agent: Slackbot
+User-agent: Discordbot
+User-agent: Viber
+User-agent: SkypeUriPreview
+Allow: /
+Disallow: /api/
+
 User-agent: *
 Disallow: /

@@ -28,6 +28,7 @@ Bagdi Kata kézzel kötött sapka webshopja, kétnyelvű (HU/EN), cPanel PHP tá
 - Az éles oldal a fejlesztői környezetből nem biztos, hogy elérhető.
 
 ## Nyitott tételek
+- **Webshop megnyitásakor:** az `index.html` megosztási címkéi (og:title, og:description, twitter:*) és a kép (`assets/og-hamarosan.jpg`) a „Hamarosan” időszakra szólnak – cserélni kell a nyitott webshophoz. A `robots.txt` jelszavas módban csak a megosztási robotokat engedi (nyilvános módban a `robots-public.txt` él).
 - Süti-sáv / Google Fonts adatvédelmi kérdés (saját tárolás vagy elhagyás).
 - Jogi szövegek („vázlat”) átnézése élesítés előtt; `mail.php` base_url.
 - Szerveren a régi `api/mailtest.php`, `api/selftest.php` törlendő; a cPanel cron-ban a régi `mailtest` sor törlendő, helyette `cron_daily.php`.
