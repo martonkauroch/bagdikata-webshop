@@ -140,6 +140,8 @@ var PRIVACY_HU=`${DRAFT_NOTE_HU}
 ## 4. Sütik
 A webshop működéséhez szükséges tárolás (pl. kosár tartalma, nyelv- és pénznem-beállítás) a böngészőben történik. [Marketing- vagy követő sütit – pl. Barion Pixel – csak hozzájárulás alapján használunk; ezt a tájékoztatót ennek megfelelően kell kiegészíteni.]
 
+**Google Analytics.** Ha a süti-sávon hozzájárulsz („Elfogadom”), a Google Ireland Ltd. (Gordon House, Barrow Street, Dublin 4, Írország) Google Analytics szolgáltatásával látogatottsági statisztikát készítünk (megtekintett oldalak, eszköz- és böngészőtípus, hozzávetőleges földrajzi hely, honnan érkeztél). Ehhez a Google sütiket (_ga, _ga_*) helyez el a böngésződben, legfeljebb 14 hónapig. Az adatokat hirdetési célra nem használjuk, és nem kapcsoljuk össze más adatokkal. Jogalap: hozzájárulás (GDPR 6. cikk (1) a)); a hozzájárulás a lábléc „Süti-beállítások” linkjén bármikor visszavonható – ekkor a mérés leáll és a Google-sütik törlődnek. Az adatok az EU-n kívülre (USA) is kerülhetnek; a Google az EU–USA adatvédelmi keretrendszer tanúsított résztvevője. Részletek: https://policies.google.com/technologies/partner-sites?hl=hu
+
 ## 5. Az adatok megőrzése
 A rendelési adatokat a szerződés teljesítéséhez és a jogszabályi kötelezettségekhez szükséges ideig kezeljük; a számviteli bizonylatokat a törvényi határidőig őrizzük meg. [A további megőrzési időket – pl. szavatossági igények, elállás – ki kell egészíteni.]
 
@@ -179,6 +181,8 @@ var PRIVACY_EN=`${DRAFT_NOTE_EN}
 
 ## 4. Cookies
 Storage needed for the shop to work (e.g. cart contents, language and currency settings) happens in your browser. [Marketing or tracking cookies – e.g. Barion Pixel – are only used with consent; update this notice accordingly.]
+
+**Google Analytics.** If you consent on the cookie banner (“Accept”), we use the Google Analytics service of Google Ireland Ltd. (Gordon House, Barrow Street, Dublin 4, Ireland) to create visitor statistics (pages viewed, device and browser type, approximate location, referral source). For this, Google stores cookies (_ga, _ga_*) in your browser for up to 14 months. The data are not used for advertising and are not combined with other data. Legal basis: consent (GDPR Art. 6(1)(a)); you can withdraw it any time with the “Cookie settings” link in the footer – measurement then stops and the Google cookies are deleted. Data may be transferred outside the EU (USA); Google participates in the EU–US Data Privacy Framework. Details: https://policies.google.com/technologies/partner-sites
 
 ## 5. Retention
 Order data are kept as long as necessary to perform the contract and meet legal obligations; accounting records for the statutory period. [Add further retention periods – e.g. warranty claims, withdrawal.]

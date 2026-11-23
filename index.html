@@ -8,7 +8,7 @@
   <head>
     <meta name="bk-expect-shared" content="1">
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https://api.frankfurter.dev https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https://api.frankfurter.dev https://challenges.cloudflare.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; frame-src 'self' https://challenges.cloudflare.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Bagdi Kata – kézzel kötött melanzs sapkák és nyakmelegítők. Minden darab egyedi." />
@@ -38,6 +38,7 @@
     <script src="./bk-intro.js"></script>
     <script src="./assets/changelog.js?v=1.48.0"></script>
     <script src="./assets/parallax.js?v=4" defer></script>
+    <script src="./assets/bk-ga.js?v=1" defer></script>
     <script type="module" crossorigin src="./assets/index-0f-fFOYT.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/createLucideIcon-Bc0h7bbI.js">
     <link rel="stylesheet" crossorigin href="./assets/index-DxU-lOkS.css">

@@ -10,6 +10,8 @@ bk_daily_tick();
 $cfg = load_config();
 $landing = landing_public();
 $out = array('shared' => true, 'configured' => (bool) $cfg, 'site' => false, 'public' => false, 'admin' => false, 'turnstile' => bot_site_key(), 'adminEmail' => '', 'landing' => $landing, 'data' => new stdClass());
+$gs = json_decode((string) read_raw('settings'));
+$out['ga'] = (is_object($gs) && isset($gs->analytics) && is_object($gs->analytics) && !empty($gs->analytics->enabled) && isset($gs->analytics->gaId) && is_string($gs->analytics->gaId) && preg_match('/^G-[A-Z0-9]{4,15}$/', $gs->analytics->gaId)) ? $gs->analytics->gaId : '';
 if ($cfg && has_site($cfg)) {
     $out['site'] = true;
     $out['public'] = site_is_public();

@@ -9,7 +9,7 @@ try{
  var x=new XMLHttpRequest();x.open('GET',base+'api/boot.php',false);x.withCredentials=true;x.send(null);
  var ct=x.getResponseHeader('content-type')||'';
  if(x.status===200&&ct.indexOf('json')>=0){var j=JSON.parse(x.responseText);
-  if(j&&j.shared===true){BK.shared=true;BK.base=base;BK.configured=!!j.configured;BK.site=!!j.site;BK.publicSite=!!j.public;BK.turnstile=j.turnstile||'';BK.landing=j.landing||null;BK.admin=!!j.admin;BK.adminEmail=j.adminEmail||'';BK.mfa=j.mfa||null;BK.data=j.data||{};remember(BK.data);
+  if(j&&j.shared===true){BK.shared=true;BK.base=base;BK.configured=!!j.configured;BK.site=!!j.site;BK.publicSite=!!j.public;BK.turnstile=j.turnstile||'';BK.landing=j.landing||null;BK.ga=j.ga||'';BK.admin=!!j.admin;BK.adminEmail=j.adminEmail||'';BK.mfa=j.mfa||null;BK.data=j.data||{};remember(BK.data);
    try{localStorage.setItem('bagdikata:cleanup:test-data-2026-10-21','true')}catch(e){}}}
 }catch(e){}
 function api(path,opt){opt=opt||{};opt.credentials='same-origin';opt.headers=Object.assign({'X-BK':'1'},opt.headers||{});return fetch(BK.base+'api/'+path,opt)}
