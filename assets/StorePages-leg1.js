@@ -133,6 +133,9 @@ var PRIVACY_HU=`${DRAFT_NOTE_HU}
 - Csomagszolgáltatók: Foxpost, Packeta, GLS (a kiválasztott szállítási módnak megfelelően).
 - Tárhely- és e-mail-szolgáltatók: [SZOLGÁLTATÓK NEVE].
 - Könyvelő: [KÖNYVELŐ NEVE, ha van].
+- Robotszűrés: Cloudflare, Inc. (Turnstile) – lásd alább.
+
+**Robotszűrés (Cloudflare Turnstile).** Az űrlapok (hírlevél-feliratkozás, kapcsolatfelvétel, rendelés) védelmére a Cloudflare, Inc. Turnstile szolgáltatását használjuk, amely a látogató számára láthatatlan ellenőrzéssel szűri ki a robotokat. Ennek során a Cloudflare a böngésző és az eszköz technikai adatait (pl. IP-cím, böngészőtípus) dolgozza fel, kizárólag a visszaélések megelőzése céljából, jogos érdekünk alapján (GDPR 6. cikk (1) f)). Részletek: Cloudflare Turnstile adatvédelmi kiegészítő – https://www.cloudflare.com/turnstile-privacy-policy/
 
 ## 4. Sütik
 A webshop működéséhez szükséges tárolás (pl. kosár tartalma, nyelv- és pénznem-beállítás) a böngészőben történik. [Marketing- vagy követő sütit – pl. Barion Pixel – csak hozzájárulás alapján használunk; ezt a tájékoztatót ennek megfelelően kell kiegészíteni.]
@@ -170,6 +173,9 @@ var PRIVACY_EN=`${DRAFT_NOTE_EN}
 - Carriers: Foxpost, Packeta, GLS (depending on the chosen delivery method).
 - Hosting and e-mail providers: [PROVIDERS].
 - Accountant: [NAME, if any].
+- Bot protection: Cloudflare, Inc. (Turnstile) – see below.
+
+**Bot protection (Cloudflare Turnstile).** To protect our forms (newsletter sign-up, contact, orders) we use the Turnstile service of Cloudflare, Inc., which filters out bots with a check that is invisible to visitors. In doing so, Cloudflare processes technical data of the browser and device (e.g. IP address, browser type) solely to prevent abuse, based on our legitimate interest (GDPR Art. 6(1)(f)). Details: Cloudflare Turnstile Privacy Addendum – https://www.cloudflare.com/turnstile-privacy-policy/
 
 ## 4. Cookies
 Storage needed for the shop to work (e.g. cart contents, language and currency settings) happens in your browser. [Marketing or tracking cookies – e.g. Barion Pixel – are only used with consent; update this notice accordingly.]
@@ -331,7 +337,9 @@ function Rich({text}){
     else if(/^-\s+/.test(l)){if(!list){list={t:"ul",v:[]};blocks.push(list)}list.v.push(l.replace(/^-\s+/,""))}
     else if(l.trim()===""){list=null}
     else{list=null;blocks.push({t:"p",v:l})}});
-  let inline=s=>String(s).split(/(\*\*[^*]+\*\*)/g).map((x,i)=>/^\*\*[^*]+\*\*$/.test(x)?h("strong",{key:i},x.slice(2,-2)):x);
+  let lk={color:"#bf1b2c",textDecoration:"underline",textUnderlineOffset:"2px",overflowWrap:"anywhere"},
+    links=(t,k)=>String(t).split(/(https?:\/\/[^\s<>"]*[^\s<>".,;:!?)]|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g).map((x,j)=>/^https?:\/\//.test(x)?h("a",{key:k+"-"+j,href:x,target:"_blank",rel:"noopener noreferrer",style:lk},x):/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(x)?h("a",{key:k+"-"+j,href:"mailto:"+x,style:lk},x):x),
+    inline=s=>String(s).split(/(\*\*[^*]+\*\*)/g).map((x,i)=>/^\*\*[^*]+\*\*$/.test(x)?h("strong",{key:i},links(x.slice(2,-2),i)):h(P.Fragment,{key:i},links(x,i)));
   return h("div",{className:"text-ink-soft",style:{lineHeight:1.7}},blocks.map((b,i)=>b.t==="h"?h("h2",{key:i,className:"font-display",style:{fontSize:"1.2rem",fontWeight:500,margin:"2rem 0 .6rem"}},b.v):b.t==="ul"?h("ul",{key:i,style:{listStyle:"disc",paddingLeft:"1.3rem",margin:".4rem 0"}},b.v.map((x,j)=>h("li",{key:j,style:{margin:".25rem 0"}},inline(x)))):h("p",{key:i,style:{margin:".6rem 0"}},inline(b.v))));
 }
 function pickText(legal,kind,locale){
