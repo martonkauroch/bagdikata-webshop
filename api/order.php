@@ -15,6 +15,12 @@ foreach ($o->items as $it) {
     if (!is_object($it) || !isset($it->productId) || !is_string($it->productId) || !isset($it->quantity) || !is_numeric($it->quantity) || $it->quantity < 1 || $it->quantity > 999) { fail(400, 'Érvénytelen tétel'); }
 }
 if (!bot_verify(isset($d->captcha) ? $d->captcha : '')) { fail(400, 'A robotellenőrzés nem sikerült.'); }
+$str = function ($o, $k, $max) { return (is_object($o) && isset($o->$k) && is_scalar($o->$k)) ? mb_substr(trim((string) $o->$k), 0, $max, 'UTF-8') : ''; };
+$c = isset($o->customer) ? $o->customer : null;
+$o->customer = (object) array('name' => $str($c, 'name', 120), 'email' => $str($c, 'email', 200), 'phone' => $str($c, 'phone', 40));
+if ($o->customer->name === '' || !filter_var($o->customer->email, FILTER_VALIDATE_EMAIL)) { fail(400, 'Hiányzó vagy hibás név / e-mail-cím.'); }
+$ad = isset($o->address) ? $o->address : null;
+$o->address = (object) array('zip' => $str($ad, 'zip', 12), 'city' => $str($ad, 'city', 80), 'street' => $str($ad, 'street', 200));
 
 $store = json_decode((string) read_raw('store'));
 $byId = array();
@@ -49,6 +55,7 @@ if (!isset($SHIP[$sm])) { fail(400, 'Érvénytelen szállítási mód.'); }
 list($sk, $fee, $codDef) = $SHIP[$sm];
 $sc = (isset($sh->$sk) && is_object($sh->$sk)) ? $sh->$sk : new stdClass();
 if (isset($sc->enabled) && $sc->enabled === false) { fail(400, 'Ez a szállítási mód jelenleg nem elérhető.'); }
+if ($sk === 'gls' && ($o->address->zip === '' || $o->address->city === '' || $o->address->street === '')) { fail(400, 'Házhoz szállításnál a teljes cím megadása kötelező.'); }
 if (isset($sc->fee) && is_numeric($sc->fee)) { $fee = max(0, (int) round($sc->fee)); }
 $codOk = $sk === 'pickup' ? false : (isset($sc->codEnabled) ? $sc->codEnabled !== false : $codDef);
 $pm = (isset($o->paymentMethod) && is_string($o->paymentMethod)) ? $o->paymentMethod : '';
@@ -95,6 +102,9 @@ mutate_json('store', function ($cur) use ($o, &$isNew, $items, $sub, $shipFee, $
         $o->priceCorrected = true;
     }
     $o->test = !site_is_public();
+    $o->createdAt = date('c');
+    if (!isset($o->orderNumber) || !is_string($o->orderNumber) || !preg_match('/^BK-\d{1,12}$/', $o->orderNumber)) { $o->orderNumber = 'BK-' . date('ymdHis'); }
+    if (!isset($o->status) || !in_array($o->status, array('uj', 'fizetve'), true)) { $o->status = 'uj'; }
     array_unshift($orders, $o);
     $cur->orders = array_slice($orders, 0, 2000);
     if (isset($cur->products) && is_array($cur->products)) {

@@ -12,6 +12,7 @@ Bagdi Kata kézzel kötött sapka webshopja, kétnyelvű (HU/EN), cPanel PHP tá
 - `save.php` a rendeléseket egyesíti (union merge) → törlés csak dedikált szerver-végponttal.
 - Admin API minta: `fetch(window.__BK.base+'api/x.php',{method:'POST',credentials:'same-origin',headers:{'X-BK':'1','Content-Type':'application/json'}})`, a válaszban `ok:true` kell.
 - Napi biztonsági mentés: `_backup.php` (adatok naponta/14 db, képek hetente/4 db → `api/data/backups/`), indítja `cron_daily.php` és `bk_daily_tick`; admin: `backup.php` + Beállítások › „Biztonsági mentések” kártya.
+- Hírlevél-jelvény az admin menüben: `newsletter.php?unseen=1` (GET, admin) / `{action:"seen"}` (POST), adat: `api/data/nl_seen.json`; a menü (`ProtectedAdminLayout-*.js`) 700 ms-onként figyeli a hash-t (a router nem küld hashchange-et).
 - Napi jelentés: cPanel cron óránként (`/usr/local/bin/php <gyökér>/api/cron_daily.php`) + tartalék: oldalbetöltés-trigger (`bk_daily_tick`).
 
 - **Content-Security-Policy:** `index.html` `<meta http-equiv>` (a `.htaccess`-ben csak frame-ancestors/base-uri/object-src). Új külső szkript-, betűtípus-, kapcsolat- vagy keretforrásnál a CSP-t is bővíteni kell. Helyi teszthez az `upgrade-insecure-requests` részt ki kell venni (http). Robotszűrő: Cloudflare Turnstile, kulcsok az `api/data/security.php`-ban (`turnstile_site`, `turnstile_secret`; Invisible mód).

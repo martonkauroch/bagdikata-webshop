@@ -47,6 +47,22 @@ if (($method === 'GET' && isset($_GET['u'])) || ($method === 'POST' && (isset($_
     nl_page($en ? 'Unsubscribe' : 'Leiratkozás a hírlevélről', $en ? 'Do you want to stop receiving the Bagdi Kata newsletter?' : 'Szeretnél leiratkozni a Bagdi Kata hírlevélről?', $lang, $btn);
 }
 
+function nl_seen_at() { $raw = read_raw('nl_seen'); $d = $raw ? json_decode($raw, true) : null; return (is_array($d) && isset($d['at'])) ? (int) $d['at'] : 0; }
+function nl_unseen() {
+    $seen = nl_seen_at(); $n = 0;
+    foreach (nl_list() as $s) {
+        if (isset($s['status']) && $s['status'] === 'unsubscribed') { continue; }
+        $t = isset($s['consentAt']) && $s['consentAt'] ? strtotime($s['consentAt']) : (isset($s['createdAt']) ? strtotime($s['createdAt']) : 0);
+        if ($t > $seen) { $n++; }
+    }
+    return $n;
+}
+if ($method === 'GET' && isset($_GET['unseen'])) {
+    if (!has_admin($cfg)) { fail(401, 'Admin belépés szükséges'); }
+    header('Cache-Control: no-store');
+    json_out(array('ok' => true, 'unseen' => nl_unseen()));
+}
+
 if ($method === 'GET' && isset($_GET['export'])) {
     if (!has_admin($cfg)) { fail(401, 'Admin belépés szükséges'); }
     header('Content-Type: text/csv; charset=utf-8');
@@ -115,6 +131,7 @@ function nl_draft($d) {
 }
 
 if ($act === 'list') { json_out(nl_snapshot()); }
+if ($act === 'seen') { write_raw('nl_seen', json_encode(array('at' => time()))); json_out(array('ok' => true, 'unseen' => 0)); }
 if ($act === 'delete' || $act === 'unsub') {
     $id = (isset($d->id) && is_string($d->id) && preg_match('/^[a-f0-9]{16}$/', $d->id)) ? $d->id : '';
     if ($id === '') { fail(400, 'Hibás azonosító'); }
