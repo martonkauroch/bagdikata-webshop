@@ -14,6 +14,21 @@ function Card({title,description,children}){
     h("div",{className:"p-5"},children));
 }
 
+var MEASURE_CFG={hu:{stat:"- **Statisztika:**",newStat:"- **Saját látogatottsági statisztika",newRec:"- Látogatottsági statisztika:",cookieStart:"A webshop működéséhez szükséges tárolás",newCookie:"A webshop a böngésződben sütiket",ga:"**Google Analytics.**",turnB:"- Robotszűrés:",turnP:"**Robotszűrés (Cloudflare Turnstile).**",eu:"**Adattovábbítás az EU-n kívülre.**",retNew:"Statisztika és biztonság:"},en:{stat:"- **Statistics:**",newStat:"- **Own visitor statistics",newRec:"- Visitor statistics:",cookieStart:"Storage needed for the shop to work",newCookie:"The shop uses cookies and local storage",ga:"**Google Analytics.**",turnB:"- Bot protection:",turnP:"**Bot protection (Cloudflare Turnstile).**",eu:"**Transfers outside the EU.**",retNew:"Statistics and security:"}};
+function measureMerge(text,def,lang){
+  let c=MEASURE_CFG[lang],L=String(text||"").split("\n"),D=String(def||"").split("\n"),done=[];
+  let sec=(A,n)=>{let a=A.findIndex(x=>new RegExp("^##\\s*"+n+"\\.").test(x));if(a<0)return null;let b=A.findIndex((x,i)=>i>a&&/^##\s*\d+\./.test(x));return[a,b<0?A.length:b]};
+  let line=(A,pre)=>A.findIndex(x=>x.startsWith(pre));
+  let endOf=(A,r)=>{let e=r[1];while(e>r[0]+1&&A[e-1].trim()==="")e--;return e};
+  let ins=(at,arr)=>{L.splice(at,0,...arr)};
+  let has=pre=>L.some(x=>x.startsWith(pre));
+  if(!has(c.newStat)){let di=line(D,c.newStat),blk=di<0?[]:D.slice(di,di+4);if(blk.length){let ui=line(L,c.stat);if(ui>=0){L.splice(ui,1,...blk)}else{let r=sec(L,2);if(r)ins(endOf(L,r),blk)}done.push("statisztika")}}
+  if(!has(c.newRec)){let r=sec(L,3),dr=sec(D,3);if(r&&dr){let di=line(D,c.newRec),nb=[];for(let i=di;i>=0&&i<dr[1]&&D[i].startsWith("- ");i++)nb.push(D[i]);if(!has(c.turnB)){let tb=line(D,c.turnB);tb>=0&&nb.unshift(D[tb])}let last=-1;for(let i=r[0]+1;i<r[1];i++)if(L[i].startsWith("- "))last=i;ins(last>=0?last+1:r[0]+1,nb);let r2=sec(L,3),e=endOf(L,r2),add=[];if(!has(c.turnP)){let tp=line(D,c.turnP);tp>=0&&add.push("",D[tp])}if(!has(c.eu)){let ep=line(D,c.eu);ep>=0&&add.push("",D[ep])}add.length&&ins(e,add);done.push("címzettek")}}
+  if(!has(c.newCookie)){let r=sec(L,4),dr=sec(D,4);if(r&&dr){let gi=line(D,c.ga),blk=D.slice(dr[0]+1,gi>0?gi:dr[1]);while(blk.length&&blk[0].trim()==="")blk.shift();while(blk.length&&blk[blk.length-1].trim()==="")blk.pop();let ui=L.findIndex((x,i)=>i>r[0]&&i<r[1]&&x.startsWith(c.cookieStart));if(ui>=0)L.splice(ui,1,...blk);else ins(r[0]+1,blk.concat([""]));done.push("sütik")}}
+  if(!has(c.ga)){let r=sec(L,4),gp=line(D,c.ga);if(r&&gp>=0){ins(endOf(L,r),["",D[gp]]);done.push("Google Analytics")}}
+  if(!has(c.retNew)){let r=sec(L,5),dr=sec(D,5);if(r&&dr){let ri=line(D,c.retNew),blk=D.slice(ri,endOf(D,dr));ri>=0&&(ins(endOf(L,r),[""].concat(blk)),done.push("megőrzés"))}}
+  return{text:L.join("\n"),done};
+}
 function AdminLegalPage(){
   let{content,save}=useContent();
   let initial=()=>{let o={};for(let k of KINDS){let st=(content.legal||{})[k];o[k]={hu:st&&typeof st.hu==="string"&&st.hu.trim()?st.hu:LEGAL_DEFAULTS[k].hu,en:st&&typeof st.en==="string"?st.en:LEGAL_DEFAULTS[k].en}}return o};
@@ -34,6 +49,9 @@ function AdminLegalPage(){
       total>0?h("p",{className:"rounded-lg bg-amber-50 p-3 text-sm text-amber-900",role:"status"},"Még "+total+" kitöltendő [szögletes zárójeles] rész van a szövegekben (cégnév, cím, adószám, békéltető testület stb.). Élesítés előtt ezeket ki kell tölteni."):h("p",{className:"rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900"},"Nincs kitöltetlen [szögletes zárójeles] rész."),
       KINDS.map(k=>h(Card,{key:k,title:LEGAL_TITLES[k].hu,description:"Fejlécek: sor elején „## ”, felsorolás: „- ”. Üres sor új bekezdést kezd. Csak szöveg menthető (HTML nem)."},
         h("div",{className:"space-y-4"},
+          k==="privacy"&&!draft[k].hu.includes(MEASURE_CFG.hu.newStat)&&LEGAL_DEFAULTS.privacy.hu.includes(MEASURE_CFG.hu.newStat)&&h("div",{"data-testid":"measure-merge",style:{border:"1px solid #fcd34d",background:"#fffbeb",borderRadius:10,padding:"12px 14px",fontSize:14,color:"#78350f"}},
+            h("p",{style:{margin:0}},h("strong",null,"Frissült az adatkezelési tájékoztató a mérések miatt. "),"A saját mentett szövegedből még hiányoznak a statisztikáról, a Google Analyticsről, a sütikről, a címzettekről és a megőrzési időkről szóló részek. A gomb ezeket a megfelelő fejezetekbe illeszti (magyarul és angolul), a saját kitöltéseid megmaradnak. Mentés előtt átnézheted."),
+            h("button",{type:"button","data-testid":"measure-merge-btn",style:{marginTop:10,background:"#231f20",color:"#fff",borderRadius:8,padding:"8px 14px",fontSize:14},onClick:()=>{let H=measureMerge(draft[k].hu,LEGAL_DEFAULTS.privacy.hu,"hu"),E=draft[k].en&&draft[k].en.trim()?measureMerge(draft[k].en,LEGAL_DEFAULTS.privacy.en,"en"):{text:LEGAL_DEFAULTS.privacy.en,done:["teljes angol alapszöveg"]};setDraft(d=>({...d,[k]:{hu:H.text,en:E.text}}));setMsg("Beillesztve ("+(H.done.join(", ")||"nincs teendő")+"). Nézd át a szöveget, majd kattints a Mentés gombra.");window.setTimeout(()=>setMsg(null),12000)}},"Mérési változások beillesztése")),
           h("div",{className:"grid gap-4 lg:grid-cols-2"},
             h("label",{className:"block"},h("span",{className:"label"},"Magyar (kötelező) – kitöltendő: "+holes(draft[k].hu)),
               h("textarea",{className:"input",style:{minHeight:"22rem",fontFamily:"inherit",lineHeight:1.5},value:draft[k].hu,onChange:ev=>set(k,"hu",ev.target.value)}),
