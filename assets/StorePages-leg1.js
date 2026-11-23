@@ -123,7 +123,10 @@ var PRIVACY_HU=`${DRAFT_NOTE_HU}
 - **Rendelés teljesítése:** név, e-mail-cím, telefonszám, szállítási és számlázási cím, rendelt termékek, fizetési mód, megjegyzés. Cél: a szerződés megkötése és teljesítése, szállítás, kapcsolattartás. Jogalap: a szerződés teljesítése (GDPR 6. cikk (1) b).
 - **Számlázás, számviteli kötelezettségek:** számlázási adatok, számla. Jogalap: jogi kötelezettség (GDPR 6. cikk (1) c); a számviteli bizonylatokat a jogszabály szerinti ideig (jelenleg 8 év) megőrizzük.
 - **Elállás, szavatosság, panasz:** az elállási nyilatkozat, panasz és szavatossági ügyintézés adatai. Jogalap: jogi kötelezettség és szerződés teljesítése.
-- **Statisztika:** oldal- és termékmegtekintések névtelenül, naponta változó sózott lenyomattal. Ha a süti-sávban elfogadod a statisztikai azonosítót, egy véletlenszerű azonosítót is tárolunk a böngésződben a visszatérő látogatók számolásához; ebből személy nem azonosítható. Jogalap: hozzájárulás (GDPR 6. cikk (1) a), Eht. 155. §); a hozzájárulás a lábléc „Süti-beállítások” hivatkozásával bármikor visszavonható.
+- **Saját látogatottsági statisztika (sütik nélkül):** naponta összesítve számoljuk az oldalmegtekintéseket, látogatásokat és egyedi látogatókat, valamint a termékekkel kapcsolatos eseményeket (megjelenés, kattintás, megtekintés, kosárba tétel, megosztás csatornánként). Az aznapi egyedi látogatók megkülönböztetéséhez az IP-címből és a böngésző azonosító szövegéből egy titkos kulccsal képzett, egyirányú lenyomatot használunk; magát az IP-címet nem tároljuk, a lenyomat pedig csak az adott napra érvényes, utána törlődik. Csak összesített számokat őrzünk meg, egyes látogatókhoz nem köthetőket. Ehhez a böngészőben csak egy, a böngészőlap bezárásakor magától törlődő jelzőt tárolunk (bagdikata:visit:…, munkamenet-tároló), hogy egy látogatást csak egyszer számoljunk. Ha a böngésződben be van kapcsolva a „Ne kövess” (Do Not Track) vagy a „Global Privacy Control” beállítás, nem mérünk. Cél: a webshop működésének és a termékek iránti érdeklődésnek az értékelése. Jogalap: jogos érdek (GDPR 6. cikk (1) f)); tiltakozhatsz ellene a fenti böngészőbeállítással vagy az alábbi elérhetőségen.
+- **Visszatérő látogatók számolása (csak hozzájárulással):** ha a süti-sávon az „Elfogadom” gombot választod, egy véletlenszerű azonosítót (bk_vid) tárolunk a böngésződben; a szerveren ennek csak titkos kulccsal képzett lenyomatát, az első és utolsó látogatás napját és a látogatási napokat őrizzük. Ebből személy nem azonosítható. Jogalap: hozzájárulás (GDPR 6. cikk (1) a), Eht. 155. § (4)); a hozzájárulás a lábléc „Süti-beállítások” hivatkozásával bármikor visszavonható – ekkor az azonosítót töröljük a böngésződből.
+- **Google Analytics (csak hozzájárulással):** részletesebb látogatottsági statisztika a Google Ireland Ltd. szolgáltatásával – lásd a 4. pontban. Jogalap: hozzájárulás (GDPR 6. cikk (1) a), Eht. 155. § (4)).
+- **Biztonság, visszaélések megelőzése:** az űrlapok robotszűrése (Cloudflare Turnstile, lásd a 3. pontban), a próbálkozások számának korlátozása (az IP-cím egyirányú lenyomata, legfeljebb 2 napig), valamint a tárhelyszolgáltató tűzfala és naplói. Jogalap: jogos érdek (GDPR 6. cikk (1) f)).
 - **Hírlevél:** a feliratkozás adatait a külön Hírlevél – adatkezelési tájékoztató (/hirlevel) ismerteti. Jogalap: hozzájárulás (GDPR 6. cikk (1) a).
 - **Kuponkód:** a beváltott kuponkód a rendelés része; a kuponhasználat számlálása személyes adatot nem tartalmaz.
 
@@ -134,16 +137,43 @@ var PRIVACY_HU=`${DRAFT_NOTE_HU}
 - Tárhely- és e-mail-szolgáltatók: [SZOLGÁLTATÓK NEVE].
 - Könyvelő: [KÖNYVELŐ NEVE, ha van].
 - Robotszűrés: Cloudflare, Inc. (Turnstile) – lásd alább.
+- Látogatottsági statisztika: Google Ireland Ltd. (Google Analytics) – csak hozzájárulás esetén, lásd a 4. pontban.
+- Betűtípusok: a webshop a Google Fonts (Google Ireland Ltd.) szolgáltatásból tölti be a betűtípusait, ezért az oldal megnyitásakor a böngésződ IP-címe és technikai adatai a Google-hoz kerülnek. A Google ezeket saját tájékoztatása szerint nem használja fel profilalkotásra.
+- Árfolyam: az euróban kijelzett árakhoz az aktuális árfolyamot a nyilvános Frankfurter szolgáltatásból (api.frankfurter.dev) kérjük le; ekkor a böngésződ IP-címe technikailag eljut hozzájuk, személyes adatot nem küldünk.
+- A tárhelyszolgáltató a szerver biztonsága érdekében (tűzfal, robot- és támadásszűrés, Imunify360) a látogatók IP-címét és böngészőadatait naplózza, és gyanús forgalomnál rövid ellenőrző oldalt jeleníthet meg.
 
 **Robotszűrés (Cloudflare Turnstile).** Az űrlapok (hírlevél-feliratkozás, kapcsolatfelvétel, rendelés) védelmére a Cloudflare, Inc. Turnstile szolgáltatását használjuk, amely a látogató számára láthatatlan ellenőrzéssel szűri ki a robotokat. Ennek során a Cloudflare a böngésző és az eszköz technikai adatait (pl. IP-cím, böngészőtípus) dolgozza fel, kizárólag a visszaélések megelőzése céljából, jogos érdekünk alapján (GDPR 6. cikk (1) f)). Részletek: Cloudflare Turnstile adatvédelmi kiegészítő – https://www.cloudflare.com/turnstile-privacy-policy/
 
+**Adattovábbítás az EU-n kívülre.** A Google és a Cloudflare az adatokat az Egyesült Államokba is továbbíthatja; mindkettő az EU–USA adatvédelmi keretrendszer (Data Privacy Framework) tanúsított résztvevője, ami az Európai Bizottság megfelelőségi határozata alapján megfelelő védelmet biztosít.
+
 ## 4. Sütik
-A webshop működéséhez szükséges tárolás (pl. kosár tartalma, nyelv- és pénznem-beállítás) a böngészőben történik. [Marketing- vagy követő sütit – pl. Barion Pixel – csak hozzájárulás alapján használunk; ezt a tájékoztatót ennek megfelelően kell kiegészíteni.]
+A webshop a böngésződben sütiket (cookie) és helyi tárolót (localStorage, sessionStorage) használ. Hirdetési vagy marketingcélú sütit nem használunk.
+
+**Működéshez szükséges (hozzájárulás nélkül):**
+- a kosár tartalma (bagdikata:cart), a pénznem-beállítás és az árfolyam (bagdikata:currency, bagdikata:eurhuf), valamint a webshop adatainak gyorsítótára a gyorsabb betöltéshez (termékek, tartalom, beállítások: bagdikata:store, bagdikata:content, bagdikata:settings) – helyi tároló, amíg nem törlöd;
+- egy látogatás egyszeri számolásához használt jelző (bagdikata:visit:…, munkamenet-tároló) – a böngészőlap bezárásáig;
+- a süti-döntésed (bk_consent, helyi tároló) – amíg nem törlöd vagy nem módosítod;
+- a bevezető animáció megjelenítésének megjegyzése (bk_intro_seen, helyi tároló);
+- a jelszóval védett oldal belépési sütije (bk_site) – 12 óra, „Emlékezz rám” esetén 30 nap;
+- az adminisztrációs felület munkamenet-sütijei (bk_admin, bk_pre) – csak az üzemeltetőnél, legfeljebb 8 óra.
+
+**Csak hozzájárulással („Elfogadom”):**
+- visszatérő látogatók számolása: bk_vid (helyi tároló) – a hozzájárulás visszavonásáig;
+- Google Analytics: _ga, _ga_* sütik – legfeljebb 14 hónap.
+
+A hozzájárulásodat bármikor módosíthatod a lábléc (a „Hamarosan” oldalon az oldal alján lévő) „Süti-beállítások” hivatkozásával; a böngésződ beállításaiban a sütiket és a helyi tárolót bármikor törölheted.
 
 **Google Analytics.** Ha a süti-sávon hozzájárulsz („Elfogadom”), a Google Ireland Ltd. (Gordon House, Barrow Street, Dublin 4, Írország) Google Analytics szolgáltatásával látogatottsági statisztikát készítünk (megtekintett oldalak, eszköz- és böngészőtípus, hozzávetőleges földrajzi hely, honnan érkeztél). Ehhez a Google sütiket (_ga, _ga_*) helyez el a böngésződben, legfeljebb 14 hónapig. Az adatokat hirdetési célra nem használjuk, és nem kapcsoljuk össze más adatokkal. Jogalap: hozzájárulás (GDPR 6. cikk (1) a)); a hozzájárulás a lábléc „Süti-beállítások” linkjén bármikor visszavonható – ekkor a mérés leáll és a Google-sütik törlődnek. Az adatok az EU-n kívülre (USA) is kerülhetnek; a Google az EU–USA adatvédelmi keretrendszer tanúsított résztvevője. Részletek: https://policies.google.com/technologies/partner-sites?hl=hu
 
 ## 5. Az adatok megőrzése
 A rendelési adatokat a szerződés teljesítéséhez és a jogszabályi kötelezettségekhez szükséges ideig kezeljük; a számviteli bizonylatokat a törvényi határidőig őrizzük meg. [A további megőrzési időket – pl. szavatossági igények, elállás – ki kell egészíteni.]
+
+Statisztika és biztonság:
+- saját statisztika: az aznapi látogató-lenyomat a nap végéig, az összesített napi adatok 120 napig;
+- visszatérő látogatók (bk_vid lenyomata): az utolsó látogatástól számított 200 napig;
+- Google Analytics: a Google-nál 14 hónapig (a Google Analytics adatmegőrzési beállítása szerint);
+- próbálkozás-korlátozás (IP-lenyomat): legfeljebb 2 napig;
+- biztonsági mentések: a napi mentések 14 napig, a képek mentései 4 hétig.
 
 ## 6. Az érintett jogai
 Kérheti a személyes adatokhoz való hozzáférést, azok helyesbítését, törlését vagy kezelésének korlátozását, tiltakozhat az adatkezelés ellen, és kérheti az adatok hordozhatóságát. Kérelmét a info@bagdikata.hu címen nyújthatja be; a kérelmet a jogszabályi határidőn belül megválaszoljuk.
@@ -165,7 +195,10 @@ var PRIVACY_EN=`${DRAFT_NOTE_EN}
 - **Fulfilling orders:** name, e-mail, phone number, delivery and billing address, ordered products, payment method, notes. Purpose: concluding and performing the contract, delivery, contact. Legal basis: performance of a contract (GDPR Art. 6(1)(b)).
 - **Invoicing and accounting:** billing data and invoices. Legal basis: legal obligation (GDPR Art. 6(1)(c)); accounting records are kept for the statutory period (currently 8 years).
 - **Withdrawal, warranty, complaints:** data of withdrawal notices, complaints and warranty cases. Legal basis: legal obligation and contract performance.
-- **Statistics:** page and product views, anonymously, using a daily-changing salted hash. If you accept the statistics identifier in the cookie banner, we also store a random identifier in your browser to count returning visitors; no person can be identified from it. Legal basis: consent (GDPR Art. 6(1)(a)); you can withdraw it at any time via "Cookie settings" in the footer.
+- **Own visitor statistics (cookie-free):** we count page views, visits and unique visitors per day, and product-related events (impressions, clicks, views, add-to-cart, shares by channel). To tell apart the day's unique visitors we use a one-way hash made with a secret key from the IP address and the browser's user-agent string; the IP address itself is not stored, and the hash is valid for that day only and is then deleted. Only aggregated figures are kept, which cannot be linked to individual visitors. For this we only keep a marker in your browser that is deleted automatically when the tab is closed (bagdikata:visit:…, session storage), so that a visit is counted only once. If "Do Not Track" or "Global Privacy Control" is enabled in your browser, we do not measure. Purpose: evaluating how the shop works and the interest in our products. Legal basis: legitimate interest (GDPR Art. 6(1)(f)); you can object with the browser setting above or at the contact below.
+- **Counting returning visitors (only with consent):** if you choose "Accept" on the cookie banner, we store a random identifier (bk_vid) in your browser; on the server we only keep a hash of it made with a secret key, the dates of the first and last visit and the visit days. No person can be identified from it. Legal basis: consent (GDPR Art. 6(1)(a), Section 155(4) of the Hungarian Electronic Communications Act); you can withdraw it any time with the "Cookie settings" link in the footer – the identifier is then deleted from your browser.
+- **Google Analytics (only with consent):** more detailed visitor statistics with the service of Google Ireland Ltd. – see section 4. Legal basis: consent (GDPR Art. 6(1)(a)).
+- **Security, prevention of abuse:** bot protection of the forms (Cloudflare Turnstile, see section 3), limiting the number of attempts (a one-way hash of the IP address, for up to 2 days), and the hosting provider's firewall and logs. Legal basis: legitimate interest (GDPR Art. 6(1)(f)).
 - **Newsletter:** subscription data is described in the separate Newsletter privacy notice (/hirlevel). Legal basis: consent (GDPR Art. 6(1)(a)).
 - **Coupon codes:** a redeemed coupon code is part of the order; counting coupon use involves no personal data.
 
@@ -176,16 +209,43 @@ var PRIVACY_EN=`${DRAFT_NOTE_EN}
 - Hosting and e-mail providers: [PROVIDERS].
 - Accountant: [NAME, if any].
 - Bot protection: Cloudflare, Inc. (Turnstile) – see below.
+- Visitor statistics: Google Ireland Ltd. (Google Analytics) – only with consent, see section 4.
+- Fonts: the shop loads its fonts from Google Fonts (Google Ireland Ltd.), so when you open the site your browser's IP address and technical data reach Google. According to Google, these are not used for profiling.
+- Exchange rate: for prices shown in euro, the current rate is fetched from the public Frankfurter service (api.frankfurter.dev); your browser's IP address technically reaches them, no personal data is sent.
+- For server security (firewall, bot and attack filtering, Imunify360) the hosting provider logs visitors' IP addresses and browser data and may show a short verification page for suspicious traffic.
 
 **Bot protection (Cloudflare Turnstile).** To protect our forms (newsletter sign-up, contact, orders) we use the Turnstile service of Cloudflare, Inc., which filters out bots with a check that is invisible to visitors. In doing so, Cloudflare processes technical data of the browser and device (e.g. IP address, browser type) solely to prevent abuse, based on our legitimate interest (GDPR Art. 6(1)(f)). Details: Cloudflare Turnstile Privacy Addendum – https://www.cloudflare.com/turnstile-privacy-policy/
 
+**Transfers outside the EU.** Google and Cloudflare may transfer data to the United States; both are certified participants of the EU–US Data Privacy Framework, which provides adequate protection under the European Commission's adequacy decision.
+
 ## 4. Cookies
-Storage needed for the shop to work (e.g. cart contents, language and currency settings) happens in your browser. [Marketing or tracking cookies – e.g. Barion Pixel – are only used with consent; update this notice accordingly.]
+The shop uses cookies and local storage (localStorage, sessionStorage) in your browser. We do not use advertising or marketing cookies.
+
+**Necessary for the shop to work (no consent needed):**
+- cart contents (bagdikata:cart), currency setting and exchange rate (bagdikata:currency, bagdikata:eurhuf), and a cache of the shop's data for faster loading (products, content, settings: bagdikata:store, bagdikata:content, bagdikata:settings) – local storage, until you delete them;
+- a marker used to count a visit only once (bagdikata:visit:…, session storage) – until the tab is closed;
+- your cookie choice (bk_consent, local storage) – until you delete or change it;
+- remembering that the intro animation was shown (bk_intro_seen, local storage);
+- the login cookie of the password-protected site (bk_site) – 12 hours, 30 days with "Remember me";
+- session cookies of the admin interface (bk_admin, bk_pre) – only for the operator, up to 8 hours.
+
+**Only with consent ("Accept"):**
+- counting returning visitors: bk_vid (local storage) – until consent is withdrawn;
+- Google Analytics: _ga, _ga_* cookies – up to 14 months.
+
+You can change your consent any time with the "Cookie settings" link in the footer (on the "coming soon" page at the bottom of the page); you can delete cookies and local storage in your browser settings at any time.
 
 **Google Analytics.** If you consent on the cookie banner (“Accept”), we use the Google Analytics service of Google Ireland Ltd. (Gordon House, Barrow Street, Dublin 4, Ireland) to create visitor statistics (pages viewed, device and browser type, approximate location, referral source). For this, Google stores cookies (_ga, _ga_*) in your browser for up to 14 months. The data are not used for advertising and are not combined with other data. Legal basis: consent (GDPR Art. 6(1)(a)); you can withdraw it any time with the “Cookie settings” link in the footer – measurement then stops and the Google cookies are deleted. Data may be transferred outside the EU (USA); Google participates in the EU–US Data Privacy Framework. Details: https://policies.google.com/technologies/partner-sites
 
 ## 5. Retention
 Order data are kept as long as necessary to perform the contract and meet legal obligations; accounting records for the statutory period. [Add further retention periods – e.g. warranty claims, withdrawal.]
+
+Statistics and security:
+- own statistics: the day's visitor hash until the end of the day, aggregated daily figures for 120 days;
+- returning visitors (hash of bk_vid): 200 days from the last visit;
+- Google Analytics: 14 months at Google (according to the Google Analytics data retention setting);
+- attempt limiting (IP hash): up to 2 days;
+- backups: daily backups for 14 days, image backups for 4 weeks.
 
 ## 6. Your rights
 You may request access to, rectification or erasure of your personal data or restriction of processing, object to processing, and request data portability. Contact info@bagdikata.hu; we respond within the statutory time limit.
