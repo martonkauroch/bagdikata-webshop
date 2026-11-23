@@ -14,6 +14,7 @@ Bagdi Kata kézzel kötött sapka webshopja, kétnyelvű (HU/EN), cPanel PHP tá
 - Napi biztonsági mentés: `_backup.php` (adatok naponta/14 db, képek hetente/4 db → `api/data/backups/`), indítja `cron_daily.php` és `bk_daily_tick`; admin: `backup.php` + Beállítások › „Biztonsági mentések” kártya.
 - Napi jelentés: cPanel cron óránként (`/usr/local/bin/php <gyökér>/api/cron_daily.php`) + tartalék: oldalbetöltés-trigger (`bk_daily_tick`).
 
+- **Content-Security-Policy:** `index.html` `<meta http-equiv>` (a `.htaccess`-ben csak frame-ancestors/base-uri/object-src). Új külső szkript-, betűtípus-, kapcsolat- vagy keretforrásnál a CSP-t is bővíteni kell. Helyi teszthez az `upgrade-insecure-requests` részt ki kell venni (http). Robotszűrő: Cloudflare Turnstile, kulcsok az `api/data/security.php`-ban (`turnstile_site`, `turnstile_secret`; Invisible mód).
 - **A forráskódban nincsenek fejlesztői kommentek** (a felhasználó kérése): PHP, JS, `.htaccess`, `.cpanel.yml` – új kódba se kerüljön; a magyarázat ide, a CLAUDE.md-be való. Kivétel: az `index.html` szerzői jogi megjegyzése és az `api/data/*.example` kitöltési útmutatói.
 
 ## Kiadási szabály (minden módosításnál)

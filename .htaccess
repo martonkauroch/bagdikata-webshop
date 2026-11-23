@@ -51,6 +51,8 @@ DirectoryIndex index.html
   Header set Strict-Transport-Security "max-age=31536000" env=HTTPS
   Header unset X-Powered-By
   Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+  Header set X-Permitted-Cross-Domain-Policies "none"
   <FilesMatch "\.(js|css|jpg|jpeg|png|webp|svg|woff2)$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
