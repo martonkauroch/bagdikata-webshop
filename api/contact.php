@@ -42,6 +42,7 @@ try {
     mail_log('OK contact ' . $ref . ' -> ' . count($to) . ' cím');
     try { mail_confirm_contact($email, $name, $lang, $ref); mail_log('OK contact-visszaigazolas ' . $ref); }
     catch (Throwable $e) { mail_log('HIBA contact-visszaigazolas: ' . mail_clean($e->getMessage(), 200)); }
+    try { live_push('msg'); } catch (Throwable $e) { }
     json_out(array('ok' => true));
 } catch (Throwable $e) {
     mail_log('HIBA contact: ' . mail_clean($e->getMessage(), 200));

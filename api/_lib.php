@@ -88,6 +88,21 @@ function landing_has_image($id) {
     foreach ($l->images as $im) { if ($im['src'] === 'srv:' . $id) { return true; } }
     return false;
 }
+function live_push($type, $extra = array()) {
+    $ev = array_merge(array('t' => time(), 'y' => (string) $type), $extra);
+    mutate_json('live', function ($cur) use ($ev) {
+        $a = $cur ? json_decode(json_encode($cur), true) : array();
+        if (!is_array($a)) { $a = array(); }
+        $evs = (isset($a['ev']) && is_array($a['ev'])) ? $a['ev'] : array();
+        $evs[] = $ev;
+        $evs = array_slice($evs, -80);
+        $m = (isset($a['m']) && is_array($a['m'])) ? $a['m'] : array();
+        if ($ev['y'] === 'pageview') { $k = (string) intdiv($ev['t'], 60); $m[$k] = (isset($m[$k]) ? (int) $m[$k] : 0) + 1; }
+        $cut = intdiv(time(), 60) - 90;
+        foreach (array_keys($m) as $k) { if ((int) $k < $cut) { unset($m[$k]); } }
+        return array('ev' => $evs, 'm' => $m);
+    });
+}
 function share_has_image($id) {
     $raw = read_raw('content'); $c = $raw ? json_decode($raw, true) : null;
     return is_array($c) && isset($c['share']['image']) && $c['share']['image'] === 'srv:' . $id && (!isset($c['share']['showImage']) || $c['share']['showImage'] !== false);

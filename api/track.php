@@ -5,7 +5,7 @@ ensure_data();
 require_post();
 $cfg = load_config();
 if (!$cfg) { json_out(array('ok' => false), 503); }
-require_site($cfg);
+$site = has_site($cfg);
 if (has_admin($cfg)) { json_out(array('ok' => true)); }
 if ((isset($_SERVER['HTTP_DNT']) && $_SERVER['HTTP_DNT'] === '1') || (isset($_SERVER['HTTP_SEC_GPC']) && $_SERVER['HTTP_SEC_GPC'] === '1')) { json_out(array('ok' => true)); }
 $ua = isset($_SERVER['HTTP_USER_AGENT']) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
@@ -16,6 +16,9 @@ $d = body_json(2000);
 if (!is_object($d) || !isset($d->type) || !is_string($d->type)) { json_out(array('ok' => false), 400); }
 $type = $d->type;
 if (!in_array($type, array('pageview', 'impression', 'click', 'view', 'cart', 'share', 'vid'), true)) { json_out(array('ok' => false), 400); }
+if (!$site && $type !== 'pageview') { fail(401, 'Nincs belépve (oldaljelszó)'); }
+$path = (isset($d->path) && is_string($d->path) && preg_match('#^/[A-Za-z0-9_/-]{0,80}$#', $d->path)) ? $d->path : '';
+if (!$site) { $path = '/hamarosan'; }
 $pid = (isset($d->productId) && is_string($d->productId) && preg_match('/^[A-Za-z0-9_-]{1,60}$/', $d->productId)) ? $d->productId : '';
 $ch = (isset($d->channel) && is_string($d->channel) && in_array($d->channel, array('facebook', 'messenger', 'whatsapp', 'viber', 'telegram', 'x', 'pinterest', 'linkedin', 'email', 'instagram', 'copy', 'native'), true)) ? $d->channel : '';
 if ($type !== 'pageview' && $type !== 'vid' && $pid === '') { json_out(array('ok' => false), 400); }
@@ -79,4 +82,6 @@ mutate_json('analytics', function ($cur) use ($type, $pid, $ch, $newVisit, $isNe
     }
     return $a;
 });
+if ($type === 'pageview') { live_push('pageview', array('p' => $path, 'nv' => $newVisit ? 1 : 0)); }
+elseif ($type !== 'impression') { live_push($type, array_filter(array('pid' => $pid, 'ch' => $ch))); }
 json_out(array('ok' => true));

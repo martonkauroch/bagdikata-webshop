@@ -94,6 +94,7 @@ if ($act === 'subscribe') {
     $email = (isset($d->email) && is_string($d->email)) ? $d->email : '';
     if (!mail_valid(trim($email))) { fail(400, 'Érvénytelen e-mail-cím'); }
     nl_subscribe($cfg, $email, (isset($d->name) && is_string($d->name)) ? $d->name : '', (isset($d->lang) && $d->lang === 'en') ? 'en' : 'hu', $src);
+    try { live_push('nl', array('src' => $src)); } catch (Throwable $e) { }
     json_out(array('ok' => true));
 }
 

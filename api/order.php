@@ -124,4 +124,5 @@ if ($isNew && !empty($o->newsletter) && isset($o->customer) && is_object($o->cus
             (isset($o->locale) && $o->locale === 'en') ? 'en' : 'hu', 'checkout');
     } catch (Throwable $e) {  }
 }
+if ($isNew) { try { live_push('order', array('sum' => (int) $sub)); } catch (Throwable $e) { } }
 json_out(array('ok' => true));
