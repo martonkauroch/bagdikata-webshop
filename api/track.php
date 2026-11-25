@@ -15,12 +15,34 @@ rl_hit('track', 3600);
 $d = body_json(2000);
 if (!is_object($d) || !isset($d->type) || !is_string($d->type)) { json_out(array('ok' => false), 400); }
 $type = $d->type;
-if (!in_array($type, array('pageview', 'impression', 'click', 'view', 'cart', 'share', 'vid'), true)) { json_out(array('ok' => false), 400); }
-if (!$site && $type !== 'pageview') { fail(401, 'Nincs belépve (oldaljelszó)'); }
+if (!in_array($type, array('pageview', 'impression', 'click', 'view', 'cart', 'share', 'vid', 'time'), true)) { json_out(array('ok' => false), 400); }
+if (!$site && $type !== 'pageview' && $type !== 'time') { fail(401, 'Nincs belépve (oldaljelszó)'); }
 $path = (isset($d->path) && is_string($d->path) && preg_match('#^/[A-Za-z0-9_/-]{0,80}$#', $d->path)) ? $d->path : '';
 if (!$site) { $path = '/hamarosan'; }
 $pid = (isset($d->productId) && is_string($d->productId) && preg_match('/^[A-Za-z0-9_-]{1,60}$/', $d->productId)) ? $d->productId : '';
 $ch = (isset($d->channel) && is_string($d->channel) && in_array($d->channel, array('facebook', 'messenger', 'whatsapp', 'viber', 'telegram', 'x', 'pinterest', 'linkedin', 'email', 'instagram', 'copy', 'native'), true)) ? $d->channel : '';
+if ($type === 'time') {
+    $ms = isset($d->ms) && is_numeric($d->ms) ? (int) $d->ms : 0;
+    if ($path === '' || $ms < 1000) { json_out(array('ok' => true)); }
+    $sec = min(1800, (int) round($ms / 1000));
+    $first = !empty($d->first);
+    date_default_timezone_set('Europe/Budapest');
+    $today = date('Y-m-d');
+    mutate_json('analytics', function ($cur) use ($today, $path, $sec, $first) {
+        $a = $cur ? json_decode(json_encode($cur), true) : array();
+        if (!is_array($a)) { $a = array(); }
+        if (!isset($a[$today]) || !is_array($a[$today])) { $a[$today] = array('date' => $today, 'visitors' => 0, 'pageViews' => 0, 'products' => array()); }
+        $day = &$a[$today];
+        if (!isset($day['dur']) || !is_array($day['dur'])) { $day['dur'] = array(); }
+        if (!isset($day['dur'][$path]) && count($day['dur']) >= 300) { return $a; }
+        $e = isset($day['dur'][$path]) && is_array($day['dur'][$path]) ? $day['dur'][$path] : array('s' => 0, 'n' => 0);
+        $e['s'] = (int) $e['s'] + $sec;
+        if ($first) { $e['n'] = (int) $e['n'] + 1; }
+        $day['dur'][$path] = $e;
+        return $a;
+    });
+    json_out(array('ok' => true));
+}
 if ($type !== 'pageview' && $type !== 'vid' && $pid === '') { json_out(array('ok' => false), 400); }
 if ($type === 'share' && $ch === '') { json_out(array('ok' => false), 400); }
 $newVisit = !empty($d->newVisit);
