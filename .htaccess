@@ -11,6 +11,7 @@ DirectoryIndex index.html
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
   RewriteRule ^assets/og-share\.jpg$ api/ogimg.php?share=1 [L,QSA]
+  RewriteRule ^assets/og-p/([A-Za-z0-9_-]{1,80})\.jpg$ api/ogimg.php?id=$1 [L,QSA]
 
   RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|Facebot|meta-externalfetcher|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Pinterest|Slackbot|Discordbot|Viber|SkypeUriPreview) [NC]
   RewriteRule ^(index\.html)?$ api/p.php?page=home [L,QSA]

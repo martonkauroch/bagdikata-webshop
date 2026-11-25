@@ -12,7 +12,7 @@ if ($isShare) {
     list($url, $file) = seo_image($sh['image']);
     if (is_array($sh['frame'])) { $fx = isset($sh['frame']['x']) ? max(0, min(100, (float) $sh['frame']['x'])) : 50; $fy = isset($sh['frame']['y']) ? max(0, min(100, (float) $sh['frame']['y'])) : 50; }
 } else {
-if (!$cfg || !site_is_public()) { http_response_code(404); exit; }
+if (!$cfg) { http_response_code(404); exit; }
 $id = isset($_GET['id']) ? (string) $_GET['id'] : '';
 if (!preg_match('/^[A-Za-z0-9_-]{1,80}$/', $id)) { http_response_code(404); exit; }
 $p = seo_find_product($id);

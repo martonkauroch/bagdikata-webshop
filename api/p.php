@@ -7,12 +7,18 @@ $site = seo_site_url();
 $lang = (isset($_GET['lang']) && $_GET['lang'] === 'en') ? 'en' : 'hu';
 $id = isset($_GET['id']) ? (string) $_GET['id'] : '';
 $page = isset($_GET['page']) ? (string) $_GET['page'] : '';
+$viaRoot = false;
+if ($page === 'home' && isset($_GET['p']) && is_string($_GET['p']) && preg_match('/^[A-Za-z0-9_-]{1,80}$/', $_GET['p'])) {
+    $id = $_GET['p']; $page = ''; $viaRoot = true;
+    $lang = (isset($_GET['l']) && $_GET['l'] === 'en') ? 'en' : 'hu';
+}
 $en = $lang === 'en';
 $pub = $cfg && site_is_public();
+$showProd = $cfg && ($pub || seo_is_bot());
 $prefix = $en ? '/en' : '';
 $title = 'Bagdi Kata'; $desc = ''; $img = ''; $imgFile = null; $path = ''; $hash = '/' . ($en ? 'en/' : ''); $ld = array(); $body = '';
 if ($id !== '') {
-    $p = preg_match('/^[A-Za-z0-9_-]{1,80}$/', $id) && $pub ? seo_find_product($id) : null;
+    $p = preg_match('/^[A-Za-z0-9_-]{1,80}$/', $id) && $showProd ? seo_find_product($id) : null;
     if (!$p) {
         if (!$pub) { header('Location: ' . $site . '/', true, 302); exit; }
         http_response_code(404);
@@ -21,13 +27,13 @@ if ($id !== '') {
         exit;
     }
     $slug = seo_product_slug($p);
-    if ($id !== $slug) { header('Location: ' . $site . $prefix . '/termek/' . rawurlencode($slug), true, 301); exit; }
+    if ($id !== $slug) { header('Location: ' . ($viaRoot ? $site . '/?p=' . rawurlencode($slug) . ($en ? '&l=en' : '') : $site . $prefix . '/termek/' . rawurlencode($slug)), true, 301); exit; }
     $name = $en && !empty($p->nameEn) ? $p->nameEn : (isset($p->name) ? $p->name : $id);
     $d = $en && !empty($p->descriptionEn) ? $p->descriptionEn : (isset($p->description) ? $p->description : '');
     $title = $name . ' – Bagdi Kata';
     $desc = trim(preg_replace('/\s+/', ' ', strip_tags($d)));
     list($img, $imgFile) = seo_image(isset($p->imageUrl) ? $p->imageUrl : '');
-    if ($imgFile && function_exists('imagecreatetruecolor')) { $img = $site . '/api/ogimg.php?id=' . rawurlencode($p->id); $imgFile = null; $ogW = 1200; $ogH = 630; }
+    if ($imgFile && function_exists('imagecreatetruecolor')) { $img = $site . '/assets/og-p/' . rawurlencode($slug) . '.jpg?v=' . substr(sha1((isset($p->imageUrl) ? $p->imageUrl : '') . '|' . @filemtime($imgFile)), 0, 10); $imgFile = null; $ogW = 1200; $ogH = 630; }
     $path = $prefix . '/termek/' . $slug; $hash = ($en ? '/en' : '') . '/termek/' . $slug;
     $price = isset($p->price) && is_numeric($p->price) ? (float) $p->price : null;
     $inStock = !isset($p->stock) || !is_numeric($p->stock) || $p->stock > 0;
@@ -52,6 +58,7 @@ if ($id !== '') {
 $w = isset($ogW) ? $ogW : 0; $h = isset($ogH) ? $ogH : 0;
 if ($imgFile && is_file($imgFile)) { $sz = @getimagesize($imgFile); if ($sz) { $w = $sz[0]; $h = $sz[1]; } }
 $canon = $site . $path;
+$ogUrl = $viaRoot ? $site . '/?p=' . rawurlencode($slug) . ($en ? '&l=en' : '') : $canon;
 $alt = ($en ? $site . preg_replace('#^/en#', '', $path) : $site . '/en' . $path);
 $huUrl = $en ? $alt : $canon; $enUrl = $en ? $canon : $alt;
 $app = $site . '/#' . $hash;
@@ -76,7 +83,7 @@ if (!$pub) { header('X-Robots-Tag: noindex, nofollow'); }
 <meta property="og:locale" content="<?= $en ? 'en_US' : 'hu_HU' ?>">
 <meta property="og:title" content="<?= seo_h($title) ?>">
 <meta property="og:description" content="<?= seo_h($desc) ?>">
-<meta property="og:url" content="<?= seo_h($canon) ?>">
+<meta property="og:url" content="<?= seo_h($ogUrl) ?>">
 <?php if ($img): ?>
 <meta property="og:image" content="<?= seo_h($img) ?>">
 <meta property="og:image:secure_url" content="<?= seo_h($img) ?>">

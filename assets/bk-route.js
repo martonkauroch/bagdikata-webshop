@@ -1,0 +1,1 @@
+(function(){try{var q=location.search,m=/[?&]p=([A-Za-z0-9_-]{1,80})(?:&|$)/.exec(q);if(!m)return;var en=/[?&]l=en(?:&|$)/.test(q);location.replace(location.pathname+'#'+(en?'/en':'')+'/termek/'+m[1])}catch(e){}})();
