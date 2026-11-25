@@ -1,5 +1,6 @@
 User-agent: facebookexternalhit
 User-agent: Facebot
+User-agent: meta-externalfetcher
 User-agent: Twitterbot
 User-agent: LinkedInBot
 User-agent: WhatsApp
