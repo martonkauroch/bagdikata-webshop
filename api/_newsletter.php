@@ -42,7 +42,7 @@ function nl_subscribe($cfg, $email, $name, $lang, $source) {
                 return array_values($a);
             }
             $a[$i]['status'] = 'pending'; $a[$i]['consentAt'] = $now; $a[$i]['lastMailAt'] = $now; $a[$i]['source'] = $source;
-            $a[$i]['lang'] = $lang; $a[$i]['unsubscribedAt'] = null; $a[$i]['confirmedAt'] = null; $a[$i]['consentVer'] = NL_CONSENT_VER;
+            $a[$i]['lang'] = $lang; $a[$i]['unsubscribedAt'] = null; $a[$i]['confirmedAt'] = null; $a[$i]['remindedAt'] = null; $a[$i]['consentVer'] = NL_CONSENT_VER;
             if ($name !== '') { $a[$i]['name'] = $name; }
             $send = $a[$i];
             return array_values($a);
@@ -79,8 +79,42 @@ function nl_send_confirm($cfg, $s) {
     $it = (object) array('subject' => $subject, 'lang' => $en ? 'en' : 'hu',
         'blocks' => array((object) array('heading' => $en ? 'Confirm your subscription' : 'Feliratkozás megerősítése', 'lines' => $lines), (object) array('links' => array((object) array('label' => $label, 'href' => $url)))));
     list($text, $html) = mail_render($it);
-    try { $sender = nl_sender(); mail_send(array($s['email']), $subject, $text, $html, $sender, $sender); mail_log('OK hírlevél-megerősítő -> 1 cím'); }
-    catch (Throwable $e) { mail_log('HIBA hírlevél-megerősítő: ' . mail_clean($e->getMessage(), 120)); }
+    try { $sender = nl_sender(); mail_send(array($s['email']), $subject, $text, $html, $sender, $sender); mail_log('OK hírlevél-megerősítő -> 1 cím'); return true; }
+    catch (Throwable $e) { mail_log('HIBA hírlevél-megerősítő: ' . mail_clean($e->getMessage(), 120)); return false; }
+}
+
+function nl_remind_run($cfg, $max = 25) {
+    $lock = DATA_DIR . '/nl_remind.lock';
+    if (is_file($lock) && time() - filemtime($lock) < 600) { return 0; }
+    @touch($lock);
+    $now = time(); $due = array();
+    mutate_json('newsletter', function ($cur) use ($now, $max, &$due) {
+        $a = is_array($cur) ? json_decode(json_encode($cur), true) : array();
+        if (!is_array($a)) { return $a; }
+        foreach ($a as $i => $s) {
+            if (count($due) >= $max) { break; }
+            if (!isset($s['id'], $s['email']) || (isset($s['status']) ? $s['status'] : 'pending') !== 'pending' || !empty($s['remindedAt'])) { continue; }
+            $c = !empty($s['consentAt']) ? strtotime($s['consentAt']) : 0;
+            $l = !empty($s['lastMailAt']) ? strtotime($s['lastMailAt']) : $c;
+            if (!$c || $now - $c > 30 * 86400 || $now - $l < 3 * 86400) { continue; }
+            $due[] = array_merge($a[$i], array('prevMailAt' => isset($s['lastMailAt']) ? $s['lastMailAt'] : null));
+            $a[$i]['remindedAt'] = date('c', $now); $a[$i]['lastMailAt'] = date('c', $now);
+        }
+        return array_values($a);
+    });
+    $n = 0;
+    $failed = array();
+    foreach ($due as $s) { if (nl_send_confirm($cfg, $s)) { $n++; } else { $failed[$s['id']] = $s['prevMailAt']; } }
+    if ($failed) {
+        mutate_json('newsletter', function ($cur) use ($failed) {
+            $a = is_array($cur) ? json_decode(json_encode($cur), true) : array();
+            if (!is_array($a)) { return $a; }
+            foreach ($a as $i => $s) { if (isset($s['id']) && array_key_exists($s['id'], $failed)) { $a[$i]['remindedAt'] = null; $a[$i]['lastMailAt'] = $failed[$s['id']]; } }
+            return array_values($a);
+        });
+    }
+    if ($due) { mail_log('hírlevél-emlékeztető (3 napja meg nem erősített): ' . $n . '/' . count($due) . ' elküldve'); }
+    return $n;
 }
 
 function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {

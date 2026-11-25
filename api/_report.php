@@ -214,6 +214,8 @@ function bk_daily_tick() {
             if ($r['sent'] || $r['fail']) { mail_log('napi jelentés (oldalbetöltés-trigger): ' . $r['sent'] . ' elküldve, ' . $r['fail'] . ' hiba'); }
             if (!function_exists('bk_backup_run')) { require_once __DIR__ . '/_backup.php'; }
             bk_backup_run(false, false);
+            if (!function_exists('nl_remind_run')) { require_once __DIR__ . '/_newsletter.php'; }
+            nl_remind_run($cfg);
         } catch (Throwable $e) { }
     });
 }
