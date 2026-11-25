@@ -95,6 +95,8 @@ function live_push($type, $extra = array()) {
         if (!is_array($a)) { $a = array(); }
         $evs = (isset($a['ev']) && is_array($a['ev'])) ? $a['ev'] : array();
         $evs[] = $ev;
+        $old = time() - 7200;
+        $evs = array_values(array_filter($evs, function ($x) use ($old) { return isset($x['t']) && $x['t'] > $old; }));
         $evs = array_slice($evs, -80);
         $m = (isset($a['m']) && is_array($a['m'])) ? $a['m'] : array();
         if ($ev['y'] === 'pageview') { $k = (string) intdiv($ev['t'], 60); $m[$k] = (isset($m[$k]) ? (int) $m[$k] : 0) + 1; }
