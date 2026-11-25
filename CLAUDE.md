@@ -14,6 +14,7 @@ Bagdi Kata kézzel kötött sapka webshopja, kétnyelvű (HU/EN), cPanel PHP tá
 - Napi biztonsági mentés: `_backup.php` (adatok naponta/14 db, képek hetente/4 db → `api/data/backups/`), indítja `cron_daily.php` és `bk_daily_tick`; admin: `backup.php` + Beállítások › „Biztonsági mentések” kártya.
 - Hírlevél-jelvény az admin menüben: `newsletter.php?unseen=1` (GET, admin) / `{action:"seen"}` (POST), adat: `api/data/nl_seen.json`; a menü (`ProtectedAdminLayout-*.js`) 700 ms-onként figyeli a hash-t (a router nem küld hashchange-et).
 - Google Analytics: beállítás `settings.analytics {enabled,gaId}` (Admin › Statisztika, `StatisticsPage-*.js` GACard); a `boot.php` `ga` mezőben kiküldi (a „Hamarosan” oldalnak is) → `window.__BK.ga`; betöltő: `assets/bk-ga.js` (csak `bk_consent==="1"` után, admin nélkül, hash → szép útvonal page_view; a „Hamarosan” oldalon saját sáv + link). CSP-ben: googletagmanager, *.google-analytics.com, *.analytics.google.com.
+- Facebook-megosztás: `content.share {title,description,image,frame,showImage}`; a `.htaccess` a megosztási robotokat (UA-lista) a főoldalon az `api/p.php?page=home`-ra irányítja (`seo_share()`), saját kép esetén `api/ogimg.php?share=1` (1200×630, fókuszpont); `img.php` a megosztási képet jelszó nélkül is kiadja (`share_has_image`).
 - Napi jelentés: cPanel cron óránként (`/usr/local/bin/php <gyökér>/api/cron_daily.php`) + tartalék: oldalbetöltés-trigger (`bk_daily_tick`).
 
 - **Content-Security-Policy:** `index.html` `<meta http-equiv>` (a `.htaccess`-ben csak frame-ancestors/base-uri/object-src). Új külső szkript-, betűtípus-, kapcsolat- vagy keretforrásnál a CSP-t is bővíteni kell. Helyi teszthez az `upgrade-insecure-requests` részt ki kell venni (http). Robotszűrő: Cloudflare Turnstile, kulcsok az `api/data/security.php`-ban (`turnstile_site`, `turnstile_secret`; Invisible mód).
@@ -31,7 +32,7 @@ Bagdi Kata kézzel kötött sapka webshopja, kétnyelvű (HU/EN), cPanel PHP tá
 - Az éles oldal a fejlesztői környezetből nem biztos, hogy elérhető.
 
 ## Nyitott tételek
-- **Webshop megnyitásakor:** az `index.html` megosztási címkéi (og:title, og:description, twitter:*) és a kép (`assets/og-hamarosan.jpg`) a „Hamarosan” időszakra szólnak – cserélni kell a nyitott webshophoz. A `robots.txt` jelszavas módban csak a megosztási robotokat engedi (nyilvános módban a `robots-public.txt` él).
+- **Webshop megnyitásakor:** a főoldal megosztási címe/leírása/képe az adminban (Kezdőlap és tartalom › Facebook-megosztás) átírható; az alapértelmezés (`seo_share()` a `_seo.php`-ban, és az `index.html` statikus og-címkéi tartalékként) még a „Hamarosan” időszakra szól (`assets/og-hamarosan.jpg`). A `robots.txt` jelszavas módban csak a megosztási robotokat engedi (nyilvános módban a `robots-public.txt` él).
 - Süti-sáv / Google Fonts adatvédelmi kérdés (saját tárolás vagy elhagyás).
 - Jogi szövegek („vázlat”) átnézése élesítés előtt; `mail.php` base_url.
 - Szerveren a régi `api/mailtest.php`, `api/selftest.php` törlendő; a cPanel cron-ban a régi `mailtest` sor törlendő, helyette `cron_daily.php`.

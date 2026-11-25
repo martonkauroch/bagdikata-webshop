@@ -77,9 +77,10 @@ function seo_share() {
     $raw = read_raw('content'); $c = $raw ? json_decode($raw, true) : null;
     $s = (is_array($c) && isset($c['share']) && is_array($c['share'])) ? $c['share'] : array();
     foreach (array('title', 'description') as $k) {
-        foreach (array('hu', 'en') as $l) {
-            if (isset($s[$k][$l]) && is_string($s[$k][$l]) && trim($s[$k][$l]) !== '') { $d[$k][$l] = trim($s[$k][$l]); }
-        }
+        $hu = (isset($s[$k]['hu']) && is_string($s[$k]['hu'])) ? trim($s[$k]['hu']) : '';
+        $en = (isset($s[$k]['en']) && is_string($s[$k]['en'])) ? trim($s[$k]['en']) : '';
+        if ($hu !== '') { $d[$k]['hu'] = $hu; }
+        if ($en !== '') { $d[$k]['en'] = $en; } elseif ($hu !== '') { $d[$k]['en'] = $hu; }
     }
     if (isset($s['image']) && is_string($s['image'])) { $d['image'] = $s['image']; }
     if (isset($s['frame']) && is_array($s['frame'])) { $d['frame'] = $s['frame']; }
