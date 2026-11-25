@@ -39,7 +39,7 @@ if ($id !== '') {
     $sh = seo_share();
     $title = $sh['title'][$lang]; $desc = $sh['description'][$lang];
     list($img, $imgFile) = seo_share_image();
-    if ($img && $imgFile && $sh['image'] !== '') { $img = $site . '/api/ogimg.php?share=1&v=' . substr(sha1($sh['image'] . json_encode($sh['frame']) . @filemtime($imgFile)), 0, 10); $imgFile = null; $ogW = 1200; $ogH = 630; }
+    if ($img && $imgFile && $sh['image'] !== '') { $img = $site . '/assets/og-share.jpg?v=' . substr(sha1($sh['image'] . json_encode($sh['frame']) . @filemtime($imgFile)), 0, 10); $imgFile = null; $ogW = 1200; $ogH = 630; }
     $path = $prefix . '/'; $hash = '/' . ($en ? 'en/' : '');
     $body = '<h1>' . seo_h($title) . '</h1><p>' . seo_h($desc) . '</p>';
 } elseif ($page !== '' && isset(seo_pages()[$page])) {
