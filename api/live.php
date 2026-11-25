@@ -17,7 +17,7 @@ if (is_array($vt) && isset($vt['date'], $vt['h']) && $vt['date'] === $today && i
 }
 $an = json_decode((string) read_raw('analytics'), true);
 $d = (is_array($an) && isset($an[$today]) && is_array($an[$today])) ? $an[$today] : array();
-$t = array('visitors' => (int) (isset($d['visitors']) ? $d['visitors'] : 0), 'visits' => (int) (isset($d['visits']) ? $d['visits'] : 0), 'pageViews' => (int) (isset($d['pageViews']) ? $d['pageViews'] : 0), 'views' => 0, 'clicks' => 0, 'cart' => 0, 'shares' => 0, 'nl' => 0, 'orders' => 0, 'msgs' => 0);
+$t = array('visitors' => (int) (isset($d['visitors']) ? $d['visitors'] : 0), 'visits' => (int) (isset($d['visits']) ? $d['visits'] : 0), 'pageViews' => (int) (isset($d['pageViews']) ? $d['pageViews'] : 0), 'views' => 0, 'clicks' => 0, 'cart' => 0, 'shares' => 0, 'nl' => 0, 'orders' => 0, 'msgs' => 0, 'landing' => (int) (isset($d['pages']['/hamarosan']) ? $d['pages']['/hamarosan'] : 0));
 foreach ((isset($d['products']) && is_array($d['products'])) ? $d['products'] : array() as $p) {
     $t['views'] += (int) (isset($p['views']) ? $p['views'] : 0);
     $t['clicks'] += (int) (isset($p['clicks']) ? $p['clicks'] : 0);

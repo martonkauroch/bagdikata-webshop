@@ -60,7 +60,7 @@ if ($type === 'pageview') {
 }
 $newVisit = $isNewVisit;
 $keepFrom = date('Y-m-d', strtotime('-120 days'));
-mutate_json('analytics', function ($cur) use ($type, $pid, $ch, $newVisit, $isNewUnique, $today, $keepFrom) {
+mutate_json('analytics', function ($cur) use ($type, $pid, $ch, $newVisit, $isNewUnique, $today, $keepFrom, $path) {
     $a = $cur ? json_decode(json_encode($cur), true) : array();
     if (!is_array($a)) { $a = array(); }
     foreach (array_keys($a) as $k) { if ($k < $keepFrom) { unset($a[$k]); } }
@@ -70,6 +70,10 @@ mutate_json('analytics', function ($cur) use ($type, $pid, $ch, $newVisit, $isNe
         $day['pageViews'] = (isset($day['pageViews']) ? $day['pageViews'] : 0) + 1;
         if ($isNewUnique) { $day['visitors'] = (isset($day['visitors']) ? $day['visitors'] : 0) + 1; }
         if ($newVisit) { $day['visits'] = (isset($day['visits']) ? $day['visits'] : 0) + 1; }
+        if ($path !== '') {
+            if (!isset($day['pages']) || !is_array($day['pages'])) { $day['pages'] = array(); }
+            if (isset($day['pages'][$path]) || count($day['pages']) < 300) { $day['pages'][$path] = (isset($day['pages'][$path]) ? (int) $day['pages'][$path] : 0) + 1; }
+        }
     } else {
         if (!isset($day['products']) || !is_array($day['products'])) { $day['products'] = array(); }
         if (!isset($day['products'][$pid])) { $day['products'][$pid] = array('impressions' => 0, 'clicks' => 0, 'views' => 0, 'addToCart' => 0, 'shares' => array('facebook' => 0, 'copy' => 0, 'native' => 0)); }
