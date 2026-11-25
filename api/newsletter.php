@@ -25,10 +25,22 @@ function nl_set_status($id, $status) {
 }
 
 if ($method === 'GET' && isset($_GET['c'])) {
-    $id = (string) $_GET['c']; $t = isset($_GET['t']) ? (string) $_GET['t'] : '';
+    $rawId = (string) $_GET['c']; $rawT = isset($_GET['t']) ? (string) $_GET['t'] : '';
+    $id = preg_match('/^\s*([a-f0-9]{16})/i', $rawId, $m) ? strtolower($m[1]) : $rawId;
+    $t = preg_match('/^\s*([a-f0-9]{32})/i', $rawT, $m) ? strtolower($m[1]) : $rawT;
     $lang = nl_find_lang($id); $en = ($lang === 'en');
-    if (!nl_token_ok($cfg, $id, 'confirm', $t) || !nl_set_status($id, 'confirmed')) {
-        nl_page($en ? 'Invalid link' : 'Érvénytelen link', $en ? 'This confirmation link is not valid. Please subscribe again.' : 'Ez a megerősítő link nem érvényes. Kérjük, iratkozz fel újra.', $lang);
+    if (!nl_token_ok($cfg, $id, 'confirm', $t)) {
+        mail_log('HIBA hírlevél-megerősítés: hibás vagy csonka link (azonosító ' . strlen($rawId) . ' karakter, kód ' . strlen($rawT) . ' karakter)');
+        nl_page($en ? 'Invalid link' : 'Érvénytelen link', $en ? 'This confirmation link is not valid or incomplete (some mail programs cut long links). Please open the link from the e-mail again, or subscribe again.' : 'Ez a megerősítő link nem érvényes vagy hiányos (egyes levelezőprogramok elvágják a hosszú linkeket). Kérjük, nyisd meg újra a levélben lévő gombbal, vagy iratkozz fel újra.', $lang);
+    }
+    $prev = null;
+    foreach (nl_list() as $s) { if (isset($s['id']) && $s['id'] === $id) { $prev = isset($s['status']) ? $s['status'] : 'pending'; break; } }
+    if ($prev === null || !nl_set_status($id, 'confirmed')) {
+        mail_log('HIBA hírlevél-megerősítés: a feliratkozó már nem szerepel a listán (törölve)');
+        nl_page($en ? 'Subscription not found' : 'A feliratkozás nem található', $en ? 'This subscription is no longer on our list (it may have been removed in the meantime). Please subscribe again in the webshop.' : 'Ez a feliratkozás már nem szerepel a listánkon (lehet, hogy közben törölték). Kérjük, iratkozz fel újra a webshopban.', $lang);
+    }
+    if ($prev === 'confirmed') {
+        nl_page($en ? 'Already confirmed' : 'Már megerősítve', $en ? 'You have already confirmed your subscription – no further action is needed.' : 'A feliratkozásodat már korábban megerősítetted – nincs további teendőd.', $lang);
     }
     nl_page($en ? 'Subscription confirmed' : 'Feliratkozás megerősítve', $en ? 'Thank you! You are now subscribed to the Bagdi Kata newsletter. You can unsubscribe at any time from the link at the bottom of each newsletter.' : 'Köszönjük! Mostantól kapod a Bagdi Kata hírlevelét. Bármikor leiratkozhatsz a hírlevelek alján lévő linkkel.', $lang);
 }
