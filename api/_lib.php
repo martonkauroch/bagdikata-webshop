@@ -88,6 +88,10 @@ function landing_has_image($id) {
     foreach ($l->images as $im) { if ($im['src'] === 'srv:' . $id) { return true; } }
     return false;
 }
+function share_has_image($id) {
+    $raw = read_raw('content'); $c = $raw ? json_decode($raw, true) : null;
+    return is_array($c) && isset($c['share']['image']) && $c['share']['image'] === 'srv:' . $id && (!isset($c['share']['showImage']) || $c['share']['showImage'] !== false);
+}
 function has_site($cfg) { if (!$cfg) { return false; } if (site_is_public()) { return true; } return isset($_COOKIE['bk_site']) && check_token($cfg, 'site', $_COOKIE['bk_site']); }
 function has_admin($cfg) { return $cfg && isset($_COOKIE['bk_admin']) && check_token($cfg, 'admin', $_COOKIE['bk_admin']); }
 function bot_cfg() {

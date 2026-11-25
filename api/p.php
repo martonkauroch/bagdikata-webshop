@@ -35,6 +35,13 @@ if ($id !== '') {
     if ($price !== null) { $ld['offers'] = array('@type' => 'Offer', 'url' => $site . $path, 'priceCurrency' => 'HUF', 'price' => (string) $price, 'availability' => $inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock', 'itemCondition' => 'https://schema.org/NewCondition'); }
     $body = '<h1>' . seo_h($name) . '</h1>' . ($img ? '<p><img src="' . seo_h($img) . '" alt="' . seo_h($name) . '" style="max-width:100%;height:auto;border-radius:8px"></p>' : '')
         . ($price !== null ? '<p class="price">' . seo_h(seo_money($price, $lang)) . '</p>' : '') . '<p>' . seo_h($d) . '</p>';
+} elseif ($page === 'home') {
+    $sh = seo_share();
+    $title = $sh['title'][$lang]; $desc = $sh['description'][$lang];
+    list($img, $imgFile) = seo_share_image();
+    if ($img && $imgFile && $sh['image'] !== '') { $img = $site . '/api/ogimg.php?share=1&v=' . substr(sha1($sh['image'] . json_encode($sh['frame']) . @filemtime($imgFile)), 0, 10); $imgFile = null; $ogW = 1200; $ogH = 630; }
+    $path = $prefix . '/'; $hash = '/' . ($en ? 'en/' : '');
+    $body = '<h1>' . seo_h($title) . '</h1><p>' . seo_h($desc) . '</p>';
 } elseif ($page !== '' && isset(seo_pages()[$page])) {
     $pg = seo_pages()[$page];
     $title = ($en ? $pg[1] : $pg[0]) . ' – Bagdi Kata'; $desc = $en ? $pg[3] : $pg[2];

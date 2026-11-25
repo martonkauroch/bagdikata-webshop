@@ -10,6 +10,9 @@ DirectoryIndex index.html
   RewriteCond %{REQUEST_URI} !^/\.well-known/
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
+  RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|Facebot|meta-externalfetcher|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Pinterest|Slackbot|Discordbot|Viber|SkypeUriPreview) [NC]
+  RewriteRule ^(index\.html)?$ api/p.php?page=home [L,QSA]
+
   RewriteCond %{DOCUMENT_ROOT}/api/data/public.flag -f
   RewriteRule .* - [E=BKPUBLIC:1]
   RewriteCond %{ENV:BKPUBLIC} =1

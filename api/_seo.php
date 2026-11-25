@@ -68,6 +68,35 @@ function seo_image($src) {
     }
     return array('', null);
 }
+function seo_share() {
+    $d = array(
+        'title' => array('hu' => 'Bagdi Kata – hamarosan nyílik a webshop', 'en' => 'Bagdi Kata – our webshop opens soon'),
+        'description' => array('hu' => 'Kézzel kötött melanzs sapkák és nyakmelegítők – minden darab egyedi. Iratkozz fel, és elsőként szólunk, amikor nyit a webshop!', 'en' => 'Hand-knitted melange hats and neck warmers – every piece is unique. Subscribe and be the first to know when the shop opens!'),
+        'image' => '', 'frame' => null, 'showImage' => true,
+    );
+    $raw = read_raw('content'); $c = $raw ? json_decode($raw, true) : null;
+    $s = (is_array($c) && isset($c['share']) && is_array($c['share'])) ? $c['share'] : array();
+    foreach (array('title', 'description') as $k) {
+        foreach (array('hu', 'en') as $l) {
+            if (isset($s[$k][$l]) && is_string($s[$k][$l]) && trim($s[$k][$l]) !== '') { $d[$k][$l] = trim($s[$k][$l]); }
+        }
+    }
+    if (isset($s['image']) && is_string($s['image'])) { $d['image'] = $s['image']; }
+    if (isset($s['frame']) && is_array($s['frame'])) { $d['frame'] = $s['frame']; }
+    if (isset($s['showImage'])) { $d['showImage'] = $s['showImage'] !== false; }
+    return $d;
+}
+function seo_share_image() {
+    $sh = seo_share();
+    if (!$sh['showImage']) { return array('', null); }
+    $def = __DIR__ . '/../assets/og-hamarosan.jpg';
+    if ($sh['image'] !== '') {
+        list($u, $f) = seo_image($sh['image']);
+        if ($f && is_file($f)) { return array($u, $f); }
+        if ($u && !$f) { return array($u, null); }
+    }
+    return array(seo_site_url() . '/assets/og-hamarosan.jpg', $def);
+}
 function seo_money($n, $lang) { return $lang === 'en' ? number_format((float) $n, 0, '.', ',') . ' HUF' : number_format((float) $n, 0, ',', ' ') . ' Ft'; }
 function seo_pages() {
     return array(

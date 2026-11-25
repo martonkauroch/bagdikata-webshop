@@ -3,16 +3,26 @@ define('BK_API', 1);
 require __DIR__ . '/_lib.php';
 require __DIR__ . '/_seo.php';
 $cfg = load_config();
+$isShare = isset($_GET['share']);
+$fx = 50; $fy = 50;
+if ($isShare) {
+    if (!$cfg) { http_response_code(404); exit; }
+    $sh = seo_share();
+    if (!$sh['showImage'] || $sh['image'] === '') { http_response_code(404); exit; }
+    list($url, $file) = seo_image($sh['image']);
+    if (is_array($sh['frame'])) { $fx = isset($sh['frame']['x']) ? max(0, min(100, (float) $sh['frame']['x'])) : 50; $fy = isset($sh['frame']['y']) ? max(0, min(100, (float) $sh['frame']['y'])) : 50; }
+} else {
 if (!$cfg || !site_is_public()) { http_response_code(404); exit; }
 $id = isset($_GET['id']) ? (string) $_GET['id'] : '';
 if (!preg_match('/^[A-Za-z0-9_-]{1,80}$/', $id)) { http_response_code(404); exit; }
 $p = seo_find_product($id);
 if (!$p) { http_response_code(404); exit; }
 list($url, $file) = seo_image(isset($p->imageUrl) ? $p->imageUrl : '');
+}
 if (!$file || !is_file($file) || !function_exists('imagecreatetruecolor')) { header('Location: ' . ($url ?: seo_site_url() . '/favicon.svg'), true, 302); exit; }
 $dir = DATA_DIR . '/og';
 if (!is_dir($dir)) { @mkdir($dir, 0755, true); }
-$cache = $dir . '/' . sha1($file . '|' . filemtime($file) . '|v1') . '.jpg';
+$cache = $dir . '/' . sha1($file . '|' . filemtime($file) . '|v1|' . $fx . '|' . $fy) . '.jpg';
 if (!is_file($cache)) {
     $info = @getimagesize($file);
     $src = null;
@@ -29,7 +39,7 @@ if (!is_file($cache)) {
     $ratio = $sw / $sh; $target = $W / $H;
     if ($ratio >= $target * 0.85) {
         $scale = max($W / $sw, $H / $sh); $cw = (int) round($W / $scale); $ch = (int) round($H / $scale);
-        imagecopyresampled($dst, $src, 0, 0, (int) (($sw - $cw) / 2), (int) (($sh - $ch) / 2), $W, $H, $cw, $ch);
+        imagecopyresampled($dst, $src, 0, 0, (int) (($sw - $cw) * $fx / 100), (int) (($sh - $ch) * $fy / 100), $W, $H, $cw, $ch);
     } else {
         $scale = $H / $sh; $nw = (int) round($sw * $scale);
         imagecopyresampled($dst, $src, (int) (($W - $nw) / 2), 0, 0, 0, $nw, $H, $sw, $sh);
