@@ -43,6 +43,7 @@ try {
     try { mail_confirm_contact($email, $name, $lang, $ref); mail_log('OK contact-visszaigazolas ' . $ref); }
     catch (Throwable $e) { mail_log('HIBA contact-visszaigazolas: ' . mail_clean($e->getMessage(), 200)); }
     try { live_push('msg'); } catch (Throwable $e) { }
+    try { require_once __DIR__ . '/_push.php'; push_notify('msg', 'Új üzenet a weboldalról', mail_clean($name, 60) . ': ' . mb_substr(trim(preg_replace('/\s+/u', ' ', $msg)), 0, 140), 'Kapcsolati űrlap – a részletek a leveleid között', '/#/admin', 'msg-' . $ref); } catch (Throwable $e) { }
     json_out(array('ok' => true));
 } catch (Throwable $e) {
     mail_log('HIBA contact: ' . mail_clean($e->getMessage(), 200));

@@ -125,4 +125,14 @@ if ($isNew && !empty($o->newsletter) && isset($o->customer) && is_object($o->cus
     } catch (Throwable $e) {  }
 }
 if ($isNew) { try { live_push('order', array('sum' => (int) $sub)); } catch (Throwable $e) { } }
+if ($isNew) {
+    try {
+        require_once __DIR__ . '/_push.php';
+        $pcs = 0; foreach ($o->items as $it) { $pcs += isset($it->quantity) ? (int) $it->quantity : 1; }
+        $num = isset($o->orderNumber) ? (string) $o->orderNumber : '';
+        $cn = isset($o->customer->name) && is_string($o->customer->name) ? trim($o->customer->name) : '';
+        $amt = number_format((float) $o->total, 0, ',', ' ') . ' Ft';
+        push_notify('order', (!empty($o->test) ? 'Teszt rendelés – ' : 'Új rendelés – ') . $amt, $num . ($cn !== '' ? ' · ' . $cn : '') . ' · ' . $pcs . ' db', $num . ' · ' . $pcs . ' db', '/#/admin/rendelesek', 'order-' . $num);
+    } catch (Throwable $e) { }
+}
 json_out(array('ok' => true));

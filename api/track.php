@@ -110,4 +110,14 @@ mutate_json('analytics', function ($cur) use ($type, $pid, $ch, $newVisit, $isNe
 });
 if ($type === 'pageview') { live_push('pageview', array('p' => $path, 'nv' => $newVisit ? 1 : 0)); }
 elseif ($type !== 'impression') { live_push($type, array_filter(array('pid' => $pid, 'ch' => $ch))); }
+if ($type === 'cart') {
+    try {
+        require_once __DIR__ . '/_push.php';
+        if (push_wants('cart')) {
+            require_once __DIR__ . '/_seo.php';
+            $pp = seo_find_product($pid); $pn = $pp && isset($pp->name) ? (string) $pp->name : $pid;
+            push_notify('cart', 'Kosárba tétel', $pn, $pn, '/#/admin/statisztika', 'cart-' . $pid);
+        }
+    } catch (Throwable $e) { }
+}
 json_out(array('ok' => true));

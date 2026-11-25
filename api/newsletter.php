@@ -39,6 +39,9 @@ if ($method === 'GET' && isset($_GET['c'])) {
         mail_log('HIBA hírlevél-megerősítés: a feliratkozó már nem szerepel a listán (törölve)');
         nl_page($en ? 'Subscription not found' : 'A feliratkozás nem található', $en ? 'This subscription is no longer on our list (it may have been removed in the meantime). Please subscribe again in the webshop.' : 'Ez a feliratkozás már nem szerepel a listánkon (lehet, hogy közben törölték). Kérjük, iratkozz fel újra a webshopban.', $lang);
     }
+    if ($prev !== 'confirmed') {
+        try { require_once __DIR__ . '/_push.php'; push_notify('nl', 'Hírlevél-feliratkozás megerősítve', 'Egy új olvasó megerősítette a feliratkozását.', 'Egy új olvasó megerősítette a feliratkozását.', '/#/admin/hirlevel', 'nlc-' . $id); } catch (Throwable $e) { }
+    }
     if ($prev === 'confirmed') {
         nl_page($en ? 'Already confirmed' : 'Már megerősítve', $en ? 'You have already confirmed your subscription – no further action is needed.' : 'A feliratkozásodat már korábban megerősítetted – nincs további teendőd.', $lang);
     }

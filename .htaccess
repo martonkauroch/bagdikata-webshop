@@ -68,4 +68,13 @@ DirectoryIndex index.html
   <FilesMatch "\.(js|css)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
+  <FilesMatch "\.webmanifest$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "^bk-sw\.js$">
+    Header set Service-Worker-Allowed "/"
+  </FilesMatch>
+</IfModule>
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
 </IfModule>

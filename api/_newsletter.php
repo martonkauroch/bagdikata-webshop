@@ -53,7 +53,14 @@ function nl_subscribe($cfg, $email, $name, $lang, $source) {
         $a[] = $new; $send = $new;
         return array_values($a);
     });
-    if ($send) { nl_send_confirm($cfg, $send); }
+    if ($send) {
+        nl_send_confirm($cfg, $send);
+        try {
+            require_once __DIR__ . '/_push.php';
+            $srcL = array('landing' => '„Hamarosan” oldal', 'checkout' => 'rendeléskor', 'footer' => 'webshop');
+            push_notify('nl', 'Új hírlevél-feliratkozás', $email . ' · ' . $srcL[$source] . ' (megerősítésre vár)', 'Forrás: ' . $srcL[$source] . ' (megerősítésre vár)', '/#/admin/hirlevel', 'nl-' . $send['id']);
+        } catch (Throwable $e) { }
+    }
     return 'ok';
 }
 
