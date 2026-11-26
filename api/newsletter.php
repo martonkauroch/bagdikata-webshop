@@ -139,11 +139,12 @@ function nl_draft($d) {
     $subjectEn = (isset($d->subjectEn) && is_string($d->subjectEn)) ? mb_substr(trim(preg_replace('/[\r\n\t]+/u', ' ', $d->subjectEn)), 0, 150, 'UTF-8') : '';
     $bodyEn = (isset($d->bodyEn) && is_string($d->bodyEn)) ? mb_substr(str_replace("\r", '', $d->bodyEn), 0, 10000, 'UTF-8') : '';
     $cl = (isset($d->ctaLabel) && is_string($d->ctaLabel)) ? mb_substr(trim($d->ctaLabel), 0, 60, 'UTF-8') : '';
+    $clEn = (isset($d->ctaLabelEn) && is_string($d->ctaLabelEn)) ? mb_substr(trim($d->ctaLabelEn), 0, 60, 'UTF-8') : '';
     $cu = (isset($d->ctaUrl) && is_string($d->ctaUrl)) ? trim($d->ctaUrl) : '';
     if ($subject === '' || trim($body) === '') { fail(400, 'A tárgy és a levél szövege kötelező.'); }
     if (($cl !== '' || $cu !== '') && (!preg_match('#^https://[^\s<>"]{4,300}$#i', $cu) || $cl === '')) { fail(400, 'A gombhoz címke és https:// kezdetű link is kell.'); }
     if (($subjectEn !== '') !== (trim($bodyEn) !== '')) { fail(400, 'Az angol változathoz tárgy és szöveg is kell (vagy mindkettő maradjon üresen).'); }
-    return array('subject' => $subject, 'body' => $body, 'subjectEn' => $subjectEn, 'bodyEn' => $bodyEn, 'ctaLabel' => $cu === '' ? '' : $cl, 'ctaUrl' => $cu);
+    return array('subject' => $subject, 'body' => $body, 'subjectEn' => $subjectEn, 'bodyEn' => $bodyEn, 'ctaLabel' => $cu === '' ? '' : $cl, 'ctaLabelEn' => ($cu === '' || $subjectEn === '') ? '' : $clEn, 'ctaUrl' => $cu);
 }
 
 if ($act === 'list') { json_out(nl_snapshot()); }

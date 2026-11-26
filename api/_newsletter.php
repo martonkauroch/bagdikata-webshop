@@ -144,7 +144,8 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
         }
         return array($why, $lab, $priv, $impl);
     };
-    $langs = $hasEn ? ($en ? array(true, false) : array(false, true)) : array($en && false);
+    $useEn = $en && $hasEn;
+    $langs = array($en);
     $fh = ''; $ft = array();
     foreach ($langs as $isEn) {
         list($why, $lab, $priv, $impl) = $foot($isEn);
@@ -160,20 +161,13 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
         $GLOBALS['bk_mail_headers'] = array('List-Unsubscribe: <' . $unsub . '>, <mailto:' . $contact . '?subject=unsubscribe>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click', 'Precedence: bulk');
     }
     $blocks = array();
-    if ($hasEn) {
-        $blocks[] = (object) array('switch' => array((object) array('label' => 'Magyar', 'href' => '#hu'), (object) array('label' => 'English', 'href' => '#en')));
+    $body = $useEn ? $camp['bodyEn'] : $camp['body'];
+    $blocks[] = (object) array('lines' => preg_split('/\r\n|\r|\n/', (string) $body));
+    if (!empty($camp['ctaLabel']) && !empty($camp['ctaUrl'])) {
+        $cl = ($useEn && !empty($camp['ctaLabelEn'])) ? $camp['ctaLabelEn'] : $camp['ctaLabel'];
+        $blocks[] = (object) array('links' => array((object) array('label' => $cl, 'href' => $camp['ctaUrl'])));
     }
-    $first = true;
-    foreach (($hasEn ? ($en ? array('en', 'hu') : array('hu', 'en')) : array($en ? 'en' : 'hu')) as $lg) {
-        $isEn = ($lg === 'en');
-        $body = $isEn ? $camp['bodyEn'] : $camp['body'];
-        $blk = array('lines' => preg_split('/\r\n|\r|\n/', (string) $body));
-        if ($hasEn) { $blk['anchor'] = $lg; $blk['langtag'] = $isEn ? 'English' : 'Magyar'; if (!$first) { $blk['rule'] = true; } }
-        $blocks[] = (object) $blk;
-        if (!empty($camp['ctaLabel']) && !empty($camp['ctaUrl'])) { $blocks[] = (object) array('links' => array((object) array('label' => $camp['ctaLabel'], 'href' => $camp['ctaUrl']))); }
-        $first = false;
-    }
-    $it = (object) array('subject' => $subj, 'lang' => $en ? 'en' : 'hu', 'blocks' => $blocks);
+    $it = (object) array('subject' => $subj, 'lang' => $useEn ? 'en' : 'hu', 'blocks' => $blocks);
     if ($capture) {
         list($text, $html) = mail_render($it);
         unset($GLOBALS['bk_mail_footer_html'], $GLOBALS['bk_mail_footer_text'], $GLOBALS['bk_mail_nocopy'], $GLOBALS['bk_mail_headers'], $GLOBALS['bk_mail_logo_only']);
