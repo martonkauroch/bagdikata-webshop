@@ -125,7 +125,6 @@ function nl_remind_run($cfg, $max = 25) {
 }
 
 function nl_trk_sig($cfg, $parts) { return substr(hash_hmac('sha256', implode('|', $parts), $cfg['secret'] . '|nltrk'), 0, 16); }
-function nl_trk_b64($s) { return rtrim(strtr(base64_encode($s), '+/', '-_'), '='); }
 function nl_stat_hit($kind, $cid, $sid, $url = '') {
     $cfg = load_config(); if (!$cfg) { return; }
     $h = substr(hash_hmac('sha256', $cid . '|' . $sid, $cfg['secret'] . '|nlu'), 0, 10);
@@ -191,7 +190,7 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     if (!empty($camp['ctaLabel']) && !empty($camp['ctaUrl'])) {
         $cl = ($useEn && !empty($camp['ctaLabelEn'])) ? $camp['ctaLabelEn'] : $camp['ctaLabel'];
         $href = $camp['ctaUrl'];
-        if ($trk) { $href = mail_site_url() . '/api/nlt.php?c=' . $camp['id'] . '.' . $s['id'] . '.' . nl_trk_sig($cfg, array('c', $camp['id'], $s['id'], $href)) . '&u=' . nl_trk_b64($href); }
+        if ($trk) { $href = mail_site_url() . '/api/nlt.php?c=' . $camp['id'] . '.' . $s['id'] . '.' . nl_trk_sig($cfg, array('c', $camp['id'], $s['id'])); }
         $blocks[] = (object) array('links' => array((object) array('label' => $cl, 'href' => $href)));
     }
     $it = (object) array('subject' => $subj, 'lang' => $useEn ? 'en' : 'hu', 'blocks' => $blocks);
