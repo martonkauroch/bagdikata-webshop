@@ -150,8 +150,53 @@ function NewsletterPage(){
       h("div",{style:scroll},h("table",{style:{width:"100%",borderCollapse:"collapse",minWidth:760},"data-testid":"nl-table"},h("thead",null,h("tr",null,["E-mail","Név","Állapot","Forrás","Hozzájárulás","Megerősítve",""].map((x,i)=>h("th",{key:i,style:S.th},x)))),
         h("tbody",null,subs.slice(0,lim).map(s=>{let[tone,lbl]=STAT[s.status]||["gray",s.status];return h("tr",{key:s.id,"data-testid":"nl-row"},h("td",{style:S.td},s.email),h("td",{style:S.td},s.name||"–"),h("td",{style:S.td},h(Badge,{tone},lbl)),h("td",{style:S.td},(SRC[s.source]||s.source)+(s.lang==="en"?" · EN":"")),h("td",{style:S.td},fmtDate(s.consentAt)),h("td",{style:S.td},s.status==="unsubscribed"?"leiratkozott: "+fmtDate(s.unsubscribedAt):fmtDate(s.confirmedAt)),
           h("td",{style:{...S.td,whiteSpace:"nowrap"}},s.status!=="unsubscribed"&&h("button",{type:"button",style:S.btn,onClick:()=>subAct("unsub",s)},"Leiratkoztat")," ",h("button",{type:"button",style:S.btnR,onClick:()=>subAct("delete",s)},"Töröl")))})))),
-      subs.length>lim&&h("p",{style:{marginTop:12}},h("button",{type:"button",style:S.btn,onClick:()=>setLim(lim+100)},"További "+Math.min(100,subs.length-lim)+" megjelenítése"))));
+      subs.length>lim&&h("p",{style:{marginTop:12}},h("button",{type:"button",style:S.btn,onClick:()=>setLim(lim+100)},"További "+Math.min(100,subs.length-lim)+" megjelenítése"))),
+    h(NlTplCard,null));
 }
+function NlTplCard(){
+  let[t,setT]=N.useState(null),[def,setDef]=N.useState(null),[saved,setSaved]=N.useState(""),[lg,setLg]=N.useState("hu"),[kind,setKind]=N.useState("confirm");
+  let[msg,setMsg]=N.useState(null),[busy,setBusy]=N.useState(false),[pv,setPv]=N.useState(null);
+  N.useEffect(()=>{if(!shared())return;api("newsletter.php",{action:"tpl_get"}).then(j=>{setT(j.tpl);setDef(j.defaults);setSaved(JSON.stringify(j.tpl))}).catch(e=>setMsg({e:1,t:e.message}))},[]);
+  if(!shared())return null;
+  if(!t)return h("div",{style:S.card},h("div",{style:S.body},h("p",{style:S.sub},msg?msg.t:"Betöltés…")));
+  let dirty=JSON.stringify(t)!==saved;
+  let K={confirm:"Megerősítő levél",welcome:"Üdvözlő levél",unsub:"Leiratkozás visszaigazolása"};
+  let KD={confirm:"Feliratkozáskor megy ki; a gomb automatikusan a megerősítő linkre mutat, alatta az adatkezelési sor automatikusan bekerül. Ha 3 napig nincs megerősítés, ugyanez a levél még egyszer kimegy.",welcome:"A feliratkozás megerősítése után megy ki (ha be van kapcsolva). A leiratkozási és adatkezelési link automatikusan bekerül.",unsub:"Leiratkozáskor megy ki (ha be van kapcsolva) – visszaigazolja, hogy több hírlevelet nem küldünk."};
+  let setF=(path,val)=>setT(x=>{let y=JSON.parse(JSON.stringify(x)),o=y;for(let i=0;i<path.length-1;i++)o=o[path[i]];o[path[path.length-1]]=val;return y});
+  let T=t[kind],D=def[kind];
+  let run=(p,okMsg)=>{setBusy(true);setMsg(null);return p.then(j=>{setBusy(false);okMsg&&setMsg({t:okMsg});return j}).catch(e=>{setBusy(false);setMsg({e:1,t:e.message})})};
+  let save=()=>run(api("newsletter.php",{action:"tpl_save",tpl:t}).then(j=>{setT(j.tpl);setSaved(JSON.stringify(j.tpl));return j}),"Elmentve. Az automatikus levelek mostantól ezzel a szöveggel mennek ki.");
+  let preview=()=>run(api("newsletter.php",{action:"tpl_preview",tpl:t,kind,lang:lg}).then(j=>{setPv(j);return j}));
+  let test=()=>run(api("newsletter.php",{action:"tpl_test",tpl:t,kind,lang:lg}),"A tesztlevél elment az admin e-mail-címre ("+(lg==="en"?"angol":"magyar")+" változat).");
+  let reset=()=>{if(!window.confirm("Visszaállítod a(z) „"+K[kind]+"” "+(lg==="en"?"angol":"magyar")+" szövegét az alapértelmezettre? (A mentés gombbal lép életbe.)"))return;["subject","heading","body","button"].forEach(f=>setF([kind,f,lg],D[f][lg]));if(kind!=="confirm")setF([kind,"url"],D.url)};
+  let tab=(on,lbl,click,tid)=>h("button",{type:"button",onClick:click,"data-testid":tid,style:{...S.btn,background:on?"#111827":"#fff",color:on?"#fff":"#111827",borderColor:on?"#111827":"#d1d5db"}},lbl);
+  let fld=(lbl,f,max,area)=>h("label",{style:{display:"block"}},h("span",{style:S.lab},lbl),area?h("textarea",{style:{...S.inp,minHeight:150,fontFamily:"inherit"},value:T[f][lg],maxLength:max,onChange:ev=>setF([kind,f,lg],ev.target.value),"data-testid":"tpl-"+f}):h("input",{style:S.inp,value:T[f][lg],maxLength:max,onChange:ev=>setF([kind,f,lg],ev.target.value),"data-testid":"tpl-"+f}));
+  return h("div",{style:S.card,"data-testid":"nl-tpl-card"},
+    h("div",{style:S.head},h("h2",{style:S.h2},"Automatikus levelek, fejléc és lábléc"),h("p",{style:S.sub},"A feliratkozáskor, megerősítés után és leiratkozáskor kimenő levelek szövege, valamint a minden hírlevélben és automatikus levélben megjelenő közös fejléc és lábléc – magyarul és angolul (a feliratkozó nyelvén megy ki).")),
+    h("div",{style:{...S.body,display:"grid",gap:14}},
+      msg&&h("p",{style:msg.e?S.err:S.ok,role:msg.e?"alert":"status","data-testid":"tpl-msg"},msg.t),
+      h("div",{style:{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}},h("span",{style:{fontSize:13,color:"#6b7280"}},"Nyelv:"),tab(lg==="hu","Magyar",()=>{setLg("hu");setPv(null)},"tpl-lang-hu"),tab(lg==="en","English",()=>{setLg("en");setPv(null)},"tpl-lang-en")),
+      h("div",{style:{border:"1px solid #e5e7eb",borderRadius:10,padding:14,display:"grid",gap:10,background:"#fafafa"}},
+        h("strong",{style:{fontSize:14}},"Közös fejléc és lábléc ("+(lg==="en"?"angol":"magyar")+")"),
+        h("label",null,h("span",{style:S.lab},"Fejléc – egy sor a logó alatt (üresen csak a logó látszik)"),h("input",{style:S.inp,value:t.header[lg],maxLength:120,placeholder:lg==="en"?"e.g. Hand-knitted hats from Budapest":"pl. Kézzel kötött sapkák, egyedi darabok",onChange:ev=>setF(["header",lg],ev.target.value),"data-testid":"tpl-header"})),
+        h("label",null,h("span",{style:S.lab},"Lábléc – szabad szöveg a levél alján (pl. cégadatok, elérhetőség, közösségi oldalak)"),h("textarea",{style:{...S.inp,minHeight:70,fontFamily:"inherit"},value:t.footer[lg],maxLength:600,onChange:ev=>setF(["footer",lg],ev.target.value),"data-testid":"tpl-footer"})),
+        h("p",{style:{...S.sub,margin:0}},"A leiratkozási link, az adatkezelési tájékoztató és a webshop elérhetősége ezen felül mindig automatikusan bekerül a láblécbe.")),
+      h("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},Object.keys(K).map(k=>h("span",{key:k},tab(kind===k,K[k]+(k!=="confirm"?(t[k].enabled?" · be":" · ki"):""),()=>{setKind(k);setPv(null)},"tpl-kind-"+k)))),
+      h("p",{style:{...S.sub,margin:0}},KD[kind]),
+      kind!=="confirm"&&h("label",{style:{display:"flex",gap:8,alignItems:"center",fontSize:14,fontWeight:500}},h("input",{type:"checkbox",checked:!!T.enabled,onChange:ev=>setF([kind,"enabled"],ev.target.checked),"data-testid":"tpl-enabled",style:{width:18,height:18}}),"Küldés bekapcsolva"),
+      fld("Tárgy","subject",150),fld("Címsor a levélben","heading",120),fld("Szöveg","body",3000,true),
+      h("div",{style:{display:"grid",gap:12,gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))"}},fld("Gomb felirata"+(kind==="confirm"?"":" (üresen nincs gomb)"),"button",60),
+        kind!=="confirm"&&h("label",null,h("span",{style:S.lab},"Gomb linkje (https://…)"),h("input",{style:S.inp,value:T.url,placeholder:"https://bagdikata.hu",onChange:ev=>setF([kind,"url"],ev.target.value),"data-testid":"tpl-url"}))),
+      h("p",{style:{...S.sub,margin:0}},"Helyettesítők a tárgyban, címsorban és szövegben: {nev} – a feliratkozó neve (ha nem adta meg: „Érdeklődő” / „Subscriber”), {email} – az e-mail-címe."),
+      h("div",{style:{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}},
+        h("button",{type:"button",style:{...S.btnD,opacity:busy||!dirty?.5:1},disabled:busy||!dirty,onClick:save,"data-testid":"tpl-save"},"Mentés"),
+        h("button",{type:"button",style:S.btn,disabled:busy,onClick:preview,"data-testid":"tpl-preview"},"Előnézet"),
+        h("button",{type:"button",style:S.btn,disabled:busy,onClick:test,"data-testid":"tpl-test"},"Tesztlevél magamnak"),
+        h("button",{type:"button",style:S.btn,disabled:busy,onClick:reset},"Alapértelmezett szöveg"),
+        dirty&&h("span",{style:{fontSize:13,color:"#92400e"}},"Nem mentett módosítás")),
+      pv&&h("div",null,h("p",{style:{fontSize:13,margin:"0 0 6px"}},h("strong",null,"Tárgy: "),pv.subject),h("iframe",{title:"Előnézet",sandbox:"",srcDoc:pv.html,"data-testid":"tpl-frame",style:{width:"100%",maxWidth:640,height:620,border:"1px solid #e5e7eb",borderRadius:8,background:"#fff"}}))));
+}
+
 
 function LanguagePage(){
   let{settings,save}=useSettings();

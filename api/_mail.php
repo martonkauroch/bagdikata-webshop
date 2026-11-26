@@ -159,7 +159,7 @@ function mail_wrap($inner, $lang, $ref, $pre) {
         . '<tr><td align="center" style="background:#ece6dc;padding:22px 16px 16px;border-bottom:3px solid #161314">'
         . '<a href="' . htmlspecialchars($site) . '" style="text-decoration:none"><img src="' . $logo . '" width="' . (empty($GLOBALS['bk_mail_logo_only']) ? 56 : 72) . '" alt="Bagdi Kata" style="display:block;margin:0 auto ' . (empty($GLOBALS['bk_mail_logo_only']) ? 8 : 0) . 'px;border:0"></a>'
         . (empty($GLOBALS['bk_mail_logo_only']) ? '<div style="font-family:Georgia,\'Times New Roman\',serif;font-size:22px;letter-spacing:1px;color:#161314">Bagdi Kata</div>'
-        . '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b6b6b;margin-top:2px">' . $tag . '</div>' : '')
+        . '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b6b6b;margin-top:2px">' . $tag . '</div>' : (!empty($GLOBALS['bk_mail_header_text']) ? '<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4a4a;margin-top:10px">' . htmlspecialchars((string) $GLOBALS['bk_mail_header_text']) . '</div>' : ''))
         . '</td></tr>'
         . '<tr><td style="padding:24px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#222222">' . $inner . '</td></tr>'
         . '<tr><td style="background:#f6f3ee;padding:16px 28px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#6b6b6b;border-top:1px solid #ece6dc">'

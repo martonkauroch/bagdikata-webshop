@@ -40,6 +40,7 @@ if ($method === 'GET' && isset($_GET['c'])) {
         nl_page($en ? 'Subscription not found' : 'A feliratkozás nem található', $en ? 'This subscription is no longer on our list (it may have been removed in the meantime). Please subscribe again in the webshop.' : 'Ez a feliratkozás már nem szerepel a listánkon (lehet, hogy közben törölték). Kérjük, iratkozz fel újra a webshopban.', $lang);
     }
     if ($prev !== 'confirmed') {
+        try { $tp = nl_tpl(); if (!empty($tp['welcome']['enabled'])) { foreach (nl_list() as $ws) { if (isset($ws['id']) && $ws['id'] === $id) { nl_send_sys($cfg, 'welcome', $ws, $tp); break; } } } } catch (Throwable $e) { }
         try { require_once __DIR__ . '/_push.php'; push_notify('nl', 'Hírlevél-feliratkozás megerősítve', 'Egy új olvasó megerősítette a feliratkozását.', 'Egy új olvasó megerősítette a feliratkozását.', '/#/admin/hirlevel', 'nlc-' . $id); } catch (Throwable $e) { }
     }
     if ($prev === 'confirmed') {
@@ -53,7 +54,9 @@ if (($method === 'GET' && isset($_GET['u'])) || ($method === 'POST' && (isset($_
     $lang = nl_find_lang($id); $en = ($lang === 'en');
     if (!nl_token_ok($cfg, $id, 'unsub', $t)) { nl_page($en ? 'Invalid link' : 'Érvénytelen link', $en ? 'This unsubscribe link is not valid. Please write to info@bagdikata.hu and we will remove you manually.' : 'Ez a leiratkozó link nem érvényes. Írj az info@bagdikata.hu címre, és kézzel töröljük a címedet.', $lang); }
     if ($method === 'POST') {
+        $us = null; foreach (nl_list() as $x) { if (isset($x['id']) && $x['id'] === $id) { $us = $x; break; } }
         nl_set_status($id, 'unsubscribed');
+        if ($us && (!isset($us['status']) || $us['status'] !== 'unsubscribed')) { try { $tp = nl_tpl(); if (!empty($tp['unsub']['enabled'])) { nl_send_sys($cfg, 'unsub', $us, $tp); } } catch (Throwable $e) { } }
         if (isset($_POST['List-Unsubscribe'])) { header('Content-Type: text/plain; charset=utf-8'); echo 'OK'; exit; }
         nl_page($en ? 'You have unsubscribed' : 'Leiratkoztál', $en ? 'We will not send you any more newsletters. You can subscribe again at any time.' : 'Nem küldünk több hírlevelet erre a címre. Bármikor újra feliratkozhatsz.', $lang);
     }
@@ -148,6 +151,23 @@ function nl_draft($d) {
 }
 
 if ($act === 'list') { json_out(nl_snapshot()); }
+if ($act === 'tpl_get') { json_out(array('ok' => true, 'tpl' => nl_tpl(), 'defaults' => nl_tpl_defaults())); }
+if ($act === 'tpl_save') {
+    $tp = nl_tpl_clean(isset($d->tpl) ? json_decode(json_encode($d->tpl), true) : null);
+    write_raw('nl_tpl', json_encode($tp, JSON_UNESCAPED_UNICODE));
+    json_out(array('ok' => true, 'tpl' => $tp, 'defaults' => nl_tpl_defaults()));
+}
+if ($act === 'tpl_preview' || $act === 'tpl_test') {
+    $tp = nl_tpl_clean(isset($d->tpl) ? json_decode(json_encode($d->tpl), true) : null);
+    $kind = (isset($d->kind) && in_array($d->kind, array('confirm', 'welcome', 'unsub'), true)) ? $d->kind : 'confirm';
+    $lang = (isset($d->lang) && $d->lang === 'en') ? 'en' : 'hu';
+    $fake = array('id' => '0000000000000000', 'email' => $act === 'tpl_test' ? $cfg['admin_email'] : 'feliratkozo@example.com', 'name' => '', 'lang' => $lang);
+    if ($act === 'tpl_preview') { list($sj, $tx, $ht) = nl_sys_build($cfg, $kind, $fake, $tp); json_out(array('ok' => true, 'subject' => $sj, 'html' => $ht)); }
+    if (rl_blocked('nltest', 20, 3600)) { fail(429, 'Túl sok tesztlevél. Próbáld később.'); }
+    rl_hit('nltest', 3600);
+    if (!nl_send_sys($cfg, $kind, $fake, $tp, $cfg['admin_email'], '[TESZT] ')) { fail(502, 'A tesztlevelet nem sikerült elküldeni (lásd mail.log).'); }
+    json_out(array('ok' => true));
+}
 if ($act === 'seen') { write_raw('nl_seen', json_encode(array('at' => time()))); json_out(array('ok' => true, 'unseen' => 0)); }
 if ($act === 'delete' || $act === 'unsub') {
     $id = (isset($d->id) && is_string($d->id) && preg_match('/^[a-f0-9]{16}$/', $d->id)) ? $d->id : '';

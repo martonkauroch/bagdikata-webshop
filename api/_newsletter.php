@@ -64,31 +64,122 @@ function nl_subscribe($cfg, $email, $name, $lang, $source) {
     return 'ok';
 }
 
-function nl_send_confirm($cfg, $s) {
-    $en = (isset($s['lang']) && $s['lang'] === 'en');
-    $name = (isset($s['name']) && $s['name'] !== '') ? $s['name'] : '';
-    $url = nl_link($cfg, $s['id'], 'confirm');
-    if ($en) {
-        $subject = 'Please confirm your newsletter subscription – Bagdi Kata';
-        $lines = array(($name !== '' ? 'Dear ' . $name . ',' : 'Hello,'), '',
-            'a newsletter subscription was requested for this e-mail address (' . $s['email'] . ') at the Bagdi Kata webshop. It only takes effect once you confirm it with the link below.', '',
-            'If it was not you, simply ignore this message – we will not send you any newsletter without your confirmation.', '',
-            'You can withdraw your consent at any time, free of charge, using the unsubscribe link at the bottom of every newsletter. How we handle your data: ' . nl_privacy_url('en'));
-        $label = 'Confirm subscription';
-    } else {
-        $subject = 'Erősítsd meg a hírlevél-feliratkozásodat – Bagdi Kata';
-        $lines = array(($name !== '' ? 'Kedves ' . $name . '!' : 'Kedves Érdeklődő!'), '',
-            'Ezen az e-mail-címen (' . $s['email'] . ') hírlevél-feliratkozást kezdeményeztek a Bagdi Kata webshopban. A feliratkozás csak akkor lép érvénybe, ha az alábbi linkkel megerősíted.', '',
-            'Ha nem te kérted, egyszerűen hagyd figyelmen kívül ezt a levelet – megerősítés nélkül nem küldünk hírlevelet.', '',
-            'Hozzájárulásodat bármikor, ingyenesen visszavonhatod a hírlevelek alján lévő leiratkozás linkkel. Az adatkezelésről itt olvashatsz: ' . nl_privacy_url('hu'));
-        $label = 'Feliratkozás megerősítése';
-    }
-    $it = (object) array('subject' => $subject, 'lang' => $en ? 'en' : 'hu',
-        'blocks' => array((object) array('heading' => $en ? 'Confirm your subscription' : 'Feliratkozás megerősítése', 'lines' => $lines), (object) array('links' => array((object) array('label' => $label, 'href' => $url)))));
-    list($text, $html) = mail_render($it);
-    try { $sender = nl_sender(); mail_send(array($s['email']), $subject, $text, $html, $sender, $sender); mail_log('OK hírlevél-megerősítő -> 1 cím'); return true; }
-    catch (Throwable $e) { mail_log('HIBA hírlevél-megerősítő: ' . mail_clean($e->getMessage(), 120)); return false; }
+function nl_tpl_defaults() {
+    return array(
+        'header' => array('hu' => '', 'en' => ''),
+        'footer' => array('hu' => '', 'en' => ''),
+        'confirm' => array(
+            'subject' => array('hu' => 'Erősítsd meg a hírlevél-feliratkozásodat – Bagdi Kata', 'en' => 'Please confirm your newsletter subscription – Bagdi Kata'),
+            'heading' => array('hu' => 'Feliratkozás megerősítése', 'en' => 'Confirm your subscription'),
+            'body' => array(
+                'hu' => "Kedves {nev}!\n\nEzen az e-mail-címen ({email}) hírlevél-feliratkozást kezdeményeztek a Bagdi Kata webshopban. A feliratkozás csak akkor lép érvénybe, ha az alábbi gombbal megerősíted.\n\nHa nem te kérted, egyszerűen hagyd figyelmen kívül ezt a levelet – megerősítés nélkül nem küldünk hírlevelet.",
+                'en' => "Dear {nev},\n\na newsletter subscription was requested for this e-mail address ({email}) at the Bagdi Kata webshop. It only takes effect once you confirm it with the button below.\n\nIf it was not you, simply ignore this message – we will not send you any newsletter without your confirmation."),
+            'button' => array('hu' => 'Feliratkozás megerősítése', 'en' => 'Confirm subscription')),
+        'welcome' => array('enabled' => false,
+            'subject' => array('hu' => 'Köszönjük a feliratkozást – Bagdi Kata', 'en' => 'Thank you for subscribing – Bagdi Kata'),
+            'heading' => array('hu' => 'Üdv a hírlevelünkön!', 'en' => 'Welcome to our newsletter!'),
+            'body' => array(
+                'hu' => "Kedves {nev}!\n\nKöszönjük, hogy megerősítetted a feliratkozásodat. Mostantól elsőként értesülsz az új kollekciókról, akciókról és a webshop híreiről.",
+                'en' => "Dear {nev},\n\nthank you for confirming your subscription. From now on you will be the first to hear about new collections, offers and news from the shop."),
+            'button' => array('hu' => 'Irány a webshop', 'en' => 'Visit the shop'),
+            'url' => 'https://bagdikata.hu'),
+        'unsub' => array('enabled' => false,
+            'subject' => array('hu' => 'Leiratkoztál a hírlevélről – Bagdi Kata', 'en' => 'You have unsubscribed – Bagdi Kata'),
+            'heading' => array('hu' => 'Sikeres leiratkozás', 'en' => 'Unsubscribed'),
+            'body' => array(
+                'hu' => "Kedves {nev}!\n\nA(z) {email} címet levettük a hírlevél-listánkról, több hírlevelet nem küldünk. Ha tévedésből történt, bármikor újra feliratkozhatsz a webshopban.",
+                'en' => "Dear {nev},\n\nwe have removed {email} from our newsletter list and will not send you any more newsletters. If this was a mistake, you can subscribe again at any time in the shop."),
+            'button' => array('hu' => '', 'en' => ''),
+            'url' => ''),
+    );
 }
+function nl_tpl_clean($in) {
+    $d = nl_tpl_defaults();
+    $in = is_array($in) ? $in : array();
+    $str = function ($v, $max) { return is_string($v) ? mb_substr(str_replace("\r", '', $v), 0, $max, 'UTF-8') : null; };
+    $out = $d;
+    foreach (array('header' => 120, 'footer' => 600) as $k => $max) {
+        foreach (array('hu', 'en') as $l) { $x = isset($in[$k][$l]) ? $str($in[$k][$l], $max) : null; if ($x !== null) { $out[$k][$l] = $k === 'header' ? trim(preg_replace('/\s+/u', ' ', $x)) : trim($x); } }
+    }
+    foreach (array('confirm', 'welcome', 'unsub') as $k) {
+        if ($k !== 'confirm') { $out[$k]['enabled'] = !empty($in[$k]['enabled']); }
+        foreach (array('subject' => 150, 'heading' => 120, 'body' => 3000, 'button' => 60) as $f => $max) {
+            foreach (array('hu', 'en') as $l) {
+                $x = isset($in[$k][$f][$l]) ? $str($in[$k][$f][$l], $max) : null;
+                if ($x === null) { continue; }
+                $x = $f === 'body' ? trim($x) : trim(preg_replace('/\s+/u', ' ', $x));
+                if ($x === '' && ($f === 'subject' || $f === 'body' || ($k === 'confirm' && $f === 'button'))) { continue; }
+                $out[$k][$f][$l] = $x;
+            }
+        }
+        if ($k !== 'confirm' && isset($in[$k]['url']) && is_string($in[$k]['url'])) { $u = trim($in[$k]['url']); $out[$k]['url'] = preg_match('#^https://[^\s<>"]{4,300}$#i', $u) ? $u : ''; }
+    }
+    return $out;
+}
+function nl_tpl() { $raw = read_raw('nl_tpl'); return nl_tpl_clean($raw ? json_decode($raw, true) : null); }
+function nl_frame_footer($tpl, $en) {
+    $x = trim($tpl['footer'][$en ? 'en' : 'hu']);
+    if ($x === '') { return array('', ''); }
+    $h = '<p style="margin:0 0 10px">' . nl2br(htmlspecialchars($x)) . '</p>';
+    return array($h, $x);
+}
+function nl_frame_begin($tpl, $en) {
+    $GLOBALS['bk_mail_logo_only'] = true;
+    $hd = trim($tpl['header'][$en ? 'en' : 'hu']);
+    if ($hd !== '') { $GLOBALS['bk_mail_header_text'] = $hd; }
+}
+function nl_frame_end() { unset($GLOBALS['bk_mail_footer_html'], $GLOBALS['bk_mail_footer_text'], $GLOBALS['bk_mail_nocopy'], $GLOBALS['bk_mail_headers'], $GLOBALS['bk_mail_logo_only'], $GLOBALS['bk_mail_header_text']); }
+function nl_sys_build($cfg, $kind, $s, $tpl = null) {
+    $tpl = $tpl ? $tpl : nl_tpl();
+    $T = $tpl[$kind];
+    $en = (isset($s['lang']) && $s['lang'] === 'en'); $L = $en ? 'en' : 'hu';
+    $name = (isset($s['name']) && trim((string) $s['name']) !== '') ? trim((string) $s['name']) : ($en ? 'Subscriber' : 'Érdeklődő');
+    $fill = function ($x) use ($s, $name) { return strtr((string) $x, array('{nev}' => $name, '{name}' => $name, '{email}' => (string) $s['email'])); };
+    $lines = preg_split('/\n/', $fill($T['body'][$L]));
+    $blocks = array((object) array('heading' => $fill($T['heading'][$L]), 'lines' => $lines));
+    $href = '';
+    if ($kind === 'confirm') { $href = nl_link($cfg, $s['id'], 'confirm'); }
+    elseif (!empty($T['url'])) { $href = $T['url']; }
+    $lab = trim($T['button'][$L]);
+    if ($href !== '' && $lab !== '') { $blocks[] = (object) array('links' => array((object) array('label' => $fill($lab), 'href' => $href))); }
+    list($fh, $ft) = nl_frame_footer($tpl, $en);
+    $priv = nl_privacy_url($L);
+    if ($kind === 'confirm') {
+        $p = $en ? 'You can withdraw your consent at any time, free of charge, using the unsubscribe link at the bottom of every newsletter. How we handle your data: ' : 'Hozzájárulásodat bármikor, ingyenesen visszavonhatod a hírlevelek alján lévő leiratkozás linkkel. Az adatkezelésről itt olvashatsz: ';
+        $fh .= '<p style="margin:0 0 10px">' . htmlspecialchars($p) . '<a href="' . htmlspecialchars($priv) . '" style="color:#161314">' . htmlspecialchars($priv) . '</a></p>';
+        $ft .= ($ft !== '' ? "\r\n\r\n" : '') . $p . $priv;
+    } elseif ($kind === 'welcome') {
+        $un = nl_link($cfg, $s['id'], 'unsub');
+        $la = $en ? array('Unsubscribe', 'Privacy notice', 'You can unsubscribe at any time with the link below.') : array('Leiratkozás', 'Adatkezelési tájékoztató', 'Bármikor leiratkozhatsz az alábbi linkkel.');
+        $fh .= '<p style="margin:0 0 10px">' . htmlspecialchars($la[2]) . ' <a href="' . htmlspecialchars($un) . '" style="color:#161314">' . $la[0] . '</a> &middot; <a href="' . htmlspecialchars($priv) . '" style="color:#161314">' . $la[1] . '</a></p>';
+        $ft .= ($ft !== '' ? "\r\n\r\n" : '') . $la[2] . "\r\n" . $la[0] . ': ' . $un . "\r\n" . $la[1] . ': ' . $priv;
+    } else {
+        $a = $en ? 'This is an automatic message sent from the Bagdi Kata webshop.' : 'Ez a Bagdi Kata webshop automatikus üzenete.';
+        $fh .= '<p style="margin:0 0 4px">' . htmlspecialchars($a) . '</p>';
+        $ft .= ($ft !== '' ? "\r\n\r\n" : '') . $a;
+    }
+    nl_frame_begin($tpl, $en);
+    $GLOBALS['bk_mail_footer_html'] = $fh;
+    $GLOBALS['bk_mail_footer_text'] = $ft;
+    if ($kind !== 'confirm') { $GLOBALS['bk_mail_nocopy'] = true; }
+    $it = (object) array('subject' => $fill($T['subject'][$L]), 'lang' => $L, 'blocks' => $blocks);
+    list($text, $html) = mail_render($it);
+    nl_frame_end();
+    return array($it->subject, $text, $html);
+}
+function nl_send_sys($cfg, $kind, $s, $tpl = null, $to = null, $prefix = '') {
+    $kl = array('confirm' => 'megerősítő', 'welcome' => 'üdvözlő', 'unsub' => 'leiratkozás-visszaigazoló');
+    try {
+        list($subject, $text, $html) = nl_sys_build($cfg, $kind, $s, $tpl);
+        if ($kind !== 'confirm' || $to !== null) { $GLOBALS['bk_mail_nocopy'] = true; }
+        $sender = nl_sender();
+        mail_send(array($to !== null ? $to : $s['email']), $prefix . $subject, $text, $html, $sender, $sender);
+        unset($GLOBALS['bk_mail_nocopy']);
+        mail_log('OK hírlevél-' . $kl[$kind] . ($prefix !== '' ? ' (teszt)' : '') . ' -> 1 cím');
+        return true;
+    } catch (Throwable $e) { unset($GLOBALS['bk_mail_nocopy']); mail_log('HIBA hírlevél-' . $kl[$kind] . ': ' . mail_clean($e->getMessage(), 120)); return false; }
+}
+function nl_send_confirm($cfg, $s) { return nl_send_sys($cfg, 'confirm', $s); }
 
 function nl_remind_run($cfg, $max = 25) {
     $lock = DATA_DIR . '/nl_remind.lock';
@@ -168,7 +259,8 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     };
     $useEn = $en && $hasEn;
     $langs = array($en);
-    $fh = ''; $ft = array();
+    $tplF = nl_tpl();
+    list($fh, $ftx) = nl_frame_footer($tplF, $en); $ft = $ftx !== '' ? array($ftx) : array();
     foreach ($langs as $isEn) {
         list($why, $lab, $priv, $impl) = $foot($isEn);
         $fh .= '<p style="margin:0 0 6px">' . htmlspecialchars($why) . '</p>'
@@ -180,7 +272,7 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     $GLOBALS['bk_mail_footer_html'] = $fh;
     $GLOBALS['bk_mail_footer_text'] = implode("\r\n\r\n", $ft);
     $GLOBALS['bk_mail_nocopy'] = true;
-    $GLOBALS['bk_mail_logo_only'] = true;
+    nl_frame_begin($tplF, $en);
     if (!$preview) {
         $GLOBALS['bk_mail_headers'] = array('List-Unsubscribe: <' . $unsub . '>, <mailto:' . $contact . '?subject=unsubscribe>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click', 'Precedence: bulk');
     }
@@ -196,7 +288,7 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     $it = (object) array('subject' => $subj, 'lang' => $useEn ? 'en' : 'hu', 'blocks' => $blocks);
     if ($capture) {
         list($text, $html) = mail_render($it);
-        unset($GLOBALS['bk_mail_footer_html'], $GLOBALS['bk_mail_footer_text'], $GLOBALS['bk_mail_nocopy'], $GLOBALS['bk_mail_headers'], $GLOBALS['bk_mail_logo_only']);
+        nl_frame_end();
         return array('subject' => ($preview ? '[TESZT] ' : '') . $subj, 'html' => $html, 'text' => $text);
     }
     try {
@@ -205,7 +297,7 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
         mail_send(array($s['email']), ($preview ? '[TESZT] ' : '') . $subj, $text, $html, $sender, $sender);
         $err = null;
     } catch (Throwable $e) { $err = mail_clean($e->getMessage(), 160); }
-    unset($GLOBALS['bk_mail_footer_html'], $GLOBALS['bk_mail_footer_text'], $GLOBALS['bk_mail_nocopy'], $GLOBALS['bk_mail_headers'], $GLOBALS['bk_mail_logo_only']);
+    nl_frame_end();
     return $err;
 }
 
