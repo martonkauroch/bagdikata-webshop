@@ -186,7 +186,7 @@ if ($act === 'campaign_create') {
     foreach (nl_list() as $s) { if (isset($s['status']) && $s['status'] === 'confirmed') { $queue[] = $s['id']; } }
     if (!count($queue)) { fail(400, 'Nincs megerősített feliratkozó, akinek a levelet ki lehetne küldeni.'); }
     $queue = array_slice($queue, 0, 5000);
-    $c = array_merge($dr, array('id' => bin2hex(random_bytes(6)), 'createdAt' => date('c'), 'total' => count($queue), 'sent' => 0, 'failed' => 0, 'queue' => $queue, 'status' => 'sending', 'busyUntil' => 0, 'lastError' => ''));
+    $c = array_merge($dr, array('id' => bin2hex(random_bytes(6)), 'trk' => 1, 'createdAt' => date('c'), 'total' => count($queue), 'sent' => 0, 'failed' => 0, 'queue' => $queue, 'status' => 'sending', 'busyUntil' => 0, 'lastError' => ''));
     mutate_json('nl_campaigns', function ($cur) use ($c) { $a = is_array($cur) ? json_decode(json_encode($cur), true) : array(); if (!is_array($a)) { $a = array(); } array_unshift($a, $c); return array_slice($a, 0, 40); });
     $r = nl_snapshot(); $r['campaignId'] = $c['id']; json_out($r);
 }
@@ -216,22 +216,22 @@ if ($act === 'campaign_send' || $act === 'campaign_cancel') {
     if (!$camp) { json_out(nl_snapshot()); }
     @set_time_limit(60);
     $byId = array(); foreach (nl_list() as $s) { if (isset($s['id'])) { $byId[$s['id']] = $s; } }
-    $done = array(); $sent = 0; $failed = 0; $lastErr = ''; $streak = 0; $t0 = microtime(true);
+    $done = array(); $sent = 0; $sentEn = 0; $failed = 0; $lastErr = ''; $streak = 0; $t0 = microtime(true);
     foreach (array_slice($camp['queue'], 0, 20) as $sid) {
         if (microtime(true) - $t0 > 25) { break; }
         $done[] = $sid;
         if (!isset($byId[$sid]) || !isset($byId[$sid]['status']) || $byId[$sid]['status'] !== 'confirmed') { continue; }
         $err = nl_send_one($cfg, $camp, $byId[$sid]);
         if ($err) { $failed++; $streak++; $lastErr = $err; mail_log('HIBA hírlevél: ' . $err); if ($streak >= 3) { break; } }
-        else { $sent++; $streak = 0; }
+        else { $sent++; $streak = 0; if (isset($byId[$sid]['lang']) && $byId[$sid]['lang'] === 'en') { $sentEn++; } }
     }
     if ($streak >= 3) { array_splice($done, -$streak); $failed -= $streak; }
-    mutate_json('nl_campaigns', function ($cur) use ($cid, $done, $sent, $failed, $lastErr, $streak) {
+    mutate_json('nl_campaigns', function ($cur) use ($cid, $done, $sent, $sentEn, $failed, $lastErr, $streak) {
         $a = is_array($cur) ? json_decode(json_encode($cur), true) : array(); if (!is_array($a)) { $a = array(); }
         foreach ($a as $i => $c) {
             if ($c['id'] !== $cid) { continue; }
             $q = array_values(array_diff($c['queue'], $done));
-            $a[$i]['queue'] = $q; $a[$i]['sent'] += $sent; $a[$i]['failed'] += $failed; $a[$i]['busyUntil'] = 0;
+            $a[$i]['queue'] = $q; $a[$i]['sent'] += $sent; $a[$i]['sentEn'] = (isset($c['sentEn']) ? (int) $c['sentEn'] : 0) + $sentEn; $a[$i]['failed'] += $failed; $a[$i]['busyUntil'] = 0;
             if ($lastErr !== '') { $a[$i]['lastError'] = $lastErr; }
             $a[$i]['status'] = ($streak >= 3) ? 'paused' : (count($q) ? 'sending' : 'done');
         }

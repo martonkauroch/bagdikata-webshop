@@ -124,6 +124,29 @@ function nl_remind_run($cfg, $max = 25) {
     return $n;
 }
 
+function nl_trk_sig($cfg, $parts) { return substr(hash_hmac('sha256', implode('|', $parts), $cfg['secret'] . '|nltrk'), 0, 16); }
+function nl_trk_b64($s) { return rtrim(strtr(base64_encode($s), '+/', '-_'), '='); }
+function nl_stat_hit($kind, $cid, $sid, $url = '') {
+    $cfg = load_config(); if (!$cfg) { return; }
+    $h = substr(hash_hmac('sha256', $cid . '|' . $sid, $cfg['secret'] . '|nlu'), 0, 10);
+    $now = date('c');
+    mutate_json('nl_stats', function ($cur) use ($kind, $cid, $h, $url, $now) {
+        $a = is_array($cur) || is_object($cur) ? json_decode(json_encode($cur), true) : array();
+        if (!is_array($a)) { $a = array(); }
+        if (!isset($a[$cid])) {
+            if (count($a) >= 60) { $a = array_slice($a, -59, null, true); }
+            $a[$cid] = array('o' => 0, 'uo' => array(), 'c' => 0, 'uc' => array(), 'l' => array(), 'fo' => null, 'lo' => null);
+        }
+        $e = &$a[$cid];
+        if ($kind === 'o') { $e['o']++; if (!$e['fo']) { $e['fo'] = $now; } $e['lo'] = $now; }
+        if (count($e['uo']) < 20000) { $e['uo'][$h] = 1; }
+        if ($kind === 'c') {
+            $e['c']++; if (count($e['uc']) < 20000) { $e['uc'][$h] = 1; }
+            if ($url !== '' && (isset($e['l'][$url]) || count($e['l']) < 20)) { $e['l'][$url] = (isset($e['l'][$url]) ? (int) $e['l'][$url] : 0) + 1; }
+        }
+        return $a;
+    });
+}
 function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     $en = (isset($s['lang']) && $s['lang'] === 'en');
     $hasEn = (!empty($camp['subjectEn']) && !empty($camp['bodyEn']));
@@ -153,6 +176,8 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
             . '<p style="margin:0 0 10px"><a href="' . htmlspecialchars($unsub) . '" style="color:#161314">' . $lab[0] . '</a> &middot; <a href="' . htmlspecialchars($priv) . '" style="color:#161314">' . $lab[1] . '</a> &middot; <a href="' . htmlspecialchars($impl) . '" style="color:#161314">' . $lab[2] . '</a></p>';
         $ft[] = $why . "\r\n" . $lab[0] . ': ' . $unsub . "\r\n" . $lab[1] . ': ' . $priv;
     }
+    $trk = !$preview && !$capture && isset($camp['id']) && is_string($camp['id']) && preg_match('/^[a-f0-9]{12}$/', $camp['id']) && isset($s['id']) && preg_match('/^[a-f0-9]{16}$/', (string) $s['id']);
+    if ($trk) { $fh .= '<img src="' . htmlspecialchars(mail_site_url() . '/api/nlt.php?o=' . $camp['id'] . '.' . $s['id'] . '.' . nl_trk_sig($cfg, array('o', $camp['id'], $s['id']))) . '" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0">'; }
     $GLOBALS['bk_mail_footer_html'] = $fh;
     $GLOBALS['bk_mail_footer_text'] = implode("\r\n\r\n", $ft);
     $GLOBALS['bk_mail_nocopy'] = true;
@@ -165,7 +190,9 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     $blocks[] = (object) array('lines' => preg_split('/\r\n|\r|\n/', (string) $body));
     if (!empty($camp['ctaLabel']) && !empty($camp['ctaUrl'])) {
         $cl = ($useEn && !empty($camp['ctaLabelEn'])) ? $camp['ctaLabelEn'] : $camp['ctaLabel'];
-        $blocks[] = (object) array('links' => array((object) array('label' => $cl, 'href' => $camp['ctaUrl'])));
+        $href = $camp['ctaUrl'];
+        if ($trk) { $href = mail_site_url() . '/api/nlt.php?c=' . $camp['id'] . '.' . $s['id'] . '.' . nl_trk_sig($cfg, array('c', $camp['id'], $s['id'], $href)) . '&u=' . nl_trk_b64($href); }
+        $blocks[] = (object) array('links' => array((object) array('label' => $cl, 'href' => $href)));
     }
     $it = (object) array('subject' => $subj, 'lang' => $useEn ? 'en' : 'hu', 'blocks' => $blocks);
     if ($capture) {

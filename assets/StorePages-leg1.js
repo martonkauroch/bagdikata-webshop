@@ -342,6 +342,7 @@ var NEWSLETTER_HU=`${DRAFT_NOTE_HU}
 
 ## 3. Milyen adatokat kezelünk?
 - E-mail-cím, név (ha megadod), a feliratkozás időpontja és forrása (pénztár vagy weboldal), a megerősítés és az esetleges leiratkozás időpontja, a hozzájárulási szöveg változata.
+- A kiküldött hírlevelek megnyitása és a bennük lévő gombra kattintás: a levélben egy láthatatlan kép és a gomb linkje jelzi, hogy a levelet megnyitották-e, illetve a gombra kattintottak-e. Ezt kiküldésenként összesítve, álnevesített (a címedből közvetlenül vissza nem fejthető) azonosítóval tároljuk, csak a hírlevelek javítása céljából; az utolsó 60 kiküldés adatait őrizzük meg. A megnyitás mérését elkerülheted, ha a levelezőprogramodban letiltod a képek automatikus betöltését.
 
 ## 4. A feliratkozás menete
 Feliratkozáskor megerősítő levelet küldünk a megadott címre. A feliratkozás csak akkor lép érvénybe, ha a levélben lévő linkre kattintasz (kettős megerősítés). Megerősítés nélkül hírlevelet nem küldünk.
@@ -373,6 +374,7 @@ var NEWSLETTER_EN=`${DRAFT_NOTE_EN}
 
 ## 3. What data we process
 - E-mail address, name (if given), date and source of the subscription (checkout or website), date of confirmation and of any unsubscription, version of the consent text.
+- Opening of the newsletters we send and clicks on the button in them: an invisible image and the button link in the e-mail show whether it was opened and whether the button was clicked. We store this per mailing, in aggregate, with a pseudonymised identifier (not directly traceable to your address), only to improve our newsletters; we keep the data of the last 60 mailings. You can avoid open tracking by turning off automatic image loading in your e-mail program.
 
 ## 4. How subscription works
 When you subscribe we send a confirmation e-mail. The subscription only takes effect once you click the link in it (double opt-in). We do not send any newsletter without confirmation.
