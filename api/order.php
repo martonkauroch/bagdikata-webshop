@@ -128,14 +128,12 @@ if ($isNew && !empty($o->newsletter) && isset($o->customer) && is_object($o->cus
 }
 if ($isNew) { try { live_push('order', array('sum' => (int) $sub)); } catch (Throwable $e) { } }
 if ($isNew && isset($o->orderNumber, $o->customer->email)) {
-    $oSnap = json_decode(json_encode($o));
-    register_shutdown_function(function () use ($oSnap) {
-        try {
-            if (function_exists('fastcgi_finish_request')) { @fastcgi_finish_request(); } elseif (function_exists('litespeed_finish_request')) { @litespeed_finish_request(); }
-            ignore_user_abort(true);
-            mail_order_server($oSnap);
-        } catch (Throwable $e) { try { mail_log('HIBA rendelési levelek: ' . mail_clean($e->getMessage(), 200)); } catch (Throwable $e2) { } }
-    });
+    ignore_user_abort(true);
+    @set_time_limit(90);
+    try {
+        mail_log('rendelés mentve (' . $o->orderNumber . ', ' . (isset($o->paymentMethod) ? $o->paymentMethod : '') . '), levelek küldése…');
+        mail_order_server(json_decode(json_encode($o)));
+    } catch (Throwable $e) { try { mail_log('HIBA rendelési levelek: ' . mail_clean($e->getMessage(), 200)); } catch (Throwable $e2) { } }
 }
 if ($isNew) {
     try {
