@@ -431,7 +431,9 @@ function mail_dispatch($cfg, $items, $isAdmin) {
         }
         $mc = mail_cfg();
         if (($kind === 'order' || $kind === 'daily') && empty($it->direct)) {
-            $rt = array_merge(mail_route_list($mc, $kind), mail_settings_recipients($kind === 'order' ? 'orderEmail' : 'dailyReport'));
+            $sk = $kind === 'order' ? 'orderEmail' : 'dailyReport'; $sob = mail_settings_obj();
+            $son = !($sob && isset($sob->notifications->$sk->enabled) && $sob->notifications->$sk->enabled === false);
+            $rt = array_merge(mail_route_list($mc, $kind), $son ? mail_settings_recipients($sk) : array());
             if (count($rt)) { $to = array(); foreach ($rt as $a) { $to[strtolower($a)] = $a; } }
         }
         if ($kind === 'withdrawal') { foreach (mail_route_list($mc, 'withdrawal_copy') as $a) { $to[strtolower($a)] = $a; } }
