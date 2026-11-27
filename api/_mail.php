@@ -169,15 +169,17 @@ function mail_wrap($inner, $lang, $ref, $pre) {
         . '</td></tr></table></td></tr></table></body></html>';
 }
 
-function mail_confirm_send($to, $kind, $lang, $ref, $subject, $heading, $paras, $table, $senderKind) {
+function mail_confirm_send($to, $kind, $lang, $ref, $subject, $heading, $paras, $table, $senderKind, $extra = null) {
     $mc = mail_cfg();
     $blocks = array();
     if ($table) {
         $blocks[] = (object) array('heading' => $heading, 'lines' => array_slice($paras, 0, count($paras) - 3));
         $blocks[] = (object) array('table' => $table);
+        if ($extra) { $blocks[] = $extra; }
         $blocks[] = (object) array('lines' => array_slice($paras, -3));
     } else {
         $blocks[] = (object) array('heading' => $heading, 'lines' => $paras);
+        if ($extra) { $blocks[] = $extra; }
     }
     $it = (object) array('subject' => $subject, 'blocks' => $blocks, 'lang' => $lang, 'ref' => $ref);
     list($text, $html) = mail_render($it);
@@ -195,16 +197,85 @@ function mail_confirm_contact($email, $name, $lang, $ref) {
             array('Kedves ' . $name . '!', '', 'Üzenetedet megkaptuk, és a fenti azonosítón iktattuk. A megadott e-mail-címen válaszolunk, általában 1–2 munkanapon belül.', '', 'Ez automatikus visszaigazolás, kérjük, ne erre a levélre válaszolj. Ha szeretnél valamit hozzátenni, írj nekünk, és hivatkozz a fenti azonosítóra.', '', 'Üdvözlettel:', 'Bagdi Kata'), null, 'contact');
     }
 }
+function mail_order_matches($number, $email) {
+    $raw = read_raw('store'); $st = $raw ? json_decode($raw) : null;
+    if (!is_object($st) || !isset($st->orders) || !is_array($st->orders)) { return false; }
+    foreach (array_slice($st->orders, 0, 300) as $x) {
+        if (!is_object($x) || !isset($x->orderNumber) || $x->orderNumber !== $number) { continue; }
+        $em = isset($x->customer->email) && is_string($x->customer->email) ? strtolower(trim($x->customer->email)) : '';
+        $ts = isset($x->createdAt) ? strtotime((string) $x->createdAt) : 0;
+        return $em !== '' && $em === strtolower(trim((string) $email)) && $ts > time() - 6 * 3600;
+    }
+    return false;
+}
+function mail_confirm_pending_add($num, $email, $name, $lang, $tbl) {
+    $now = time();
+    mutate_json('confirm_pending', function ($cur) use ($num, $email, $name, $lang, $tbl, $now) {
+        $a = is_array($cur) || is_object($cur) ? json_decode(json_encode($cur), true) : array();
+        if (!is_array($a)) { $a = array(); }
+        foreach ($a as $k => $x) { if (!isset($x['at']) || $x['at'] < $now - 3600) { unset($a[$k]); } }
+        if (count($a) >= 50) { return $a; }
+        $a[$num] = array('email' => $email, 'name' => $name, 'lang' => $lang, 'tbl' => $tbl, 'at' => $now);
+        return $a;
+    });
+}
+function mail_confirm_pending_run($num, $email) {
+    $hit = null;
+    mutate_json('confirm_pending', function ($cur) use ($num, $email, &$hit) {
+        $a = is_array($cur) || is_object($cur) ? json_decode(json_encode($cur), true) : array();
+        if (!is_array($a) || !isset($a[$num])) { return $a; }
+        if (strtolower(trim((string) $a[$num]['email'])) === strtolower(trim((string) $email))) { $hit = $a[$num]; unset($a[$num]); }
+        return $a;
+    });
+    if (!$hit) { return false; }
+    try {
+        $tbl = $hit['tbl'] ? json_decode(json_encode($hit['tbl'])) : null;
+        mail_confirm_order($hit['email'], (string) $hit['name'], $hit['lang'] === 'en' ? 'en' : 'hu', $num, $tbl);
+        mail_log('OK order-visszaigazolas -> vásárló (a rendelés beérkezése után)');
+        return true;
+    } catch (Throwable $e) { mail_log('HIBA order-visszaigazolas: ' . mail_clean($e->getMessage(), 200)); return false; }
+}
+function mail_transfer_block($number, $en) {
+    $raw = read_raw('store'); $st = $raw ? json_decode($raw) : null; $o = null;
+    if (is_object($st) && isset($st->orders) && is_array($st->orders)) { foreach ($st->orders as $x) { if (is_object($x) && isset($x->orderNumber) && $x->orderNumber === $number) { $o = $x; break; } } }
+    if (!$o || !isset($o->paymentMethod) || $o->paymentMethod !== 'atutalas') { return null; }
+    $raw = read_raw('settings'); $set = $raw ? json_decode($raw) : null;
+    $t = (is_object($set) && isset($set->transfer) && is_object($set->transfer)) ? $set->transfer : new stdClass();
+    $g = function ($k) use ($t) { return isset($t->$k) && is_string($t->$k) ? mail_clean($t->$k, 120) : ''; };
+    $days = isset($t->days) && is_numeric($t->days) ? max(1, min(60, (int) $t->days)) : 5;
+    $amt = number_format((float) (isset($o->total) ? $o->total : 0), 0, ',', ' ') . ' Ft';
+    $note = (isset($t->note) && is_object($t->note) && isset($t->note->{$en ? 'en' : 'hu'}) && is_string($t->note->{$en ? 'en' : 'hu'})) ? trim($t->note->{$en ? 'en' : 'hu'}) : '';
+    if ($g('holder') === '' || $g('account') === '') {
+        mail_log('FIGYELEM: előre utalásos rendelés (' . $number . '), de nincs megadva a banki adat (Beállítások › Fizetés › Előre utalás)');
+        return (object) array('heading' => $en ? 'Bank transfer' : 'Utalási adatok', 'lines' => array($en ? 'We will send you the bank transfer details in a separate e-mail shortly.' : 'Az utalási adatokat hamarosan külön levélben küldjük.'));
+    }
+    $L = array();
+    $L[] = $en ? 'Please transfer the total amount of your order within ' . $days . ' days to the account below. Please quote the order number in the payment reference so that we can identify your payment. We will ship your parcel once the payment has arrived.'
+               : 'Kérjük, a rendelés végösszegét ' . $days . ' napon belül utald át az alábbi számlára. A közleménybe írd be a rendelésszámot, így tudjuk azonosítani a befizetést. A csomagot a jóváírás után adjuk fel.';
+    $L[] = '';
+    $L[] = ($en ? 'Beneficiary: ' : 'Kedvezményezett: ') . $g('holder');
+    if ($g('bank') !== '') { $L[] = 'Bank: ' . $g('bank'); }
+    $L[] = ($en ? 'Account number (Hungary): ' : 'Számlaszám: ') . $g('account');
+    if ($g('iban') !== '') { $L[] = 'IBAN: ' . $g('iban'); }
+    if ($g('swift') !== '') { $L[] = 'SWIFT/BIC: ' . $g('swift'); }
+    $L[] = ($en ? 'Amount: ' : 'Összeg: ') . $amt;
+    $L[] = ($en ? 'Payment reference: ' : 'Közlemény: ') . $number;
+    $L[] = ($en ? 'Due within: ' : 'Fizetési határidő: ') . $days . ($en ? ' days' : ' nap');
+    if ($note !== '') { $L[] = ''; foreach (preg_split('/\r\n|\r|\n/', $note) as $nl) { $L[] = mail_clean($nl, 300); } }
+    return (object) array('heading' => $en ? 'Bank transfer details' : 'Utalási adatok', 'lines' => $L);
+}
 function mail_confirm_order($email, $name, $lang, $number, $table) {
     $en = ($lang === 'en');
     $name = mail_clean($name, 80);
     $number = mail_clean($number, 60);
+    $xfer = null;
+    try { $xfer = mail_transfer_block($number, $en); } catch (Throwable $e) { $xfer = null; }
     if ($en) {
         mail_confirm_send($email, 'order', 'en', $number, 'Order confirmation ' . $number . ' – Bagdi Kata', 'Thank you for your order',
-            array('Dear ' . $name . ',', '', 'we have received your order (' . $number . '). The details are below. We will contact you by e-mail about the shipping of your parcel; you will receive your invoice separately.', '', 'If you have any question, reply to this e-mail or write to info@bagdikata.hu and quote the order number.', '', 'Kind regards,', 'Bagdi Kata'), $table, 'order');
+            array('Dear ' . $name . ',', '', 'we have received your order (' . $number . '). The details are below. We will contact you by e-mail about the shipping of your parcel; you will receive your invoice separately.', '', 'If you have any question, reply to this e-mail or write to info@bagdikata.hu and quote the order number.', '', 'Kind regards,', 'Bagdi Kata'), $table, 'order', $xfer);
     } else {
         mail_confirm_send($email, 'order', 'hu', $number, 'Rendelés visszaigazolás ' . $number . ' – Bagdi Kata', 'Köszönjük a rendelésedet',
-            array('Kedves ' . $name . '!', '', 'Megkaptuk a rendelésedet (' . $number . '). A részleteket alább találod. A csomag feladásáról e-mailben értesítünk; a számlát külön levélben küldjük.', '', 'Ha kérdésed van, válaszolj erre a levélre, vagy írj az info@bagdikata.hu címre a rendelésszám megadásával.', '', 'Üdvözlettel:', 'Bagdi Kata'), $table, 'order');
+            array('Kedves ' . $name . '!', '', 'Megkaptuk a rendelésedet (' . $number . '). A részleteket alább találod. A csomag feladásáról e-mailben értesítünk; a számlát külön levélben küldjük.', '', 'Ha kérdésed van, válaszolj erre a levélre, vagy írj az info@bagdikata.hu címre a rendelésszám megadásával.', '', 'Üdvözlettel:', 'Bagdi Kata'), $table, 'order', $xfer);
     }
 }
 
@@ -365,19 +436,22 @@ function mail_dispatch($cfg, $items, $isAdmin) {
         }
         if ($kind === 'withdrawal') { foreach (mail_route_list($mc, 'withdrawal_copy') as $a) { $to[strtolower($a)] = $a; } }
         if (!$isAdmin && $kind !== 'order' && $kind !== 'withdrawal') { mail_log('kihagyva (' . $kind . '): látogatótól nem küldhető'); continue; }
-        if (!count($to)) { mail_log('kihagyva (' . $kind . '): nincs érvényes, engedélyezett címzett (Beállítások > Rendelési értesítő)'); continue; }
-        if (rl_blocked($isAdmin ? 'mailsend_a' : 'mailsend_v', $isAdmin ? 100 : 10, 3600)) { mail_log('limit: ' . $kind); continue; }
-        rl_hit($isAdmin ? 'mailsend_a' : 'mailsend_v', 3600);
-        $subject = isset($it->subject) && is_string($it->subject) ? $it->subject : 'Értesítés';
-        list($text, $html) = mail_render($it);
-        try {
-            $sender = mail_sender_for($mc, $kind);
-            mail_send(array_values($to), $subject, $text, $html, $sender, $sender);
-            mail_log('OK ' . $kind . ' -> ' . count($to) . ' cím');
-            $okCount++;
-            if ($kind === 'daily' || ($kind === 'test' && strpos($subject, 'Napi jelentés') === 0)) { mail_audit_report($kind, $subject, array_values($to), $text); }
-        } catch (Throwable $e) {
-            mail_log('HIBA ' . $kind . ': ' . mail_clean($e->getMessage(), 200));
+        $sendAdmin = true;
+        if (!count($to)) { mail_log('kihagyva (' . $kind . '): nincs érvényes, engedélyezett címzett (Beállítások > Rendelési értesítő)'); if ($kind !== 'order') { continue; } $sendAdmin = false; }
+        if ($sendAdmin && rl_blocked($isAdmin ? 'mailsend_a' : 'mailsend_v', $isAdmin ? 100 : 10, 3600)) { mail_log('limit: ' . $kind); if ($kind !== 'order') { continue; } $sendAdmin = false; }
+        if ($sendAdmin) {
+            rl_hit($isAdmin ? 'mailsend_a' : 'mailsend_v', 3600);
+            $subject = isset($it->subject) && is_string($it->subject) ? $it->subject : 'Értesítés';
+            list($text, $html) = mail_render($it);
+            try {
+                $sender = mail_sender_for($mc, $kind);
+                mail_send(array_values($to), $subject, $text, $html, $sender, $sender);
+                mail_log('OK ' . $kind . ' -> ' . count($to) . ' cím');
+                $okCount++;
+                if ($kind === 'daily' || ($kind === 'test' && strpos($subject, 'Napi jelentés') === 0)) { mail_audit_report($kind, $subject, array_values($to), $text); }
+            } catch (Throwable $e) {
+                mail_log('HIBA ' . $kind . ': ' . mail_clean($e->getMessage(), 200));
+            }
         }
         if ($kind === 'order' && isset($it->customer) && is_object($it->customer) && isset($it->customer->email) && mail_valid($it->customer->email)) {
             $tbl = null;
@@ -387,7 +461,10 @@ function mail_dispatch($cfg, $items, $isAdmin) {
             $num = (isset($it->orderNumber) && is_string($it->orderNumber)) ? $it->orderNumber : '';
             $cn = (isset($it->customer->name) && is_string($it->customer->name)) ? $it->customer->name : '';
             $lg = (isset($it->lang) && $it->lang === 'en') ? 'en' : 'hu';
-            if ($num !== '' && !rl_blocked('confirm_v', 10, 3600)) {
+            if ($num !== '' && !$isAdmin && !mail_order_matches($num, $it->customer->email)) {
+                if (preg_match('/^BK-\d{1,14}$/', $num) && !rl_blocked('confirm_v', 10, 3600)) { mail_confirm_pending_add($num, $it->customer->email, $cn, $lg, $tbl); mail_log('order-visszaigazolás függőben: a rendelés még nem érkezett be (' . $num . ')'); }
+            }
+            elseif ($num !== '' && !rl_blocked('confirm_v', 10, 3600)) {
                 rl_hit('confirm_v', 3600);
                 try {
                     mail_confirm_order($it->customer->email, $cn, $lg, $num, $tbl);

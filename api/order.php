@@ -127,6 +127,15 @@ if ($isNew && !empty($o->newsletter) && isset($o->customer) && is_object($o->cus
     } catch (Throwable $e) {  }
 }
 if ($isNew) { try { live_push('order', array('sum' => (int) $sub)); } catch (Throwable $e) { } }
+if ($isNew && isset($o->orderNumber, $o->customer->email)) {
+    $cNum = (string) $o->orderNumber; $cEm = (string) $o->customer->email;
+    register_shutdown_function(function () use ($cNum, $cEm) {
+        try {
+            if (function_exists('fastcgi_finish_request')) { @fastcgi_finish_request(); } elseif (function_exists('litespeed_finish_request')) { @litespeed_finish_request(); }
+            mail_confirm_pending_run($cNum, $cEm);
+        } catch (Throwable $e) { }
+    });
+}
 if ($isNew) {
     try {
         require_once __DIR__ . '/_push.php';
