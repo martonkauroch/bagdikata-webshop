@@ -1,4 +1,5 @@
 window.__BK_CHANGELOG=[
+{v:"1.71.5",d:"2026-11-27",c:["Termékmegosztás: az Instagram gomb és a hozzá tartozó magyarázó szöveg is kikerült"]},
 {v:"1.71.4",d:"2026-11-27",c:["Termékmegosztás: az X, Pinterest, Telegram és LinkedIn gomb kikerült (marad: Facebook, Messenger, WhatsApp, Viber, E-mail, Instagram, Link másolása, Más alkalmazás)"]},
 {v:"1.71.3",d:"2026-11-27",c:["Rendelési levelek (admin-értesítő és vásárlói visszaigazolás, előre utalásnál az utalási adatokkal): a szerver a rendelés mentésekor azonnal elküldi, nem a válasz után a háttérben; a Levélnaplóban minden rendelésnél látszik a „rendelés mentve … levelek küldése” sor és az eredmény"]},
 {v:"1.71.2",d:"2026-11-27",c:["Lábléc logók: lejjebb kerültek (a lábléc menüsora alá, a © sor fölé), logónként középre igazított blokk, mobilon is rendezetten","Admin: a [logo] jelölős szöveg helyett „Szöveg a logó mellé” + „Szöveg helye: a logó fölött / alatt” (a korábbi szöveget automatikusan átveszi)"]},
