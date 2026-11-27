@@ -29,6 +29,7 @@ if (is_object($store) && isset($store->products) && is_array($store->products)) 
 }
 $items = array();
 $sub = 0;
+$eligSub = 0;
 foreach ($o->items as $it) {
     if (strpos($it->productId, '__') === 0) { continue; }
     $p = isset($byId[$it->productId]) ? $byId[$it->productId] : null;
@@ -45,6 +46,7 @@ foreach ($o->items as $it) {
     $it->name = $pname;
     $items[] = $it;
     $sub += $it->unitPrice * $q;
+    if (!(isset($p->noCoupon) && $p->noCoupon === true)) { $eligSub += $it->unitPrice * $q; }
 }
 if (!count($items)) { fail(400, 'A kosár üres.'); }
 $set = json_decode((string) read_raw('settings'));
@@ -67,7 +69,7 @@ $shipFee = ($sub >= $free ? 0 : $fee) + ($pm === 'utanvet' ? $codFee : 0);
 $clientTotal = (isset($o->total) && is_numeric($o->total)) ? (int) round($o->total) : null;
 rl_hit('order', 3600);
 $isNew = false;
-mutate_json('store', function ($cur) use ($o, &$isNew, $items, $sub, $shipFee, $clientTotal) {
+mutate_json('store', function ($cur) use ($o, &$isNew, $items, $sub, $eligSub, $shipFee, $clientTotal) {
     if (!is_object($cur)) { $cur = new stdClass(); }
     $orders = (isset($cur->orders) && is_array($cur->orders)) ? $cur->orders : array();
     foreach ($orders as $x) { if (is_object($x) && isset($x->id) && $x->id === $o->id) { return $cur; } }
@@ -75,11 +77,11 @@ mutate_json('store', function ($cur) use ($o, &$isNew, $items, $sub, $shipFee, $
     $disc = 0;
     if (isset($o->coupon) && is_object($o->coupon)) {
         $code = isset($o->coupon->code) && is_string($o->coupon->code) ? coupon_code_norm($o->coupon->code) : '';
-        if ($code === '') { unset($o->coupon); }
+        if ($code === '' || $eligSub <= 0) { unset($o->coupon); }
         else {
             list($cs, $cpct) = coupon_redeem($code);
             $pct = $cs === 'ok' ? min(90, max(0, (int) $cpct)) : 0;
-            $disc = (int) round($sub * $pct / 100);
+            $disc = (int) round($eligSub * $pct / 100);
             $o->coupon = (object) array('code' => $code, 'percent' => $pct, 'discount' => $disc);
             if ($cs !== 'ok') {
                 $o->coupon->invalid = true;
