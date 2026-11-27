@@ -3,8 +3,10 @@ if (!defined('BK_API')) { exit; }
 
 function mtpl_defaults() {
     return array(
-        'header' => array('hu' => '', 'en' => ''),
-        'footer' => array('hu' => '', 'en' => ''),
+        'logo' => '', 'logoWidth' => 56,
+        'title' => array('hu' => 'Bagdi Kata', 'en' => 'Bagdi Kata'),
+        'header' => array('hu' => 'Kézzel kötött melírozott sapkák', 'en' => 'Hand-knitted melange hats'),
+        'footer' => array('hu' => 'Ez a Bagdi Kata webshop automatikus üzenete.', 'en' => 'This is an automatic message sent from the Bagdi Kata webshop.'),
         'order' => array(
             'subject' => array('hu' => 'Rendelés visszaigazolás {rendelesszam} – Bagdi Kata', 'en' => 'Order confirmation {rendelesszam} – Bagdi Kata'),
             'heading' => array('hu' => 'Köszönjük a rendelésedet', 'en' => 'Thank you for your order'),
@@ -22,9 +24,11 @@ function mtpl_defaults() {
 function mtpl_clean($in) {
     $d = mtpl_defaults(); $in = is_array($in) ? $in : array(); $out = $d;
     $str = function ($v, $max) { return is_string($v) ? mb_substr(str_replace("\r", '', $v), 0, $max, 'UTF-8') : null; };
-    foreach (array('header' => 120, 'footer' => 600) as $k => $max) {
-        foreach (array('hu', 'en') as $l) { $x = isset($in[$k][$l]) ? $str($in[$k][$l], $max) : null; if ($x !== null) { $out[$k][$l] = $k === 'header' ? trim(preg_replace('/\s+/u', ' ', $x)) : trim($x); } }
+    foreach (array('title' => 60, 'header' => 120, 'footer' => 600) as $k => $max) {
+        foreach (array('hu', 'en') as $l) { $x = isset($in[$k][$l]) ? $str($in[$k][$l], $max) : null; if ($x !== null) { $out[$k][$l] = $k === 'footer' ? trim($x) : trim(preg_replace('/\s+/u', ' ', $x)); } }
     }
+    if (isset($in['logo']) && is_string($in['logo']) && preg_match('/^(|c:(png|jpg|gif|webp):[a-f0-9]{8,40})$/', $in['logo'])) { $out['logo'] = $in['logo']; }
+    if (isset($in['logoWidth']) && is_numeric($in['logoWidth'])) { $out['logoWidth'] = max(30, min(220, (int) $in['logoWidth'])); }
     $lim = array('subject' => 150, 'heading' => 120, 'body' => 3000, 'closing' => 1500);
     foreach (array('order', 'contact', 'withdrawal') as $k) {
         foreach ($d[$k] as $f => $pair) {
@@ -45,14 +49,26 @@ function mtpl_fill($s, $vars) { return strtr((string) $s, $vars); }
 function mtpl_lines($s) { $s = (string) $s; return $s === '' ? array() : preg_split('/\n/', $s); }
 function mtpl_frame_begin($T, $en) {
     $L = $en ? 'en' : 'hu';
-    $hd = trim($T['header'][$L]);
-    if ($hd !== '') { $GLOBALS['bk_mail_header_text'] = $hd; }
+    $GLOBALS['bk_mail_header_text'] = trim($T['header'][$L]);
+    $GLOBALS['bk_mail_title'] = trim($T['title'][$L]);
+    $GLOBALS['bk_mail_logo_w'] = (int) $T['logoWidth'];
     $ft = trim($T['footer'][$L]);
-    $auto = $en ? 'This is an automatic message sent from the Bagdi Kata webshop.' : 'Ez a Bagdi Kata webshop automatikus üzenete.';
-    if ($ft !== '') {
-        $GLOBALS['bk_mail_footer_html'] = '<p style="margin:0 0 10px">' . nl2br(htmlspecialchars($ft)) . '</p><p style="margin:0 0 4px">' . htmlspecialchars($auto) . '</p>';
-        $GLOBALS['bk_mail_footer_text'] = $ft;
-    }
+    $GLOBALS['bk_mail_footer_html'] = $ft !== '' ? '<p style="margin:0 0 6px">' . nl2br(htmlspecialchars($ft)) . '</p>' : '';
+    $GLOBALS['bk_mail_footer_text'] = $ft;
 }
-function mtpl_frame_end() { unset($GLOBALS['bk_mail_header_text'], $GLOBALS['bk_mail_footer_html'], $GLOBALS['bk_mail_footer_text']); }
+function mtpl_frame_end() { unset($GLOBALS['bk_mail_header_text'], $GLOBALS['bk_mail_title'], $GLOBALS['bk_mail_footer_html'], $GLOBALS['bk_mail_footer_text'], $GLOBALS['bk_mail_logo_w']); }
+function mtpl_logo_file($logo) { return preg_match('/^c:(png|jpg|gif|webp):([a-f0-9]{8,40})$/', (string) $logo, $m) ? array(DATA_DIR . '/mail-logo.' . $m[1], $m[1], $m[2]) : null; }
+function mtpl_logo_url_for($logo) {
+    $f = mtpl_logo_file($logo);
+    return ($f && is_file($f[0])) ? 'api/maillogo.php?v=' . substr($f[2], 0, 10) : 'mail-logo.png';
+}
+function mtpl_logo() {
+    static $c = null;
+    if ($c !== null) { return $c; }
+    $raw = read_raw('mail_tpl'); $t = $raw ? json_decode($raw, true) : null;
+    $w = (is_array($t) && isset($t['logoWidth']) && is_numeric($t['logoWidth'])) ? max(30, min(220, (int) $t['logoWidth'])) : 56;
+    $f = is_array($t) && isset($t['logo']) ? mtpl_logo_file($t['logo']) : null;
+    $url = ($f && is_file($f[0])) ? mail_site_url() . '/assets/mail-logo-c.' . $f[1] . '?v=' . substr($f[2], 0, 10) : mail_site_url() . '/mail-logo.png';
+    return $c = array($url, $w);
+}
 function mtpl_name($name, $en) { $name = trim((string) $name); return $name !== '' ? $name : ($en ? 'Customer' : 'Vásárló'); }

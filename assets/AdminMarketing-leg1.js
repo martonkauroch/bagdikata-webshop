@@ -397,10 +397,11 @@ function ProductTexts(){
     soldout:{title:{hu:"Ez a darab jelenleg elfogyott",en:"This piece is currently sold out"},text:{hu:"Minden sapkánk kézzel készül, ezért ebből a darabból most nincs készleten.\nÍrj nekünk, vagy iratkozz fel a hírlevélre, és szólunk, amint újra elérhető – vagy készítünk neked egy hasonlót.",en:"Every piece is handmade, so this one is out of stock right now.\nWrite to us or subscribe to our newsletter and we will let you know when it is back – or we can make you a similar one."},button:{hu:"Írj nekünk",en:"Contact us"}}
   };
   let pair=()=>({hu:"",en:""});
+  let fill=(k,o)=>{Object.keys(DEF[k]).forEach(f=>{let v={...pair(),...(o[f]||{})};["hu","en"].forEach(lg=>{if(!String(v[lg]||"").trim())v[lg]=DEF[k][f][lg]});o[f]=v});return o};
   let init=()=>({
-    notice:{show:true,title:pair(),text:pair(),short:pair(),...(content.notice||{})},
-    details:{show:true,shipping:true,title:pair(),items:pair(),...(content.details||{})},
-    soldout:{title:pair(),text:pair(),button:pair(),...(content.soldout||{})}
+    notice:fill("notice",{show:true,title:pair(),text:pair(),short:pair(),...(content.notice||{})}),
+    details:fill("details",{show:true,shipping:true,title:pair(),items:pair(),...(content.details||{})}),
+    soldout:fill("soldout",{title:pair(),text:pair(),button:pair(),...(content.soldout||{})})
   });
   let[d,setD]=N.useState(init),[msg,setMsg]=N.useState(null);
   let saved=JSON.stringify({notice:content.notice||null,details:content.details||null,soldout:content.soldout||null});
@@ -408,7 +409,7 @@ function ProductTexts(){
   let set=(k,f,v,lg)=>setD(x=>{let y=JSON.parse(JSON.stringify(x));if(lg)y[k][f]={...(y[k][f]||pair()),[lg]:v};else y[k][f]=v;return y});
   let dirty=k=>JSON.stringify(d[k])!==JSON.stringify(init()[k]);
   let doSave=k=>{save({...content,[k]:d[k]});setMsg({k,t:"Elmentve – a webshopban azonnal látszik."});setTimeout(()=>setMsg(m=>m&&m.k===k?null:m),3500)};
-  let reset=k=>{if(!window.confirm("Visszaállítod az alapértelmezett szöveget? (A Mentés gombbal lép életbe.)"))return;let b=init()[k];Object.keys(DEF[k]).forEach(f=>b[f]=pair());if(k==="notice")b.show=true;if(k==="details"){b.show=true;b.shipping=true}setD(x=>({...x,[k]:b}))};
+  let reset=k=>{if(!window.confirm("Visszaállítod az alapértelmezett szöveget? (A Mentés gombbal lép életbe.)"))return;let b=init()[k];Object.keys(DEF[k]).forEach(f=>b[f]={...DEF[k][f]});if(k==="notice")b.show=true;if(k==="details"){b.show=true;b.shipping=true}setD(x=>({...x,[k]:b}))};
   let two={display:"grid",gap:10,gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))"};
   let fld=(k,f,label,rows,max)=>h("div",{style:{display:"grid",gap:4}},h("span",{style:S.lab},label),h("div",{style:two},["hu","en"].map(lg=>h("label",{key:lg},h("span",{style:{display:"block",fontSize:11,color:"#6b7280",marginBottom:2}},lg==="hu"?"Magyar":"English"),
     rows?h("textarea",{style:{...S.inp,minHeight:rows*22+16,fontFamily:"inherit"},value:(d[k][f]||{})[lg]||"",maxLength:max,placeholder:DEF[k][f][lg],onChange:ev=>set(k,f,ev.target.value,lg),"data-testid":"pt-"+k+"-"+f+"-"+lg})
@@ -419,7 +420,7 @@ function ProductTexts(){
     h("button",{type:"button",style:S.btn,onClick:()=>reset(k)},"Alapértelmezés"),
     dirty(k)&&h("span",{style:{fontSize:13,color:"#92400e"}},"Nem mentett módosítás"),
     msg&&msg.k===k&&h("span",{style:{fontSize:13,color:"#047857"}},msg.t));
-  let hint="Üresen hagyott mezőnél a halványan látszó alapértelmezett szöveg jelenik meg.";
+  let hint="A mezőkben a jelenleg megjelenő szöveg áll – írd át, és mentsd.";
   return h("div",{"data-testid":"product-texts",style:{marginTop:24}},
     h("h2",{style:{fontSize:15,fontWeight:600,margin:"0 0 4px",color:"#111827"}},"Termékoldali szövegek"),
     h("p",{style:{...S.sub,margin:"0 0 14px"}},"Minden termékoldalon megjelenő közös szövegek. A kártyák a címükre kattintva összecsukhatók."),
@@ -446,8 +447,9 @@ function NlProdPick({field,f,setF,tid,en}){
 
 function CustomerMailCard(){
   let[t,setT]=N.useState(null),[def,setDef]=N.useState(null),[saved,setSaved]=N.useState(""),[lg,setLg]=N.useState("hu"),[kind,setKind]=N.useState("order");
-  let[msg,setMsg]=N.useState(null),[busy,setBusy]=N.useState(false),[pv,setPv]=N.useState(null);
-  N.useEffect(()=>{if(!shared())return;api("mailtpl.php",{action:"get"}).then(j=>{setT(j.tpl);setDef(j.defaults);setSaved(JSON.stringify(j.tpl))}).catch(e=>setMsg({e:1,t:e.message}))},[]);
+  let[msg,setMsg]=N.useState(null),[busy,setBusy]=N.useState(false),[pv,setPv]=N.useState(null),[logoUrl,setLogoUrl]=N.useState("mail-logo.png");
+  N.useEffect(()=>{if(!shared())return;api("mailtpl.php",{action:"get"}).then(j=>{setT(j.tpl);setDef(j.defaults);setSaved(JSON.stringify(j.tpl));j.logoUrl&&setLogoUrl(j.logoUrl)}).catch(e=>setMsg({e:1,t:e.message}))},[]);
+  let upLogo=file=>{if(!file)return;let fd=new FormData();fd.append("logo",file);setBusy(true);setMsg(null);fetch(window.__BK.base+"api/mailtpl.php",{method:"POST",credentials:"same-origin",headers:{"X-BK":"1"},body:fd}).then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j.ok)throw new Error(j.error||"Hiba");return j})).then(j=>{setBusy(false);setT(x=>({...x,logo:j.tpl.logo}));setSaved(s0=>{try{let o=JSON.parse(s0);o.logo=j.tpl.logo;return JSON.stringify(o)}catch{return s0}});setLogoUrl(j.logoUrl);setMsg({t:"Az új logó elmentve – minden kimenő levélben ez jelenik meg ("+j.size[0]+"×"+j.size[1]+" px)."})}).catch(e=>{setBusy(false);setMsg({e:1,t:e.message})})};
   if(!shared())return null;
   if(!t)return h("section",{style:S.card},h("div",{style:S.body},h("p",{style:S.sub},msg?msg.t:"Betöltés…")));
   let dirty=JSON.stringify(t)!==saved;
@@ -459,7 +461,7 @@ function CustomerMailCard(){
   let save=()=>run(api("mailtpl.php",{action:"save",tpl:t}).then(j=>{setT(j.tpl);setSaved(JSON.stringify(j.tpl));return j}),"Elmentve – az ügyfeleknek küldött levelek mostantól ezzel a szöveggel mennek ki.");
   let preview=()=>run(api("mailtpl.php",{action:"preview",tpl:t,kind,lang:lg}).then(j=>{setPv(j);return j}));
   let test=()=>run(api("mailtpl.php",{action:"test",tpl:t,kind,lang:lg}),"A tesztlevél elment az admin e-mail-címre.");
-  let reset=()=>{if(!window.confirm("Visszaállítod a(z) „"+K[kind]+"” "+(lg==="en"?"angol":"magyar")+" szövegét az alapértelmezettre? (A Mentés gombbal lép életbe.)"))return;Object.keys(def[kind]).forEach(f=>setF([kind,f,lg],def[kind][f][lg]))};
+  let reset=()=>{if(!window.confirm("Visszaállítod a(z) „"+K[kind]+"” és a fejléc/lábléc "+(lg==="en"?"angol":"magyar")+" szövegét az alapértelmezettre? (A Mentés gombbal lép életbe.)"))return;Object.keys(def[kind]).forEach(f=>setF([kind,f,lg],def[kind][f][lg]));["title","header","footer"].forEach(f=>setF([f,lg],def[f][lg]))};
   let tab=(on,lbl,click,tid2)=>h("button",{type:"button",onClick:click,"data-testid":tid2,style:{...S.btn,background:on?"#111827":"#fff",color:on?"#fff":"#111827",borderColor:on?"#111827":"#d1d5db"}},lbl);
   let fld=f=>{let[l,max,rows]=FL[f];let val=t[kind][f]?t[kind][f][lg]:"";return h("label",{key:f,style:{display:"block"}},h("span",{style:S.lab},l),rows?h("textarea",{style:{...S.inp,minHeight:rows*22+16,fontFamily:"inherit"},value:val,maxLength:max,onChange:ev=>setF([kind,f,lg],ev.target.value),"data-testid":"cm-"+f}):h("input",{style:S.inp,value:val,maxLength:max,onChange:ev=>setF([kind,f,lg],ev.target.value),"data-testid":"cm-"+f}))};
   return h("section",{style:S.card,"data-testid":"customer-mail-card"},
@@ -468,10 +470,21 @@ function CustomerMailCard(){
       msg&&h("p",{style:msg.e?S.err:S.ok,role:msg.e?"alert":"status","data-testid":"cm-msg"},msg.t),
       h("div",{style:{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}},h("span",{style:{fontSize:13,color:"#6b7280"}},"Nyelv:"),tab(lg==="hu","Magyar",()=>{setLg("hu");setPv(null)},"cm-lang-hu"),tab(lg==="en","English",()=>{setLg("en");setPv(null)},"cm-lang-en")),
       h("div",{style:{border:"1px solid #e5e7eb",borderRadius:10,padding:14,display:"grid",gap:10,background:"#fafafa"}},
-        h("strong",{style:{fontSize:14}},"Közös fejléc és lábléc ("+(lg==="en"?"angol":"magyar")+")"),
-        h("label",null,h("span",{style:S.lab},"Fejléc – sor a logó és a „Bagdi Kata” név alatt (üresen: „Kézzel kötött melírozott sapkák”)"),h("input",{style:S.inp,value:t.header[lg],maxLength:120,onChange:ev=>setF(["header",lg],ev.target.value),"data-testid":"cm-header"})),
-        h("label",null,h("span",{style:S.lab},"Lábléc – szabad szöveg a levél alján (pl. cégadatok, elérhetőség, nyitvatartás)"),h("textarea",{style:{...S.inp,minHeight:70,fontFamily:"inherit"},value:t.footer[lg],maxLength:600,onChange:ev=>setF(["footer",lg],ev.target.value),"data-testid":"cm-footer"})),
-        h("p",{style:{...S.sub,margin:0}},"A webshop címe és az elérhetőség ezen felül mindig bekerül a láblécbe.")),
+        h("strong",{style:{fontSize:14}},"Fejléc és lábléc"),
+        h("div",{style:{display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",background:"#ece6dc",borderRadius:8,padding:"14px 16px"},"data-testid":"cm-logo-box"},
+          h("img",{src:(/^https?:/.test(logoUrl)?"":window.__BK.base)+logoUrl,alt:"Logó",style:{width:t.logoWidth||56,height:"auto",display:"block",background:"transparent"},"data-testid":"cm-logo-img"}),
+          h("div",{style:{display:"grid",gap:6,flex:"1 1 260px"}},
+            h("span",{style:{fontSize:13,color:"#374151"}},"Logó – minden kimenő levél tetején (a hírlevelekben is)."),
+            h("div",{style:{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}},
+              h("label",{style:{...S.btn,display:"inline-block"}},"Logó cseréje…",h("input",{type:"file",accept:"image/png,image/jpeg,image/gif,image/webp",style:{display:"none"},onChange:ev=>{upLogo(ev.target.files&&ev.target.files[0]);ev.target.value=""},"data-testid":"cm-logo-file"})),
+              t.logo&&h("button",{type:"button",style:S.btn,onClick:()=>{setF(["logo"],"");setLogoUrl("mail-logo.png")}},"Eredeti logó (mentés után)"),
+              h("label",{style:{fontSize:13,color:"#374151",display:"flex",gap:6,alignItems:"center"}},"Szélesség:",h("input",{type:"number",min:30,max:220,value:t.logoWidth||56,onChange:ev=>setF(["logoWidth"],Math.max(30,Math.min(220,parseInt(ev.target.value||"56",10)||56))),style:{...S.inp,width:80,padding:"4px 8px"},"data-testid":"cm-logo-w"}),"px")),
+            h("span",{style:{fontSize:12,color:"#6b7280"}},"PNG (átlátszó háttérrel) vagy JPG, legfeljebb 1 MB. A feltöltött logó azonnal érvénybe lép.")) ),
+        h("div",{style:{display:"grid",gap:10,gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))"}},
+          h("label",null,h("span",{style:S.lab},"Név a logó alatt ("+(lg==="en"?"angol":"magyar")+")"),h("input",{style:S.inp,value:t.title[lg],maxLength:60,onChange:ev=>setF(["title",lg],ev.target.value),"data-testid":"cm-title"})),
+          h("label",null,h("span",{style:S.lab},"Alcím a név alatt ("+(lg==="en"?"angol":"magyar")+")"),h("input",{style:S.inp,value:t.header[lg],maxLength:120,onChange:ev=>setF(["header",lg],ev.target.value),"data-testid":"cm-header"}))),
+        h("label",null,h("span",{style:S.lab},"Lábléc ("+(lg==="en"?"angol":"magyar")+") – pl. cégadatok, elérhetőség, nyitvatartás"),h("textarea",{style:{...S.inp,minHeight:70,fontFamily:"inherit"},value:t.footer[lg],maxLength:600,onChange:ev=>setF(["footer",lg],ev.target.value),"data-testid":"cm-footer"})),
+        h("p",{style:{...S.sub,margin:0}},"Üresen hagyott név vagy alcím nem jelenik meg. A lábléc alatt mindig ott a webshop címe és e-mail-címe; a név, az alcím és a lábléc a rendelés-, kapcsolat- és elállási levelekre vonatkozik, a logó minden levélre.")),
       h("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},Object.keys(K).map(k=>h("span",{key:k},tab(kind===k,K[k],()=>{setKind(k);setPv(null)},"cm-kind-"+k)))),
       h("p",{style:{...S.sub,margin:0}},KD[kind]),
       Object.keys(FL).filter(f=>t[kind][f]!==undefined).map(fld),

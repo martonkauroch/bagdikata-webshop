@@ -7,13 +7,28 @@ $cfg = load_config();
 if (!$cfg || !has_admin($cfg)) { fail(401, 'Admin belépés szükséges'); }
 header('Cache-Control: no-store');
 require_post();
+if (isset($_FILES['logo']) && is_array($_FILES['logo'])) {
+    $u = $_FILES['logo'];
+    if (!empty($u['error']) || !is_uploaded_file($u['tmp_name'])) { fail(400, 'A feltöltés nem sikerült.'); }
+    if ($u['size'] > 1024 * 1024) { fail(400, 'A logó legfeljebb 1 MB lehet.'); }
+    $info = @getimagesize($u['tmp_name']);
+    $map = array(IMAGETYPE_PNG => 'png', IMAGETYPE_JPEG => 'jpg', IMAGETYPE_GIF => 'gif', IMAGETYPE_WEBP => 'webp');
+    if (!$info || !isset($map[$info[2]])) { fail(400, 'Csak PNG, JPG, GIF vagy WEBP kép tölthető fel.'); }
+    $ext = $map[$info[2]];
+    foreach (glob(DATA_DIR . '/mail-logo.*') ?: array() as $old) { @unlink($old); }
+    if (!@move_uploaded_file($u['tmp_name'], DATA_DIR . '/mail-logo.' . $ext)) { fail(500, 'A logó nem menthető.'); }
+    $id = 'c:' . $ext . ':' . sha1_file(DATA_DIR . '/mail-logo.' . $ext);
+    $T = mtpl_get(); $T['logo'] = $id;
+    write_raw('mail_tpl', json_encode($T, JSON_UNESCAPED_UNICODE));
+    json_out(array('ok' => true, 'tpl' => $T, 'defaults' => mtpl_defaults(), 'logoUrl' => mtpl_logo_url_for($id), 'size' => array($info[0], $info[1])));
+}
 $d = body_json(40000);
 $act = (is_object($d) && isset($d->action) && is_string($d->action)) ? $d->action : '';
-if ($act === 'get') { json_out(array('ok' => true, 'tpl' => mtpl_get(), 'defaults' => mtpl_defaults())); }
+if ($act === 'get') { $T = mtpl_get(); json_out(array('ok' => true, 'tpl' => $T, 'defaults' => mtpl_defaults(), 'logoUrl' => mtpl_logo_url_for($T['logo']))); }
 if ($act === 'save') {
     $T = mtpl_clean(isset($d->tpl) ? json_decode(json_encode($d->tpl), true) : null);
     write_raw('mail_tpl', json_encode($T, JSON_UNESCAPED_UNICODE));
-    json_out(array('ok' => true, 'tpl' => $T, 'defaults' => mtpl_defaults()));
+    json_out(array('ok' => true, 'tpl' => $T, 'defaults' => mtpl_defaults(), 'logoUrl' => mtpl_logo_url_for($T['logo'])));
 }
 if ($act === 'preview' || $act === 'test') {
     $T = mtpl_clean(isset($d->tpl) ? json_decode(json_encode($d->tpl), true) : null);

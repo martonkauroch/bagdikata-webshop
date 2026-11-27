@@ -157,7 +157,10 @@ function mail_wrap($inner, $lang, $ref, $pre) {
     $site = mail_site_url();
     $mc = mail_cfg();
     $contact = (!empty($mc['senders']['contact']) && mail_valid($mc['senders']['contact'])) ? $mc['senders']['contact'] : 'info@bagdikata.hu';
-    $logo = htmlspecialchars($site . '/mail-logo.png');
+    list($lgu, $lgw) = mtpl_logo();
+    if (isset($GLOBALS['bk_mail_logo_w'])) { $lgw = (int) $GLOBALS['bk_mail_logo_w']; }
+    $logo = htmlspecialchars($lgu);
+    $ttl = isset($GLOBALS['bk_mail_title']) && $GLOBALS['bk_mail_title'] !== '' ? htmlspecialchars((string) $GLOBALS['bk_mail_title']) : (isset($GLOBALS['bk_mail_title']) ? '' : 'Bagdi Kata');
     $host = htmlspecialchars(preg_replace('#^https?://#i', '', $site));
     $tag = $en ? 'Hand-knitted melange hats' : 'Kézzel kötött melírozott sapkák';
     $auto = $en ? 'This is an automatic message sent from the Bagdi Kata webshop.' : 'Ez a Bagdi Kata webshop automatikus üzenete.';
@@ -169,9 +172,9 @@ function mail_wrap($inner, $lang, $ref, $pre) {
         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f3ee"><tr><td align="center" style="padding:24px 12px">'
         . '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #ece6dc">'
         . '<tr><td align="center" style="background:#ece6dc;padding:22px 16px 16px;border-bottom:3px solid #161314">'
-        . '<a href="' . htmlspecialchars($site) . '" style="text-decoration:none"><img src="' . $logo . '" width="' . (empty($GLOBALS['bk_mail_logo_only']) ? 56 : 72) . '" alt="Bagdi Kata" style="display:block;margin:0 auto ' . (empty($GLOBALS['bk_mail_logo_only']) ? 8 : 0) . 'px;border:0"></a>'
-        . (empty($GLOBALS['bk_mail_logo_only']) ? '<div style="font-family:Georgia,\'Times New Roman\',serif;font-size:22px;letter-spacing:1px;color:#161314">Bagdi Kata</div>'
-        . '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b6b6b;margin-top:2px">' . (!empty($GLOBALS['bk_mail_header_text']) ? htmlspecialchars((string) $GLOBALS['bk_mail_header_text']) : $tag) . '</div>' : (!empty($GLOBALS['bk_mail_header_text']) ? '<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4a4a;margin-top:10px">' . htmlspecialchars((string) $GLOBALS['bk_mail_header_text']) . '</div>' : ''))
+        . '<a href="' . htmlspecialchars($site) . '" style="text-decoration:none"><img src="' . $logo . '" width="' . (empty($GLOBALS['bk_mail_logo_only']) ? $lgw : max($lgw, 72)) . '" alt="Bagdi Kata" style="display:block;margin:0 auto ' . (empty($GLOBALS['bk_mail_logo_only']) ? 8 : 0) . 'px;border:0"></a>'
+        . (empty($GLOBALS['bk_mail_logo_only']) ? ($ttl !== '' ? '<div style="font-family:Georgia,\'Times New Roman\',serif;font-size:22px;letter-spacing:1px;color:#161314">' . $ttl . '</div>' : '')
+        . (isset($GLOBALS['bk_mail_header_text']) && $GLOBALS['bk_mail_header_text'] === '' ? '' : '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b6b6b;margin-top:2px">' . (!empty($GLOBALS['bk_mail_header_text']) ? htmlspecialchars((string) $GLOBALS['bk_mail_header_text']) : $tag) . '</div>') : (!empty($GLOBALS['bk_mail_header_text']) ? '<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4a4a;margin-top:10px">' . htmlspecialchars((string) $GLOBALS['bk_mail_header_text']) . '</div>' : ''))
         . '</td></tr>'
         . '<tr><td style="padding:24px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#222222">' . $inner . '</td></tr>'
         . '<tr><td style="background:#f6f3ee;padding:16px 28px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#6b6b6b;border-top:1px solid #ece6dc">'
