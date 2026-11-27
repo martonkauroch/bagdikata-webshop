@@ -389,4 +389,48 @@ function DailyReports(){
       !shared()&&h("div",{style:{...S.warn,marginTop:14}},"A tényleges kiküldéshez az éles, szerveres működés és a cPanel időzített feladata (cron) szükséges.")));
 }
 
-export{DailyReports,HistoryTabs,NewsAdminPage as AdminNewsPage,EventsAdminPage as AdminEventsPage,LanguagePage as AdminLanguagePage,CouponsPage as AdminCouponsPage,NewsletterPage as AdminNewsletterPage};
+function ProductTexts(){
+  let{content,save}=useContent();
+  let DEF={
+    notice:{title:{hu:"Minden darab egyedi",en:"Every piece is unique"},text:{hu:"Termékeink melanzs, azaz többféle színű szálból kevert fonalból készülnek. A szálak keveredése és az adott fonaltétel aktuális színösszetétele miatt a megvásárolt termék mintázata és árnyalata részben eltérhet a képen láthatótól.",en:"Our products are knitted from melange yarn, blended from fibres of several colours. Because of how the fibres mix and the current colour make-up of each yarn batch, the item you receive may differ somewhat in pattern and shade from the one shown in the pictures."},short:{hu:"A kevert szálú fonal miatt a termékek mintázata és árnyalata részben eltérhet a képeken láthatótól.",en:"Because of the blended yarn, pattern and shade may differ somewhat from the pictures."}},
+    details:{title:{hu:"Részletek",en:"Details"},items:{hu:"Kötött, bordás minta, visszahajtható szél\nUnisex, egy méret – jól nyúlik\nKímélő kézi mosás, fektetve szárítva",en:"Ribbed knit with a fold-over brim\nUnisex, one size – nicely stretchy\nGentle hand wash, dry flat"}},
+    soldout:{title:{hu:"Ez a darab jelenleg elfogyott",en:"This piece is currently sold out"},text:{hu:"Minden sapkánk kézzel készül, ezért ebből a darabból most nincs készleten.\nÍrj nekünk, vagy iratkozz fel a hírlevélre, és szólunk, amint újra elérhető – vagy készítünk neked egy hasonlót.",en:"Every piece is handmade, so this one is out of stock right now.\nWrite to us or subscribe to our newsletter and we will let you know when it is back – or we can make you a similar one."},button:{hu:"Írj nekünk",en:"Contact us"}}
+  };
+  let pair=()=>({hu:"",en:""});
+  let init=()=>({
+    notice:{show:true,title:pair(),text:pair(),short:pair(),...(content.notice||{})},
+    details:{show:true,shipping:true,title:pair(),items:pair(),...(content.details||{})},
+    soldout:{title:pair(),text:pair(),button:pair(),...(content.soldout||{})}
+  });
+  let[d,setD]=N.useState(init),[msg,setMsg]=N.useState(null);
+  let saved=JSON.stringify({notice:content.notice||null,details:content.details||null,soldout:content.soldout||null});
+  N.useEffect(()=>{setD(init())},[saved]);
+  let set=(k,f,v,lg)=>setD(x=>{let y=JSON.parse(JSON.stringify(x));if(lg)y[k][f]={...(y[k][f]||pair()),[lg]:v};else y[k][f]=v;return y});
+  let dirty=k=>JSON.stringify(d[k])!==JSON.stringify(init()[k]);
+  let doSave=k=>{save({...content,[k]:d[k]});setMsg({k,t:"Elmentve – a webshopban azonnal látszik."});setTimeout(()=>setMsg(m=>m&&m.k===k?null:m),3500)};
+  let reset=k=>{if(!window.confirm("Visszaállítod az alapértelmezett szöveget? (A Mentés gombbal lép életbe.)"))return;let b=init()[k];Object.keys(DEF[k]).forEach(f=>b[f]=pair());if(k==="notice")b.show=true;if(k==="details"){b.show=true;b.shipping=true}setD(x=>({...x,[k]:b}))};
+  let two={display:"grid",gap:10,gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))"};
+  let fld=(k,f,label,rows,max)=>h("div",{style:{display:"grid",gap:4}},h("span",{style:S.lab},label),h("div",{style:two},["hu","en"].map(lg=>h("label",{key:lg},h("span",{style:{display:"block",fontSize:11,color:"#6b7280",marginBottom:2}},lg==="hu"?"Magyar":"English"),
+    rows?h("textarea",{style:{...S.inp,minHeight:rows*22+16,fontFamily:"inherit"},value:(d[k][f]||{})[lg]||"",maxLength:max,placeholder:DEF[k][f][lg],onChange:ev=>set(k,f,ev.target.value,lg),"data-testid":"pt-"+k+"-"+f+"-"+lg})
+        :h("input",{style:S.inp,value:(d[k][f]||{})[lg]||"",maxLength:max,placeholder:DEF[k][f][lg],onChange:ev=>set(k,f,ev.target.value,lg),"data-testid":"pt-"+k+"-"+f+"-"+lg})))));
+  let tog=(k,f,label,hint)=>h("label",{style:{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer",fontSize:14}},h("input",{type:"checkbox",checked:d[k][f]!==false,onChange:ev=>set(k,f,ev.target.checked),style:{width:17,height:17,marginTop:2},"data-testid":"pt-"+k+"-"+f}),h("span",null,h("span",{style:{fontWeight:500}},label),hint&&h("span",{style:{display:"block",fontSize:12,color:"#6b7280"}},hint)));
+  let foot=k=>h("div",{style:{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginTop:4}},
+    h("button",{type:"button",style:{...S.btnD,opacity:dirty(k)?1:.5},disabled:!dirty(k),onClick:()=>doSave(k),"data-testid":"pt-save-"+k},"Mentés"),
+    h("button",{type:"button",style:S.btn,onClick:()=>reset(k)},"Alapértelmezés"),
+    dirty(k)&&h("span",{style:{fontSize:13,color:"#92400e"}},"Nem mentett módosítás"),
+    msg&&msg.k===k&&h("span",{style:{fontSize:13,color:"#047857"}},msg.t));
+  let hint="Üresen hagyott mezőnél a halványan látszó alapértelmezett szöveg jelenik meg.";
+  return h("div",{"data-testid":"product-texts",style:{marginTop:24}},
+    h("h2",{style:{fontSize:15,fontWeight:600,margin:"0 0 4px",color:"#111827"}},"Termékoldali szövegek"),
+    h("p",{style:{...S.sub,margin:"0 0 14px"}},"Minden termékoldalon megjelenő közös szövegek. A kártyák a címükre kattintva összecsukhatók."),
+    h(Card,{title:"„Minden darab egyedi” tájékoztató",description:"A termékoldalon a képek mellett megjelenő sárga keretes doboz, és a kosárban / pénztárban látható rövid változata. "+hint},
+      h("div",{style:{display:"grid",gap:14}},tog("notice","show","Tájékoztató megjelenítése","Kikapcsolva sem a termékoldalon, sem a kosárban / pénztárban nem látszik."),
+        d.notice.show!==false&&h(N.Fragment,null,fld("notice","title","Cím",0,80),fld("notice","text","Szöveg",4,600),fld("notice","short","Rövid változat (kosár, pénztár)",2,200)),foot("notice"))),
+    h(Card,{title:"Részletek",description:"A termékoldal alján lévő „Részletek” lista – soronként egy pont. "+hint},
+      h("div",{style:{display:"grid",gap:14}},tog("details","show","Részletek megjelenítése"),
+        d.details.show!==false&&h(N.Fragment,null,fld("details","title","Címsor",0,60),fld("details","items","Pontok (soronként egy)",4,1200),tog("details","shipping","Szállítási sor a lista végén","„Szállítás 1–2 munkanap alatt, X Ft felett ingyenes.” – az összeg a Beállításokból jön.")),foot("details"))),
+    h(Card,{title:"Elfogyott termék üzenete",description:"Ha egy termék készlete 0, de nincs inaktiválva, a termékoldalon a kosár gomb helyett ez látszik, egy gombbal a Kapcsolat oldalra. "+hint},
+      h("div",{style:{display:"grid",gap:14}},fld("soldout","title","Cím",0,90),fld("soldout","text","Szöveg",3,500),fld("soldout","button","Gomb felirata",0,40),foot("soldout"))));
+}
+
+export{ProductTexts,DailyReports,HistoryTabs,NewsAdminPage as AdminNewsPage,EventsAdminPage as AdminEventsPage,LanguagePage as AdminLanguagePage,CouponsPage as AdminCouponsPage,NewsletterPage as AdminNewsletterPage};
