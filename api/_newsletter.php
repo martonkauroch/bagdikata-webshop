@@ -171,13 +171,14 @@ function nl_send_sys($cfg, $kind, $s, $tpl = null, $to = null, $prefix = '') {
     $kl = array('confirm' => 'megerősítő', 'welcome' => 'üdvözlő', 'unsub' => 'leiratkozás-visszaigazoló');
     try {
         list($subject, $text, $html) = nl_sys_build($cfg, $kind, $s, $tpl);
-        if ($kind !== 'confirm' || $to !== null) { $GLOBALS['bk_mail_nocopy'] = true; }
+        if ($to !== null) { $GLOBALS['bk_mail_nocopy'] = true; }
+        $GLOBALS['bk_copy_kind'] = 'newsletter';
         $sender = nl_sender();
         mail_send(array($to !== null ? $to : $s['email']), $prefix . $subject, $text, $html, $sender, $sender);
-        unset($GLOBALS['bk_mail_nocopy']);
+        unset($GLOBALS['bk_mail_nocopy'], $GLOBALS['bk_copy_kind']);
         mail_log('OK hírlevél-' . $kl[$kind] . ($prefix !== '' ? ' (teszt)' : '') . ' -> 1 cím');
         return true;
-    } catch (Throwable $e) { unset($GLOBALS['bk_mail_nocopy']); mail_log('HIBA hírlevél-' . $kl[$kind] . ': ' . mail_clean($e->getMessage(), 120)); return false; }
+    } catch (Throwable $e) { unset($GLOBALS['bk_mail_nocopy'], $GLOBALS['bk_copy_kind']); mail_log('HIBA hírlevél-' . $kl[$kind] . ': ' . mail_clean($e->getMessage(), 120)); return false; }
 }
 function nl_send_confirm($cfg, $s) { return nl_send_sys($cfg, 'confirm', $s); }
 

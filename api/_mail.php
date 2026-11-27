@@ -184,7 +184,8 @@ function mail_confirm_send($to, $kind, $lang, $ref, $subject, $heading, $paras, 
     $it = (object) array('subject' => $subject, 'blocks' => $blocks, 'lang' => $lang, 'ref' => $ref);
     list($text, $html) = mail_render($it);
     $sender = mail_sender_for($mc, $senderKind);
-    mail_send(array($to), $subject, $text, $html, $sender, $sender);
+    $GLOBALS['bk_copy_kind'] = $kind;
+    try { mail_send(array($to), $subject, $text, $html, $sender, $sender); } finally { unset($GLOBALS['bk_copy_kind']); }
 }
 function mail_confirm_contact($email, $name, $lang, $ref) {
     $en = ($lang === 'en');
@@ -330,6 +331,8 @@ function mail_copy_list($to) {
     $out = array();
     if (is_object($st) && isset($st->notifications->outgoingCopy) && is_object($st->notifications->outgoingCopy)
         && !empty($st->notifications->outgoingCopy->enabled) && isset($st->notifications->outgoingCopy->recipients) && is_array($st->notifications->outgoingCopy->recipients)) {
+        $ck = isset($GLOBALS['bk_copy_kind']) ? (string) $GLOBALS['bk_copy_kind'] : '';
+        if ($ck !== '' && isset($st->notifications->outgoingCopy->types) && is_object($st->notifications->outgoingCopy->types) && isset($st->notifications->outgoingCopy->types->$ck) && $st->notifications->outgoingCopy->types->$ck === false) { return array(); }
         $have = array();
         foreach ($to as $a) { $have[strtolower($a)] = 1; }
         foreach (array_slice($st->notifications->outgoingCopy->recipients, 0, 5) as $r) {
@@ -447,7 +450,8 @@ function mail_dispatch($cfg, $items, $isAdmin) {
             list($text, $html) = mail_render($it);
             try {
                 $sender = mail_sender_for($mc, $kind);
-                mail_send(array_values($to), $subject, $text, $html, $sender, $sender);
+                $GLOBALS['bk_copy_kind'] = $kind === 'order' ? 'orderAdmin' : ($kind === 'withdrawal' ? 'withdrawal' : '');
+                try { mail_send(array_values($to), $subject, $text, $html, $sender, $sender); } finally { unset($GLOBALS['bk_copy_kind']); }
                 mail_log('OK ' . $kind . ' -> ' . count($to) . ' cím');
                 $okCount++;
                 if ($kind === 'daily' || ($kind === 'test' && strpos($subject, 'Napi jelentés') === 0)) { mail_audit_report($kind, $subject, array_values($to), $text); }

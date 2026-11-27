@@ -38,7 +38,9 @@ $item = (object) array(
 );
 list($text, $html) = mail_render($item);
 try {
+    $GLOBALS['bk_copy_kind'] = 'contactMsg';
     mail_send($to, $item->subject, $text, $html, $email, $sender);
+    unset($GLOBALS['bk_copy_kind']);
     mail_log('OK contact ' . $ref . ' -> ' . count($to) . ' cím');
     try { mail_confirm_contact($email, $name, $lang, $ref); mail_log('OK contact-visszaigazolas ' . $ref); }
     catch (Throwable $e) { mail_log('HIBA contact-visszaigazolas: ' . mail_clean($e->getMessage(), 200)); }
