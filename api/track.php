@@ -15,7 +15,7 @@ rl_hit('track', 3600);
 $d = body_json(2000);
 if (!is_object($d) || !isset($d->type) || !is_string($d->type)) { json_out(array('ok' => false), 400); }
 $type = $d->type;
-if (!in_array($type, array('pageview', 'impression', 'click', 'view', 'cart', 'share', 'vid', 'time'), true)) { json_out(array('ok' => false), 400); }
+if (!in_array($type, array('pageview', 'impression', 'click', 'view', 'cart', 'share', 'vid', 'time', 'out'), true)) { json_out(array('ok' => false), 400); }
 if (!$site && $type !== 'pageview' && $type !== 'time') { fail(401, 'Nincs belépve (oldaljelszó)'); }
 $path = (isset($d->path) && is_string($d->path) && preg_match('#^/[A-Za-z0-9_/-]{0,80}$#', $d->path)) ? $d->path : '';
 if (!$site) { $path = '/hamarosan'; }
@@ -41,6 +41,25 @@ if ($type === 'time') {
         $day['dur'][$path] = $e;
         return $a;
     });
+    json_out(array('ok' => true));
+}
+if ($type === 'out') {
+    $key = (isset($d->key) && is_string($d->key) && preg_match('/^[a-z0-9]{1,16}$/', $d->key)) ? $d->key : '';
+    if ($key === '') { json_out(array('ok' => false), 400); }
+    $nm = isset($d->name) && is_string($d->name) ? mb_substr(trim(preg_replace('/[\x00-\x1f<>]/u', '', $d->name)), 0, 60) : '';
+    date_default_timezone_set('Europe/Budapest');
+    $today = date('Y-m-d');
+    mutate_json('analytics', function ($cur) use ($today, $key) {
+        $a = $cur ? json_decode(json_encode($cur), true) : array();
+        if (!is_array($a)) { $a = array(); }
+        if (!isset($a[$today]) || !is_array($a[$today])) { $a[$today] = array('date' => $today, 'visitors' => 0, 'pageViews' => 0, 'products' => array()); }
+        $day = &$a[$today];
+        if (!isset($day['out']) || !is_array($day['out'])) { $day['out'] = array(); }
+        if (!isset($day['out'][$key]) && count($day['out']) >= 50) { return $a; }
+        $day['out'][$key] = (isset($day['out'][$key]) ? (int) $day['out'][$key] : 0) + 1;
+        return $a;
+    });
+    live_push('out', array_filter(array('k' => $key, 'n' => $nm, 'p' => $path)));
     json_out(array('ok' => true));
 }
 if ($type !== 'pageview' && $type !== 'vid' && $pid === '') { json_out(array('ok' => false), 400); }
