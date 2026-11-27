@@ -52,7 +52,7 @@ if (($method === 'GET' && isset($_GET['u'])) || ($method === 'POST' && (isset($_
     $id = (string) (isset($_POST['u']) ? $_POST['u'] : $_GET['u']);
     $t = (string) (isset($_POST['t']) ? $_POST['t'] : (isset($_GET['t']) ? $_GET['t'] : ''));
     $lang = nl_find_lang($id); $en = ($lang === 'en');
-    if (!nl_token_ok($cfg, $id, 'unsub', $t)) { nl_page($en ? 'Invalid link' : 'Érvénytelen link', $en ? 'This unsubscribe link is not valid. Please write to info@bagdikata.hu and we will remove you manually.' : 'Ez a leiratkozó link nem érvényes. Írj az info@bagdikata.hu címre, és kézzel töröljük a címedet.', $lang); }
+    if (!nl_token_ok($cfg, $id, 'unsub', $t)) { nl_page($en ? 'Invalid link' : 'Érvénytelen link', $en ? 'This unsubscribe link is not valid. Please send us a message using the contact form at ' . mail_site_url() . '/#/en/kapcsolat and we will remove you manually.' : 'Ez a leiratkozó link nem érvényes. Írj nekünk a webshop üzenetküldő űrlapján (' . mail_site_url() . '/#/kapcsolat), és kézzel töröljük a címedet.', $lang); }
     if ($method === 'POST') {
         $us = null; foreach (nl_list() as $x) { if (isset($x['id']) && $x['id'] === $id) { $us = $x; break; } }
         nl_set_status($id, 'unsubscribed');

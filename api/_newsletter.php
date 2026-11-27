@@ -272,7 +272,6 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     $unsub = $preview ? mail_site_url() : nl_link($cfg, $s['id'], 'unsub');
     $consent = !empty($s['consentAt']) ? date('Y-m-d', strtotime($s['consentAt'])) : '';
     $mc = mail_cfg();
-    $contact = (!empty($mc['senders']['contact']) && mail_valid($mc['senders']['contact'])) ? $mc['senders']['contact'] : 'info@bagdikata.hu';
     $imp = mail_site_url();
     $foot = function ($isEn) use ($s, $consent, $unsub) {
         $priv = nl_privacy_url($isEn ? 'en' : 'hu'); $impl = mail_site_url() . ($isEn ? '/#/en/impresszum' : '/#/impresszum');
@@ -302,7 +301,7 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     $GLOBALS['bk_mail_nocopy'] = true;
     nl_frame_begin($tplF, $en);
     if (!$preview) {
-        $GLOBALS['bk_mail_headers'] = array('List-Unsubscribe: <' . $unsub . '>, <mailto:' . $contact . '?subject=unsubscribe>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click', 'Precedence: bulk');
+        $GLOBALS['bk_mail_headers'] = array('List-Unsubscribe: <' . $unsub . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click', 'Precedence: bulk');
     }
     $blocks = array();
     $body = $useEn ? $camp['bodyEn'] : $camp['body'];

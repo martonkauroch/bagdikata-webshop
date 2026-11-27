@@ -41,7 +41,7 @@ function push_der_to_raw($der) {
 
 function push_jwt($aud, $v) {
     $h = push_b64u(json_encode(array('typ' => 'JWT', 'alg' => 'ES256')));
-    $p = push_b64u(json_encode(array('aud' => $aud, 'exp' => time() + 12 * 3600, 'sub' => 'mailto:info@bagdikata.hu')));
+    $p = push_b64u(json_encode(array('aud' => $aud, 'exp' => time() + 12 * 3600, 'sub' => 'https://bagdikata.hu')));
     $sig = '';
     if (!openssl_sign($h . '.' . $p, $sig, $v['pem'], OPENSSL_ALGO_SHA256)) { throw new Exception('Aláírási hiba'); }
     return $h . '.' . $p . '.' . push_b64u(push_der_to_raw($sig));

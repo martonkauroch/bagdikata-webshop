@@ -46,10 +46,10 @@ A szállítási módokat, díjakat és határidőket a Szállítási feltételek
 - [A jogszabály szerinti kivételek (pl. a fogyasztó kérésére egyedileg elkészített termék) feltüntetése – jogásszal egyeztetendő.]
 
 ## 8. Szavatosság
-A termék hibája esetén a szolgáltatót a Polgári Törvénykönyv szerinti kellékszavatossági kötelezettség terheli. A fogyasztó a hibás teljesítés miatt a jogszabályban meghatározott igényeket érvényesítheti (kijavítás, kicserélés, árleszállítás, elállás). A szavatossági igényt a info@bagdikata.hu címen vagy postai úton lehet bejelenteni. [A jótállásra / szavatossági határidőkre vonatkozó pontos szöveg jogásszal egyeztetendő.]
+A termék hibája esetén a szolgáltatót a Polgári Törvénykönyv szerinti kellékszavatossági kötelezettség terheli. A fogyasztó a hibás teljesítés miatt a jogszabályban meghatározott igényeket érvényesítheti (kijavítás, kicserélés, árleszállítás, elállás). A szavatossági igényt a [kapcsolati űrlapon](/kapcsolat) vagy postai úton lehet bejelenteni. [A jótállásra / szavatossági határidőkre vonatkozó pontos szöveg jogásszal egyeztetendő.]
 
 ## 9. Panaszkezelés, jogérvényesítés
-- Panaszát a vásárló a info@bagdikata.hu címen vagy a [CÍM] postacímen jelezheti. A szolgáltató a panaszt a jogszabályi határidőn belül kivizsgálja és megválaszolja.
+- Panaszát a vásárló a [kapcsolati űrlapon](/kapcsolat) vagy a [CÍM] postacímen jelezheti. A szolgáltató a panaszt a jogszabályi határidőn belül kivizsgálja és megválaszolja.
 - A fogyasztó a lakóhelye vagy tartózkodási helye szerint illetékes békéltető testülethez fordulhat. A szolgáltató székhelye szerint illetékes békéltető testület: [BÉKÉLTETŐ TESTÜLET NEVE, CÍME, E-MAIL-CÍME, POSTACÍME].
 - A fogyasztó a jogai megsértése esetén a fogyasztóvédelmi hatósághoz fordulhat, illetve bírósághoz is fordulhat.
 
@@ -98,10 +98,10 @@ See the Shipping information page for delivery methods, fees and times.
 - [Legal exceptions to be listed – to be agreed with a lawyer.]
 
 ## 8. Statutory warranty
-The seller is liable for defects under the Hungarian Civil Code. In case of a defective product the consumer may assert the statutory remedies (repair, replacement, price reduction, withdrawal). Report a claim at info@bagdikata.hu or by post. [Exact warranty periods to be agreed with a lawyer.]
+The seller is liable for defects under the Hungarian Civil Code. In case of a defective product the consumer may assert the statutory remedies (repair, replacement, price reduction, withdrawal). Report a claim via our [contact form](/kapcsolat) or by post. [Exact warranty periods to be agreed with a lawyer.]
 
 ## 9. Complaints and dispute resolution
-- Complaints can be sent to info@bagdikata.hu or to [ADDRESS]. We handle them within the statutory time limits.
+- Complaints can be sent via our [contact form](/kapcsolat) or to [ADDRESS]. We handle them within the statutory time limits.
 - Consumers may turn to the conciliation board of their place of residence. The board competent for the seller's seat: [NAME, ADDRESS, E-MAIL, POSTAL ADDRESS].
 - Consumers may also contact the consumer protection authority or go to court.
 
@@ -176,7 +176,7 @@ Statisztika és biztonság:
 - biztonsági mentések: a napi mentések 14 napig, a képek mentései 4 hétig.
 
 ## 6. Az érintett jogai
-Kérheti a személyes adatokhoz való hozzáférést, azok helyesbítését, törlését vagy kezelésének korlátozását, tiltakozhat az adatkezelés ellen, és kérheti az adatok hordozhatóságát. Kérelmét a info@bagdikata.hu címen nyújthatja be; a kérelmet a jogszabályi határidőn belül megválaszoljuk.
+Kérheti a személyes adatokhoz való hozzáférést, azok helyesbítését, törlését vagy kezelésének korlátozását, tiltakozhat az adatkezelés ellen, és kérheti az adatok hordozhatóságát. Kérelmét a [kapcsolati űrlapon](/kapcsolat) nyújthatja be; a kérelmet a jogszabályi határidőn belül megválaszoljuk.
 
 ## 7. Jogorvoslat
 Panasszal a Nemzeti Adatvédelmi és Információszabadság Hatóságnál (NAIH, 1055 Budapest, Falk Miksa utca 9-11., www.naih.hu) élhet, illetve bírósághoz fordulhat.
@@ -248,7 +248,7 @@ Statistics and security:
 - backups: daily backups for 14 days, image backups for 4 weeks.
 
 ## 6. Your rights
-You may request access to, rectification or erasure of your personal data or restriction of processing, object to processing, and request data portability. Contact info@bagdikata.hu; we respond within the statutory time limit.
+You may request access to, rectification or erasure of your personal data or restriction of processing, object to processing, and request data portability. Contact us via our [contact form](/kapcsolat); we respond within the statutory time limit.
 
 ## 7. Remedies
 You may lodge a complaint with the Hungarian National Authority for Data Protection and Freedom of Information (NAIH, 1055 Budapest, Falk Miksa utca 9-11., www.naih.hu) or go to court.
@@ -273,7 +273,7 @@ A kézzel készült termékeket a megrendelés visszaigazolása után [X] munkan
 Utánvétes fizetés csak forintos megrendelésnél választható; az utánvét kezelési díját a pénztárban tüntetjük fel.
 
 ## Átvétel és sérült csomag
-A csomagot átvételkor kérjük ellenőrizni. Sérült csomag esetén kérjük, a futár jelenlétében jegyzőkönyvet felvenni, és velünk a info@bagdikata.hu címen haladéktalanul felvenni a kapcsolatot.
+A csomagot átvételkor kérjük ellenőrizni. Sérült csomag esetén kérjük, a futár jelenlétében jegyzőkönyvet felvenni, és velünk a [kapcsolati űrlapon](/kapcsolat) haladéktalanul felvenni a kapcsolatot.
 
 ## Visszaküldés
 Az elállás és a visszaküldés feltételeit az ÁSZF tartalmazza; elállást a webshop „Elállás a szerződéstől” oldalán is jelezhet.`;
@@ -296,7 +296,7 @@ Hand-made products are handed to the carrier within [X] working days after the o
 Cash on delivery is available for orders in HUF only; the fee is shown at checkout.
 
 ## Receiving the parcel
-Please check the parcel on receipt. If it is damaged, record it with the courier and contact us at info@bagdikata.hu immediately.
+Please check the parcel on receipt. If it is damaged, record it with the courier and contact us immediately via our [contact form](/kapcsolat).
 
 ## Returns
 Conditions of withdrawal and returns are set out in the Terms; you can also notify a withdrawal on the "Right of withdrawal" page.`;
@@ -348,7 +348,7 @@ var NEWSLETTER_HU=`${DRAFT_NOTE_HU}
 Feliratkozáskor megerősítő levelet küldünk a megadott címre. A feliratkozás csak akkor lép érvénybe, ha a levélben lévő linkre kattintasz (kettős megerősítés). Megerősítés nélkül hírlevelet nem küldünk.
 
 ## 5. Leiratkozás, a hozzájárulás visszavonása
-A hozzájárulást bármikor, indokolás nélkül, ingyenesen visszavonhatod: minden hírlevél alján található „Leiratkozás” linkkel, vagy az info@bagdikata.hu címre írt levéllel. A leiratkozás után hírlevelet nem küldünk. A leiratkozás tényét (e-mail-cím, időpont) annak érdekében, hogy ne küldjünk újra levelet, [MEGŐRZÉSI IDŐ] ideig megőrizzük; kérésedre ezt is töröljük, de akkor a későbbi, esetleges új feliratkozásig nem tudjuk biztosítani, hogy ne kapj levelet.
+A hozzájárulást bármikor, indokolás nélkül, ingyenesen visszavonhatod: minden hírlevél alján található „Leiratkozás” linkkel, vagy a [kapcsolati űrlapon](/kapcsolat) küldött üzenettel. A leiratkozás után hírlevelet nem küldünk. A leiratkozás tényét (e-mail-cím, időpont) annak érdekében, hogy ne küldjünk újra levelet, [MEGŐRZÉSI IDŐ] ideig megőrizzük; kérésedre ezt is töröljük, de akkor a későbbi, esetleges új feliratkozásig nem tudjuk biztosítani, hogy ne kapj levelet.
 
 ## 6. Az adatok megőrzése
 A hozzájárulásod visszavonásáig kezeljük az adataidat; a hozzájárulás bizonyítása céljából a feliratkozás és a leiratkozás adatait a [MEGŐRZÉSI IDŐ] ideig őrizzük meg.
@@ -357,7 +357,7 @@ A hozzájárulásod visszavonásáig kezeljük az adataidat; a hozzájárulás b
 Adatfeldolgozó: tárhely- és e-mail-szolgáltató: [SZOLGÁLTATÓ NEVE]. Az adatokat harmadik félnek marketing célra nem adjuk át.
 
 ## 8. Az érintett jogai és jogorvoslat
-Kérheted a hozzáférést, helyesbítést, törlést, az adatkezelés korlátozását, tiltakozhatsz az adatkezelés ellen, és kérheted az adatok hordozhatóságát: info@bagdikata.hu. Panasszal a Nemzeti Adatvédelmi és Információszabadság Hatóságnál (NAIH, 1055 Budapest, Falk Miksa utca 9-11., www.naih.hu) élhetsz, illetve bírósághoz fordulhatsz.
+Kérheted a hozzáférést, helyesbítést, törlést, az adatkezelés korlátozását, tiltakozhatsz az adatkezelés ellen, és kérheted az adatok hordozhatóságát a [kapcsolati űrlapon](/kapcsolat). Panasszal a Nemzeti Adatvédelmi és Információszabadság Hatóságnál (NAIH, 1055 Budapest, Falk Miksa utca 9-11., www.naih.hu) élhetsz, illetve bírósághoz fordulhatsz.
 
 Hatályos: [DÁTUM].`;
 
@@ -380,7 +380,7 @@ var NEWSLETTER_EN=`${DRAFT_NOTE_EN}
 When you subscribe we send a confirmation e-mail. The subscription only takes effect once you click the link in it (double opt-in). We do not send any newsletter without confirmation.
 
 ## 5. Unsubscribing and withdrawing consent
-You can withdraw your consent at any time, free of charge and without giving reasons, using the "Unsubscribe" link at the bottom of every newsletter or by writing to info@bagdikata.hu. After that we send no more newsletters. To make sure we do not e-mail you again, we keep the fact of unsubscription (e-mail address, date) for [RETENTION PERIOD]; on request we delete this too, but then we cannot guarantee that you will not be contacted if you subscribe again later.
+You can withdraw your consent at any time, free of charge and without giving reasons, using the "Unsubscribe" link at the bottom of every newsletter or by sending us a message via our [contact form](/kapcsolat). After that we send no more newsletters. To make sure we do not e-mail you again, we keep the fact of unsubscription (e-mail address, date) for [RETENTION PERIOD]; on request we delete this too, but then we cannot guarantee that you will not be contacted if you subscribe again later.
 
 ## 6. Retention
 We process your data until you withdraw consent; to be able to prove consent, subscription and unsubscription records are kept for [RETENTION PERIOD].
@@ -389,22 +389,23 @@ We process your data until you withdraw consent; to be able to prove consent, su
 Processor: hosting and e-mail provider: [PROVIDER]. We do not pass the data to third parties for marketing purposes.
 
 ## 8. Your rights and remedies
-You may request access, rectification, erasure or restriction, object to the processing and request data portability: info@bagdikata.hu. You may lodge a complaint with the Hungarian National Authority for Data Protection and Freedom of Information (NAIH, Falk Miksa utca 9-11, 1055 Budapest, www.naih.hu) or go to court.
+You may request access, rectification, erasure or restriction, object to the processing and request data portability via our [contact form](/kapcsolat). You may lodge a complaint with the Hungarian National Authority for Data Protection and Freedom of Information (NAIH, Falk Miksa utca 9-11, 1055 Budapest, www.naih.hu) or go to court.
 
 In force from: [DATE].`;
 
 var LEGAL_DEFAULTS={terms:{hu:TERMS_HU,en:TERMS_EN},privacy:{hu:PRIVACY_HU,en:PRIVACY_EN},shipping:{hu:SHIPPING_HU,en:SHIPPING_EN},imprint:{hu:IMPRINT_HU,en:IMPRINT_EN},newsletter:{hu:NEWSLETTER_HU,en:NEWSLETTER_EN}};
 var LEGAL_TITLES={terms:{hu:"Általános szerződési feltételek (ÁSZF)",en:"Terms and Conditions"},privacy:{hu:"Adatkezelési tájékoztató",en:"Privacy Policy"},shipping:{hu:"Szállítási feltételek",en:"Shipping information"},imprint:{hu:"Impresszum",en:"Legal notice"},newsletter:{hu:"Hírlevél – adatkezelési tájékoztató",en:"Newsletter – privacy notice"}};
 
+function bkNoMail(l){let M="[A-Za-z0-9._%+-]+@bagdikata\\.hu",H="[kapcsolati űrlapon](/kapcsolat)",E="[contact form](/kapcsolat)";if(!new RegExp(M,"i").test(l)||/^\s*-?\s*e-?mail\s*:/i.test(l))return l;return l.replace(new RegExp("\\baz? "+M+" címre írt levéllel","gi"),"a "+H+" küldött üzenettel").replace(new RegExp("\\baz? "+M+" címe[nr]","gi"),"a "+H).replace(new RegExp("\\bContact "+M,"g"),"Contact us via our "+E).replace(new RegExp("\\b(?:at|to) "+M,"gi"),"via our "+E).replace(new RegExp(": "+M+"(?=[.;,]|$)","g")," "+(/[áéíóöőúüű]/i.test(l)?"a "+H:"via our "+E)).replace(new RegExp(M,"gi"),/[áéíóöőúüű]/i.test(l)?"kapcsolati űrlapunkon (/kapcsolat)":"our contact form (/kapcsolat)")}
 function Rich({text}){
-  let blocks=[],list=null;
-  String(text||"").split("\n").forEach(raw=>{let l=raw.replace(/\s+$/,"");
+  let{locale:RL}=LocaleHook(),blocks=[],list=null;
+  String(text||"").split("\n").forEach(raw=>{let l=bkNoMail(raw.replace(/\s+$/,""));
     if(/^##\s+/.test(l)){list=null;blocks.push({t:"h",v:l.replace(/^##\s+/,"")})}
     else if(/^-\s+/.test(l)){if(!list){list={t:"ul",v:[]};blocks.push(list)}list.v.push(l.replace(/^-\s+/,""))}
     else if(l.trim()===""){list=null}
     else{list=null;blocks.push({t:"p",v:l})}});
   let lk={color:"#bf1b2c",textDecoration:"underline",textUnderlineOffset:"2px",overflowWrap:"anywhere"},
-    links=(t,k)=>String(t).split(/(https?:\/\/[^\s<>"]*[^\s<>".,;:!?)]|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g).map((x,j)=>/^https?:\/\//.test(x)?h("a",{key:k+"-"+j,href:x,target:"_blank",rel:"noopener noreferrer",style:lk},x):/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(x)?h("a",{key:k+"-"+j,href:"mailto:"+x,style:lk},x):x),
+    links=(t,k)=>String(t).split(/(\[[^\]\n]{1,80}\]\((?:\/[A-Za-z0-9_\/-]{0,60}|https?:\/\/[^\s)<>"]+)\)|https?:\/\/[^\s<>"]*[^\s<>".,;:!?)]|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g).map((x,j)=>{let md=/^\[([^\]]+)\]\(([^)]+)\)$/.exec(x);return md?(md[2][0]==="/"?h("a",{key:k+"-"+j,href:"#"+(RL==="en"?"/en"+(md[2]==="/"?"":md[2]):md[2]),style:lk},md[1]):h("a",{key:k+"-"+j,href:md[2],target:"_blank",rel:"noopener noreferrer",style:lk},md[1])):/^https?:\/\//.test(x)?h("a",{key:k+"-"+j,href:x,target:"_blank",rel:"noopener noreferrer",style:lk},x):/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(x)?h("a",{key:k+"-"+j,href:"mailto:"+x,style:lk},x):x}),
     inline=s=>String(s).split(/(\*\*[^*]+\*\*)/g).map((x,i)=>/^\*\*[^*]+\*\*$/.test(x)?h("strong",{key:i},links(x.slice(2,-2),i)):h(P.Fragment,{key:i},links(x,i)));
   return h("div",{className:"text-ink-soft",style:{lineHeight:1.7}},blocks.map((b,i)=>b.t==="h"?h("h2",{key:i,className:"font-display",style:{fontSize:"1.2rem",fontWeight:500,margin:"2rem 0 .6rem"}},b.v):b.t==="ul"?h("ul",{key:i,style:{listStyle:"disc",paddingLeft:"1.3rem",margin:".4rem 0"}},b.v.map((x,j)=>h("li",{key:j,style:{margin:".25rem 0"}},inline(x)))):h("p",{key:i,style:{margin:".6rem 0"}},inline(b.v))));
 }
@@ -499,12 +500,11 @@ function WithdrawalPage(){
 }
 
 function ContactPage(){
-  let{locale}=LocaleHook(),en=locale==="en",MAIL="info@bagdikata.hu";
-  let T=en?{title:"Contact",intro:"Do you have a question about our hats or your order? Write to us, we reply by e-mail.",direct:"You can also e-mail us directly:",name:"Your name",email:"Your e-mail address",message:"Message",req:"Required",badEmail:"Invalid e-mail address",short:"Please write a few words",send:"Send message",sending:"Sending…",doneTitle:"Thank you, your message was sent",doneText:"We will reply to the e-mail address you gave.",fail:"Sorry, the message could not be sent right now. Please e-mail us directly:",local:"The form works on the live server. Until then, please e-mail us directly:",another:"Send another message"}
-  :{title:"Kapcsolat",intro:"Kérdésed van a sapkákról vagy a rendelésedről? Írj nekünk, e-mailben válaszolunk.",direct:"Közvetlenül is írhatsz nekünk:",name:"Neved",email:"E-mail-címed",message:"Üzenet",req:"Kötelező mező",badEmail:"Érvénytelen e-mail-cím",short:"Írj néhány szót",send:"Üzenet küldése",sending:"Küldés…",doneTitle:"Köszönjük, az üzenetet elküldtük",doneText:"A megadott e-mail-címre válaszolunk.",fail:"Sajnos az üzenetet most nem sikerült elküldeni. Kérjük, írj közvetlenül erre a címre:",local:"Az űrlap az éles szerveren működik. Addig kérjük, írj közvetlenül erre a címre:",another:"Újabb üzenet küldése"};
+  let{locale}=LocaleHook(),en=locale==="en";
+  let T=en?{title:"Contact",intro:"Do you have a question about our hats or your order? Write to us, we reply by e-mail.",direct:"You can also e-mail us directly:",name:"Your name",email:"Your e-mail address",message:"Message",req:"Required",badEmail:"Invalid e-mail address",short:"Please write a few words",send:"Send message",sending:"Sending…",doneTitle:"Thank you, your message was sent",doneText:"We will reply to the e-mail address you gave.",fail:"Sorry, the message could not be sent right now. Please try again in a few minutes.",local:"The form works on the live server.",another:"Send another message"}
+  :{title:"Kapcsolat",intro:"Kérdésed van a sapkákról vagy a rendelésedről? Írj nekünk, e-mailben válaszolunk.",direct:"Közvetlenül is írhatsz nekünk:",name:"Neved",email:"E-mail-címed",message:"Üzenet",req:"Kötelező mező",badEmail:"Érvénytelen e-mail-cím",short:"Írj néhány szót",send:"Üzenet küldése",sending:"Küldés…",doneTitle:"Köszönjük, az üzenetet elküldtük",doneText:"A megadott e-mail-címre válaszolunk.",fail:"Sajnos az üzenetet most nem sikerült elküldeni. Kérjük, próbáld újra néhány perc múlva.",local:"Az űrlap az éles szerveren működik.",another:"Újabb üzenet küldése"};
   let[f,setF]=N.useState({name:"",email:"",message:"",website:""}),[err,setErr]=N.useState({}),[st,setSt]=N.useState("form");
   let set=(k,v)=>{setF(s=>({...s,[k]:v}));setErr(e=>e[k]?{...e,[k]:void 0}:e)};
-  let mailLink=h("a",{href:"mailto:"+MAIL,className:"underline underline-offset-4"},MAIL);
   let validate=()=>{let e={};
     if(!f.name.trim())e.name=T.req;
     if(!f.email.trim())e.email=T.req;else if(!/^\S+@\S+\.\S+$/.test(f.email.trim()))e.email=T.badEmail;
@@ -525,13 +525,13 @@ function ContactPage(){
     h("p",{style:{marginTop:"1.5rem"}},h("button",{type:"button",className:"btn-secondary",onClick:()=>{setF({name:"",email:"",message:"",website:""});setSt("form")}},T.another)));
   return h(Shell,{title:T.title},
     h("p",{className:"text-ink-soft"},T.intro),
-    st==="fail"&&h("p",{className:"rounded-lg bg-red-50 p-3 text-red-900",role:"alert",style:{marginTop:"1rem"}},T.fail+" ",mailLink),
-    st==="local"&&h("p",{className:"rounded-lg bg-amber-50 p-3 text-amber-900",role:"status",style:{marginTop:"1rem"}},T.local+" ",mailLink),
+    st==="fail"&&h("p",{className:"rounded-lg bg-red-50 p-3 text-red-900",role:"alert",style:{marginTop:"1rem"}},T.fail),
+    st==="local"&&h("p",{className:"rounded-lg bg-amber-50 p-3 text-amber-900",role:"status",style:{marginTop:"1rem"}},T.local),
     h("form",{noValidate:true,onSubmit:e=>{e.preventDefault();if(st!=="sending"&&validate())submit()}},
       Field("name",T.name),Field("email",T.email,"email"),Field("message",T.message,"text",true),
       h("input",{type:"text",name:"website",tabIndex:-1,autoComplete:"off","aria-hidden":"true",value:f.website,onChange:e=>set("website",e.target.value),style:{position:"absolute",left:"-9999px",width:"1px",height:"1px",opacity:0}}),
-      h("p",{style:{marginTop:"1.5rem"}},h("button",{type:"submit",className:"btn-primary",disabled:st==="sending"},st==="sending"?T.sending:T.send))),
-    h("p",{className:"text-sm text-ink-muted",style:{marginTop:"1.5rem"}},T.direct+" ",mailLink));
+      h("p",{style:{marginTop:"1.5rem"}},h("button",{type:"submit",className:"btn-primary",disabled:st==="sending"},st==="sending"?T.sending:T.send)))
+  );
 }
 
 export{NewsletterPage,TermsPage,PrivacyPage,ShippingPage,ImprintPage,WithdrawalPage,ContactPage,LEGAL_DEFAULTS,LEGAL_TITLES,pickText};

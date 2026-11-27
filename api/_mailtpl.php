@@ -11,7 +11,7 @@ function mtpl_defaults() {
             'subject' => array('hu' => 'Rendelés visszaigazolás {rendelesszam} – Bagdi Kata', 'en' => 'Order confirmation {rendelesszam} – Bagdi Kata'),
             'heading' => array('hu' => 'Köszönjük a rendelésedet', 'en' => 'Thank you for your order'),
             'body' => array('hu' => "Kedves {nev}!\n\nMegkaptuk a rendelésedet ({rendelesszam}). A részleteket alább találod. A csomag feladásáról e-mailben értesítünk; a számlát külön levélben küldjük.", 'en' => "Dear {nev},\n\nwe have received your order ({rendelesszam}). The details are below. We will contact you by e-mail about the shipping of your parcel; you will receive your invoice separately."),
-            'closing' => array('hu' => "Ha kérdésed van, válaszolj erre a levélre, vagy írj az info@bagdikata.hu címre a rendelésszám megadásával.\n\nÜdvözlettel:\nBagdi Kata", 'en' => "If you have any question, reply to this e-mail or write to info@bagdikata.hu and quote the order number.\n\nKind regards,\nBagdi Kata")),
+            'closing' => array('hu' => "Ha kérdésed van, írj nekünk a webshop üzenetküldő űrlapján ({kapcsolat}), és add meg a rendelésszámot is.\n\nÜdvözlettel:\nBagdi Kata", 'en' => "If you have any question, send us a message using the form on our website ({kapcsolat}) and quote the order number.\n\nKind regards,\nBagdi Kata")),
         'contact' => array(
             'subject' => array('hu' => 'Üzenetedet megkaptuk – Bagdi Kata [{azonosito}]', 'en' => 'We received your message – Bagdi Kata [{azonosito}]'),
             'heading' => array('hu' => 'Köszönjük az üzenetedet', 'en' => 'Thank you for your message'),
@@ -44,8 +44,13 @@ function mtpl_clean($in) {
     }
     return $out;
 }
-function mtpl_get() { $raw = read_raw('mail_tpl'); return mtpl_clean($raw ? json_decode($raw, true) : null); }
-function mtpl_fill($s, $vars) { return strtr((string) $s, $vars); }
+function mtpl_get() {
+    $raw = read_raw('mail_tpl'); $a = $raw ? json_decode($raw, true) : null;
+    if (is_array($a)) { array_walk_recursive($a, function (&$v) { if (is_string($v) && strpos($v, 'info@bagdikata.hu') !== false) { $v = str_replace(array('Ha kérdésed van, válaszolj erre a levélre, vagy írj az info@bagdikata.hu címre a rendelésszám megadásával.', 'If you have any question, reply to this e-mail or write to info@bagdikata.hu and quote the order number.'), array('Ha kérdésed van, írj nekünk a webshop üzenetküldő űrlapján ({kapcsolat}), és add meg a rendelésszámot is.', 'If you have any question, send us a message using the form on our website ({kapcsolat}) and quote the order number.'), $v); } }); }
+    return mtpl_clean($a);
+}
+function mtpl_contact_url($en) { return mail_site_url() . ($en ? '/#/en/kapcsolat' : '/#/kapcsolat'); }
+function mtpl_fill($s, $vars) { if (!isset($vars['{kapcsolat}'])) { $vars['{kapcsolat}'] = mtpl_contact_url(false); } return strtr((string) $s, $vars); }
 function mtpl_lines($s) { $s = (string) $s; return $s === '' ? array() : preg_split('/\n/', $s); }
 function mtpl_frame_begin($T, $en) {
     $L = $en ? 'en' : 'hu';

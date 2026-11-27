@@ -20,6 +20,7 @@ if ($name === '' || !mail_valid($email) || mb_strlen($msg, 'UTF-8') < 5) { fail(
 rl_hit('contact', 3600);
 $mc = mail_cfg();
 $to = mail_route_list($mc, 'contact');
+if (!count($to)) { $GLOBALS['bk_copy_kind'] = 'contactMsg'; $to = mail_copy_list(array()); unset($GLOBALS['bk_copy_kind']); }
 if (!count($to)) { mail_log('HIBA contact: nincs "contact" cím a mail.php-ban'); fail(503, 'A kapcsolatfelvétel most nem érhető el.'); }
 $sender = mail_sender_for($mc, 'contact');
 $ref = 'K-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 5));
