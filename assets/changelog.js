@@ -1,4 +1,5 @@
 window.__BK_CHANGELOG=[
+{v:"1.62.3",d:"2026-11-27",c:["Admin › Rendelések lista: ha a rendelésnél kuponkódot használtak, a rendelésszám alatt lila címke mutatja (pl. „TELI10 −10%”); fölé víve a kedvezmény összege is látszik, érvénytelen kupon piros címkével"]},
 {v:"1.62.2",d:"2026-11-27",c:["Termékoldal: az ár alatti „Alanyi adómentes ár” (és „Tárgyi adómentes ár”) felirat nem jelenik meg; ÁFA-s beállításnál az „Az ár X% ÁFA-t tartalmaz” megjegyzés továbbra is látszik"]},
 {v:"1.62.1",d:"2026-11-27",c:["Elfogyott termék üzenetének új alapszövege: „…Írj nekünk, vagy iratkozz fel a hírlevélre, és szólunk, amint újra elérhető – vagy készítünk neked egy hasonlót.” (két sorban; angolul is)"]},
 {v:"1.62.0",d:"2026-11-27",c:["Elfogyott (0 db, de aktív) termék oldalán a darabszám-választó és a kosár gomb helyett barátságos tájékoztató jelenik meg: „Ez a darab jelenleg elfogyott” + rövid szöveg + „Írj nekünk” gomb a Kapcsolat oldalra (magyarul és angolul)","Admin › Kezdőlap és tartalom › új „Elfogyott termék üzenete” kártya: a cím, a szöveg és a gomb felirata szerkeszthető, előnézettel"]},
