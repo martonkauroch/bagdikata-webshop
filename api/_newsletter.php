@@ -238,6 +238,33 @@ function nl_stat_hit($kind, $cid, $sid, $url = '') {
         return $a;
     });
 }
+function nl_product_card($cfg, $pid, $en, $track) {
+    require_once __DIR__ . '/_seo.php';
+    $p = seo_find_product($pid);
+    if (!$p) { return null; }
+    $site = mail_site_url(); $slug = seo_product_slug($p);
+    $name = ($en && !empty($p->nameEn)) ? $p->nameEn : (isset($p->name) ? $p->name : $pid);
+    $price = isset($p->price) && is_numeric($p->price) ? number_format((float) $p->price, 0, ',', ' ') . ' Ft' : '';
+    if (isset($p->stock) && is_numeric($p->stock) && $p->stock <= 0) { $price = $en ? 'Sold out' : 'Elfogyott'; }
+    $url = $site . '/?p=' . rawurlencode($slug) . ($en ? '&l=en' : '');
+    if ($track) { $url = $site . '/api/nlt.php?c=' . $track[0] . '.' . $track[1] . '.' . nl_trk_sig($cfg, array('c', $track[0], $track[1], 'p:' . $p->id)) . '&p=' . rawurlencode($p->id) . ($en ? '&l=en' : ''); }
+    $img = !empty($p->imageUrl) ? $site . '/assets/og-p/' . rawurlencode($slug) . '.jpg' : '';
+    return (object) array('product' => (object) array('name' => $name, 'price' => $price, 'url' => $url, 'img' => $img, 'label' => $en ? 'View in the shop' : 'Megnézem'));
+}
+function nl_body_blocks($cfg, $camp, $s, $body, $en, $trk) {
+    $out = array(); $buf = array();
+    $track = $trk ? array($camp['id'], $s['id']) : null;
+    foreach (preg_split('/\r\n|\r|\n/', $body) as $ln) {
+        if (preg_match('/^\s*\[\[termek:([A-Za-z0-9_-]{1,80})\]\]\s*$/u', $ln, $m)) {
+            $card = nl_product_card($cfg, $m[1], $en, $track);
+            if ($card) { if ($buf) { $out[] = (object) array('lines' => $buf); $buf = array(); } $out[] = $card; }
+            continue;
+        }
+        $buf[] = $ln;
+    }
+    if ($buf) { $out[] = (object) array('lines' => $buf); }
+    return $out ? $out : array((object) array('lines' => array('')));
+}
 function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     $en = (isset($s['lang']) && $s['lang'] === 'en');
     $hasEn = (!empty($camp['subjectEn']) && !empty($camp['bodyEn']));
@@ -279,7 +306,7 @@ function nl_send_one($cfg, $camp, $s, $preview = false, $capture = false) {
     }
     $blocks = array();
     $body = $useEn ? $camp['bodyEn'] : $camp['body'];
-    $blocks[] = (object) array('lines' => preg_split('/\r\n|\r|\n/', (string) $body));
+    foreach (nl_body_blocks($cfg, $camp, $s, (string) $body, $useEn, $trk) as $bb) { $blocks[] = $bb; }
     if (!empty($camp['ctaLabel']) && !empty($camp['ctaUrl'])) {
         $cl = ($useEn && !empty($camp['ctaLabelEn'])) ? $camp['ctaLabelEn'] : $camp['ctaLabel'];
         $href = $camp['ctaUrl'];

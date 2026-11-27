@@ -115,6 +115,18 @@ function mail_render($it) {
             }
             $h[] = $hh . '</table>';
         }
+        if (isset($b->product) && is_object($b->product)) {
+            $pp = $b->product; $pu = isset($pp->url) ? mail_http_url($pp->url) : null; $pi = isset($pp->img) ? mail_http_url($pp->img) : null;
+            $pn = mail_clean(isset($pp->name) ? $pp->name : '', 120); $pr = mail_clean(isset($pp->price) ? $pp->price : '', 40); $pl = mail_clean(isset($pp->label) ? $pp->label : '', 40);
+            if ($pu && $pn !== '') {
+                $t[] = ''; $t[] = $pn . ($pr !== '' ? ' – ' . $pr : ''); $t[] = ($pl !== '' ? $pl . ': ' : '') . $pu;
+                $h[] = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0;border:1px solid #ece6dc;border-radius:10px;border-collapse:separate">'
+                    . ($pi ? '<tr><td style="padding:0"><a href="' . htmlspecialchars($pu) . '"><img src="' . htmlspecialchars($pi) . '" width="542" alt="' . htmlspecialchars($pn) . '" style="display:block;width:100%;max-width:542px;height:auto;border:0;border-radius:10px 10px 0 0"></a></td></tr>' : '')
+                    . '<tr><td style="padding:12px 16px 16px"><div style="font-size:17px;font-weight:700;color:#161314">' . htmlspecialchars($pn) . '</div>'
+                    . ($pr !== '' ? '<div style="font-size:15px;color:#6b6b6b;margin:2px 0 12px">' . htmlspecialchars($pr) . '</div>' : '<div style="height:10px"></div>')
+                    . '<a href="' . htmlspecialchars($pu) . '" style="display:inline-block;background:#161314;color:#ffffff;padding:9px 20px;border-radius:999px;text-decoration:none;font-size:14px">' . htmlspecialchars($pl !== '' ? $pl : $pn) . '</a></td></tr></table>';
+            }
+        }
         if (isset($b->links) && is_array($b->links)) {
             foreach (array_slice($b->links, 0, 20) as $lk) {
                 if (!is_object($lk) || !isset($lk->label)) { continue; }
@@ -159,7 +171,7 @@ function mail_wrap($inner, $lang, $ref, $pre) {
         . '<tr><td align="center" style="background:#ece6dc;padding:22px 16px 16px;border-bottom:3px solid #161314">'
         . '<a href="' . htmlspecialchars($site) . '" style="text-decoration:none"><img src="' . $logo . '" width="' . (empty($GLOBALS['bk_mail_logo_only']) ? 56 : 72) . '" alt="Bagdi Kata" style="display:block;margin:0 auto ' . (empty($GLOBALS['bk_mail_logo_only']) ? 8 : 0) . 'px;border:0"></a>'
         . (empty($GLOBALS['bk_mail_logo_only']) ? '<div style="font-family:Georgia,\'Times New Roman\',serif;font-size:22px;letter-spacing:1px;color:#161314">Bagdi Kata</div>'
-        . '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b6b6b;margin-top:2px">' . $tag . '</div>' : (!empty($GLOBALS['bk_mail_header_text']) ? '<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4a4a;margin-top:10px">' . htmlspecialchars((string) $GLOBALS['bk_mail_header_text']) . '</div>' : ''))
+        . '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b6b6b;margin-top:2px">' . (!empty($GLOBALS['bk_mail_header_text']) ? htmlspecialchars((string) $GLOBALS['bk_mail_header_text']) : $tag) . '</div>' : (!empty($GLOBALS['bk_mail_header_text']) ? '<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4a4a;margin-top:10px">' . htmlspecialchars((string) $GLOBALS['bk_mail_header_text']) . '</div>' : ''))
         . '</td></tr>'
         . '<tr><td style="padding:24px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#222222">' . $inner . '</td></tr>'
         . '<tr><td style="background:#f6f3ee;padding:16px 28px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#6b6b6b;border-top:1px solid #ece6dc">'
@@ -169,14 +181,14 @@ function mail_wrap($inner, $lang, $ref, $pre) {
         . '</td></tr></table></td></tr></table></body></html>';
 }
 
-function mail_confirm_send($to, $kind, $lang, $ref, $subject, $heading, $paras, $table, $senderKind, $extra = null) {
+function mail_confirm_send($to, $kind, $lang, $ref, $subject, $heading, $paras, $table, $senderKind, $extra = null, $tail = 3) {
     $mc = mail_cfg();
     $blocks = array();
     if ($table) {
-        $blocks[] = (object) array('heading' => $heading, 'lines' => array_slice($paras, 0, count($paras) - 3));
+        $blocks[] = (object) array('heading' => $heading, 'lines' => array_slice($paras, 0, count($paras) - $tail));
         $blocks[] = (object) array('table' => $table);
         if ($extra) { $blocks[] = $extra; }
-        $blocks[] = (object) array('lines' => array_slice($paras, -3));
+        if ($tail > 0) { $blocks[] = (object) array('lines' => array_slice($paras, -$tail)); }
     } else {
         $blocks[] = (object) array('heading' => $heading, 'lines' => $paras);
         if ($extra) { $blocks[] = $extra; }
@@ -188,15 +200,12 @@ function mail_confirm_send($to, $kind, $lang, $ref, $subject, $heading, $paras, 
     try { mail_send(array($to), $subject, $text, $html, $sender, $sender); } finally { unset($GLOBALS['bk_copy_kind']); }
 }
 function mail_confirm_contact($email, $name, $lang, $ref) {
-    $en = ($lang === 'en');
-    $name = mail_clean($name, 80);
-    if ($en) {
-        mail_confirm_send($email, 'contact', 'en', $ref, 'We received your message – Bagdi Kata [' . $ref . ']', 'Thank you for your message',
-            array('Dear ' . $name . ',', '', 'we have received your message and registered it under the reference number above. We will reply to this e-mail address as soon as possible, usually within 1–2 working days.', '', 'This is an automatic confirmation, please do not reply to it. If you want to add something, simply write to us and quote the reference number.', '', 'Kind regards,', 'Bagdi Kata'), null, 'contact');
-    } else {
-        mail_confirm_send($email, 'contact', 'hu', $ref, 'Üzenetedet megkaptuk – Bagdi Kata [' . $ref . ']', 'Köszönjük az üzenetedet',
-            array('Kedves ' . $name . '!', '', 'Üzenetedet megkaptuk, és a fenti azonosítón iktattuk. A megadott e-mail-címen válaszolunk, általában 1–2 munkanapon belül.', '', 'Ez automatikus visszaigazolás, kérjük, ne erre a levélre válaszolj. Ha szeretnél valamit hozzátenni, írj nekünk, és hivatkozz a fenti azonosítóra.', '', 'Üdvözlettel:', 'Bagdi Kata'), null, 'contact');
-    }
+    $en = ($lang === 'en'); $L = $en ? 'en' : 'hu';
+    $T = mtpl_get(); $C = $T['contact'];
+    $v = array('{nev}' => mtpl_name(mail_clean($name, 80), $en), '{name}' => mtpl_name(mail_clean($name, 80), $en), '{azonosito}' => $ref, '{email}' => (string) $email);
+    mtpl_frame_begin($T, $en);
+    try { mail_confirm_send($email, 'contact', $L, $ref, mtpl_fill($C['subject'][$L], $v), mtpl_fill($C['heading'][$L], $v), mtpl_lines(mtpl_fill($C['body'][$L], $v)), null, 'contact'); }
+    finally { mtpl_frame_end(); }
 }
 function mail_order_matches($number, $email) {
     $raw = read_raw('store'); $st = $raw ? json_decode($raw) : null;
@@ -266,20 +275,17 @@ function mail_transfer_block($number, $en) {
     return (object) array('heading' => $en ? 'Bank transfer details' : 'Utalási adatok', 'lines' => $L);
 }
 function mail_confirm_order($email, $name, $lang, $number, $table) {
-    $en = ($lang === 'en');
-    $name = mail_clean($name, 80);
+    $en = ($lang === 'en'); $L = $en ? 'en' : 'hu';
     $number = mail_clean($number, 60);
     $xfer = null;
     try { $xfer = mail_transfer_block($number, $en); } catch (Throwable $e) { $xfer = null; }
-    if ($en) {
-        mail_confirm_send($email, 'order', 'en', $number, 'Order confirmation ' . $number . ' – Bagdi Kata', 'Thank you for your order',
-            array('Dear ' . $name . ',', '', 'we have received your order (' . $number . '). The details are below. We will contact you by e-mail about the shipping of your parcel; you will receive your invoice separately.', '', 'If you have any question, reply to this e-mail or write to info@bagdikata.hu and quote the order number.', '', 'Kind regards,', 'Bagdi Kata'), $table, 'order', $xfer);
-    } else {
-        mail_confirm_send($email, 'order', 'hu', $number, 'Rendelés visszaigazolás ' . $number . ' – Bagdi Kata', 'Köszönjük a rendelésedet',
-            array('Kedves ' . $name . '!', '', 'Megkaptuk a rendelésedet (' . $number . '). A részleteket alább találod. A csomag feladásáról e-mailben értesítünk; a számlát külön levélben küldjük.', '', 'Ha kérdésed van, válaszolj erre a levélre, vagy írj az info@bagdikata.hu címre a rendelésszám megadásával.', '', 'Üdvözlettel:', 'Bagdi Kata'), $table, 'order', $xfer);
-    }
+    $T = mtpl_get(); $C = $T['order'];
+    $v = array('{nev}' => mtpl_name(mail_clean($name, 80), $en), '{name}' => mtpl_name(mail_clean($name, 80), $en), '{rendelesszam}' => $number, '{email}' => (string) $email);
+    $body = mtpl_lines(mtpl_fill($C['body'][$L], $v)); $close = mtpl_lines(mtpl_fill($C['closing'][$L], $v));
+    mtpl_frame_begin($T, $en);
+    try { mail_confirm_send($email, 'order', $L, $number, mtpl_fill($C['subject'][$L], $v), mtpl_fill($C['heading'][$L], $v), array_merge($body, $close), $table, 'order', $xfer, count($close)); }
+    finally { mtpl_frame_end(); }
 }
-
 function smtp_read($fp) {
     $r = '';
     while (($l = fgets($fp, 1024)) !== false) { $r .= $l; if (strlen($l) < 4 || $l[3] === ' ') { break; } }
@@ -447,7 +453,16 @@ function mail_dispatch($cfg, $items, $isAdmin) {
         if ($sendAdmin) {
             rl_hit($isAdmin ? 'mailsend_a' : 'mailsend_v', 3600);
             $subject = isset($it->subject) && is_string($it->subject) ? $it->subject : 'Értesítés';
+            $wf = false;
+            if ($kind === 'withdrawal' && isset($it->blocks[0]) && is_object($it->blocks[0])) {
+                $wen = strpos($subject, 'Acknowledgement') === 0; $WT = mtpl_get(); $W = $WT['withdrawal']; $WL = $wen ? 'en' : 'hu';
+                if (trim($W['heading'][$WL]) !== '') { $it->blocks[0]->heading = $W['heading'][$WL]; }
+                $wb = trim($W['body'][$WL]);
+                if ($wb !== '') { $it->blocks[0]->lines = array_merge(mtpl_lines($wb), array(''), isset($it->blocks[0]->lines) && is_array($it->blocks[0]->lines) ? $it->blocks[0]->lines : array()); }
+                $it->lang = $WL; mtpl_frame_begin($WT, $wen); $wf = true;
+            }
             list($text, $html) = mail_render($it);
+            if ($wf) { mtpl_frame_end(); }
             try {
                 $sender = mail_sender_for($mc, $kind);
                 $GLOBALS['bk_copy_kind'] = $kind === 'order' ? 'orderAdmin' : ($kind === 'withdrawal' ? 'withdrawal' : '');
@@ -483,3 +498,4 @@ function mail_dispatch($cfg, $items, $isAdmin) {
     }
     return $okCount;
 }
+require_once __DIR__ . '/_mailtpl.php';

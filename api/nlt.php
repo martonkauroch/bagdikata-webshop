@@ -17,7 +17,15 @@ $camp_url = function ($cid) {
 if (isset($_GET['c'])) {
     $p = $parse($_GET['c']);
     $target = '';
-    if ($cfg && $p && hash_equals(nl_trk_sig($cfg, array('c', $p[0], $p[1])), $p[2])) {
+    $pp = isset($_GET['p']) && is_string($_GET['p']) && preg_match('/^[A-Za-z0-9_-]{1,80}$/', $_GET['p']) ? $_GET['p'] : '';
+    if ($cfg && $p && $pp !== '' && hash_equals(nl_trk_sig($cfg, array('c', $p[0], $p[1], 'p:' . $pp)), $p[2])) {
+        require_once __DIR__ . '/_seo.php';
+        $prod = seo_find_product($pp);
+        if ($prod) {
+            $target = mail_site_url() . '/?p=' . rawurlencode(seo_product_slug($prod)) . ((isset($_GET['l']) && $_GET['l'] === 'en') ? '&l=en' : '');
+            if (!rl_blocked('nltrk', 300, 3600)) { rl_hit('nltrk', 3600); try { nl_stat_hit('c', $p[0], $p[1], $target); } catch (Throwable $e) { } }
+        }
+    } elseif ($cfg && $p && hash_equals(nl_trk_sig($cfg, array('c', $p[0], $p[1])), $p[2])) {
         $target = $camp_url($p[0]);
         if ($target !== '' && !rl_blocked('nltrk', 300, 3600)) { rl_hit('nltrk', 3600); try { nl_stat_hit('c', $p[0], $p[1], $target); } catch (Throwable $e) { } }
     }
