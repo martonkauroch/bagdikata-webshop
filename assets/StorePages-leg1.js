@@ -1,5 +1,5 @@
 import{$ as e,Z as t,i as n}from"./createLucideIcon-Bc0h7bbI.js";
-import{A as useContent,U as useNotifications,j as useStore,LocaleHook,LinkC}from"./index-0f-fFOYT.js";
+import{A as useContent,U as useNotifications,j as useStore,LocaleHook,LinkC,W as useSettings}from"./index-0f-fFOYT.js";
 var N=e(t(),1),P=n();
 var h=(type,props,...kids)=>{let{key:k,...rest}=props||{};if(kids.length===1)rest.children=kids[0];else if(kids.length>1)rest.children=kids;return k===void 0?P.jsx(type,rest):P.jsx(type,rest,k)};
 
@@ -420,7 +420,20 @@ function Shell({title,children}){
 function Legal({kind}){
   let{content}=useContent(),{locale,path}=LocaleHook(),en=locale==="en";
   let text=pickText(content.legal,kind,locale);
+  let stg=useSettings(),shp=stg&&stg.settings&&stg.settings.shipping||null,SM=null;
+  if(kind==="shipping"&&shp){
+    let on=k=>!(shp[k]&&shp[k].enabled===false),RX={foxpost:/foxpost/i,packeta:/packeta/i,gls:/\bgls\b/i,pickup:/személyes átvétel|personal pick-?up|pick-?up in budapest/i};
+    let inSec=false;text=String(text||"").split("\n").filter(l=>{if(/^##\s+/.test(l)){inSec=/szállítási módok|delivery methods/i.test(l);return true}if(inSec&&/^-\s+/.test(l)){for(let k in RX)if(RX[k].test(l)&&!on(k))return false}return true}).join("\n");
+    let fmt=n=>Number(n||0).toLocaleString("hu-HU")+" Ft",L=en?{foxpost:"Foxpost parcel locker",packeta:"Packeta pick-up point",gls:"GLS home delivery",pickup:"Pick-up in Budapest"}:{foxpost:"Foxpost csomagautomata",packeta:"Packeta átvételi pont",gls:"GLS házhozszállítás",pickup:"Személyes átvétel (Budapest)"},DF={foxpost:1290,packeta:1390,gls:1990,pickup:0};
+    let rows=["foxpost","packeta","gls","pickup"].filter(on).map(k=>{let c=shp[k]||{},fee=typeof c.fee==="number"&&!isNaN(c.fee)?c.fee:DF[k],cod=k!=="pickup"&&c.codEnabled!==false;return{k,n:L[k],fee,cod}});
+    let free=typeof shp.freeShippingFrom==="number"?shp.freeShippingFrom:20000,codFee=typeof shp.codFee==="number"?shp.codFee:490,td={padding:"8px 10px",borderTop:"1px solid #ece6dc",fontSize:14};
+    SM=rows.length?h("div",{"data-testid":"shipping-live",style:{margin:"0 0 2rem",border:"1px solid #ece6dc",borderRadius:12,background:"#fff",padding:"1rem 1.1rem"}},
+      h("h2",{style:{fontSize:"1.05rem",fontWeight:600,margin:"0 0 .6rem"}},en?"Current delivery options and fees":"Jelenleg elérhető szállítási módok és díjak"),
+      h("table",{style:{width:"100%",borderCollapse:"collapse"}},h("tbody",null,rows.map(r=>h("tr",{key:r.k},h("td",{style:td},r.n),h("td",{style:{...td,textAlign:"right",whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums"}},r.fee>0?fmt(r.fee):(en?"free":"ingyenes")),h("td",{style:{...td,textAlign:"right",fontSize:13,color:"#6b6b6b",whiteSpace:"nowrap"}},r.cod?(en?"cash on delivery available":"utánvéttel is"):""))))),
+      h("p",{style:{fontSize:13,color:"#4a4a4a",margin:".7rem 0 0"}},(free>0?(en?"Free shipping on orders over ":"Ingyenes szállítás ")+fmt(free)+(en?"":" feletti rendelésnél")+". ":"")+(rows.some(r=>r.cod)?(en?"Cash on delivery fee: ":"Utánvét díja: ")+fmt(codFee)+".":""))):null;
+  }
   return h(Shell,{title:LEGAL_TITLES[kind][en?"en":"hu"]},
+    SM,
     h(Rich,{text}),
     (kind==="terms"||kind==="shipping")&&h("p",{style:{marginTop:"2rem"}},h(LinkC,{to:path("/elallas"),className:"btn-secondary"},en?"Right of withdrawal →":"Elállás a szerződéstől →")));
 }
