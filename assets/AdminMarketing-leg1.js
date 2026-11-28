@@ -267,6 +267,7 @@ function NewsAdminPage(){
           h("label",null,h("span",{style:S.lab},"Text (English)"),h("textarea",{style:{...S.inp,minHeight:80,fontFamily:"inherit"},value:it.text.en,maxLength:600,onChange:ev=>setPair(i,"text","en",ev.target.value)}))),
         h("div",{style:{display:"flex",gap:12,alignItems:"end",marginTop:10,flexWrap:"wrap"}},
           h("label",{style:{flex:1,minWidth:220}},h("span",{style:S.lab},"Link (nem kötelező; https://… vagy #/termek/…)"),h("input",{style:S.inp,value:it.link||"",maxLength:300,onChange:ev=>setItem(i,"link",ev.target.value)})),
+          h("button",{type:"button",style:S.btn,onClick:()=>{location.hash="#/admin/instagram?hir="+encodeURIComponent(it.id)},"data-testid":"news-ig",title:"A mentett bejegyzésből Instagram-poszt készítése"},"Instagram-poszt"),
           h("button",{type:"button",style:S.btnR,onClick:()=>del(i)},"Törlés"))))),
     msg&&h("div",{style:S.ok,role:"status"},msg),
     dirty&&h("div",{style:{position:"fixed",left:0,right:0,bottom:0,background:"#fff",borderTop:"1px solid #e5e7eb",padding:"12px 24px",display:"flex",justifyContent:"flex-end",gap:10,zIndex:20}},
@@ -497,4 +498,90 @@ function CustomerMailCard(){
       pv&&h("div",null,h("p",{style:{fontSize:13,margin:"0 0 6px"}},h("strong",null,"Tárgy: "),pv.subject),h("iframe",{title:"Előnézet",sandbox:"",srcDoc:pv.html,"data-testid":"cm-frame",style:{width:"100%",maxWidth:640,height:640,border:"1px solid #e5e7eb",borderRadius:8,background:"#fff"}}))));
 }
 
-export{CustomerMailCard,ProductTexts,DailyReports,HistoryTabs,NewsAdminPage as AdminNewsPage,EventsAdminPage as AdminEventsPage,LanguagePage as AdminLanguagePage,CouponsPage as AdminCouponsPage,NewsletterPage as AdminNewsletterPage};
+var IgPicker=N.lazy(()=>import("./MediaLibrary-leg1.js").then(m=>({default:m.MediaPicker})));
+var igPrev=r=>{let B=window.__BK||{};return B.imgUrl?B.imgUrl(r):r};
+var igFt=n=>NF.format(Math.round(n||0))+" Ft";
+var IG_TAGS="#bagdikata #kézzelkötött #kötöttsapka #sapka #handmade #knitting #madeinhungary";
+function igCapProduct(p){if(!p)return"";let d=(p.description||"").trim();return [p.name,d,p.stock>0?igFt(p.price)+" · egyedi, kézzel kötött darab":"Ez a darab elfogyott – írj nekünk, ha hasonlót szeretnél!","Megrendelhető a webshopban – a link a profilban: bagdikata.hu",IG_TAGS].filter(Boolean).join("\n\n")}
+function igCapNews(n){if(!n)return"";return [(n.title||"").trim(),(n.text||"").trim(),"bagdikata.hu",IG_TAGS].filter(Boolean).join("\n\n")}
+function InstagramPage(){
+  let[v,setV]=N.useState(null),[err,setErr]=N.useState(null),[ok,setOk]=N.useState(null),[busy,setBusy]=N.useState(""),[tok,setTok]=N.useState(""),[guide,setGuide]=N.useState(false);
+  let[src,setSrc]=N.useState("product"),[pid,setPid]=N.useState(""),[nid,setNid]=N.useState(""),[sel,setSel]=N.useState([]),[cap,setCap]=N.useState(""),[pk,setPk]=N.useState(false),[extra,setExtra]=N.useState([]),[done,setDone]=N.useState(null);
+  let base=(window.__BK&&window.__BK.base)||"";
+  let load=()=>fetch(base+"api/instagram.php",{credentials:"same-origin",headers:{"X-BK":"1"}}).then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j.ok)throw new Error(j.error||("Hiba ("+r.status+")"));setV(j);return j}));
+  N.useEffect(()=>{load().then(j=>{let q=new URLSearchParams((location.hash.split("?")[1])||"");let t=q.get("termek"),n=q.get("hir");
+    if(t){let p=j.products.find(x=>x.id===t);if(p){setSrc("product");setPid(t);setSel(p.images.slice(0,1).map(i=>i.ref));setCap(igCapProduct(p))}}
+    else if(n){let x=j.news.find(y=>y.id===n);setSrc("news");if(x){setNid(n);setCap(igCapNews(x))}else setErr("A hír nem található – előbb mentsd el a Friss hírek oldalon.")}}).catch(e=>setErr(e.message))},[]);
+  if(!shared())return h("div",{style:{maxWidth:900}},h(PageHeader,{title:"Instagram"}),h(NeedShared));
+  let post=body=>{setErr(null);setOk(null);return api("instagram.php",body).then(j=>{setV(j);return j})};
+  let prods=v?v.products:[],news=v?v.news:[],P=prods.find(x=>x.id===pid),Nw=news.find(x=>x.id===nid);
+  let pool=[...(P?P.images:[]),...extra.filter(e=>!(P&&P.images.some(i=>i.ref===e.ref)))];
+  let tog=r=>setSel(s=>s.includes(r)?s.filter(x=>x!==r):s.length>=10?s:[...s,r]);
+  let pickProduct=id=>{setPid(id);let p=prods.find(x=>x.id===id);setSel(p&&p.images.length?[p.images[0].ref]:[]);if(src==="product")setCap(igCapProduct(p))};
+  let pickNews=id=>{setNid(id);setCap(igCapNews(news.find(x=>x.id===id)))};
+  let setMode=m=>{setSrc(m);setDone(null);if(m==="product"){setCap(igCapProduct(P))}else if(m==="news"){setCap(igCapNews(Nw))}else setCap("")};
+  let tags=(cap.match(/#[\p{L}\p{N}_]+/gu)||[]).length;
+  let canPub=v&&v.connected&&sel.length&&cap.length<=2200&&tags<=30&&!busy&&(src!=="news"||Nw)&&(src!=="product"||P);
+  let publish=()=>{if(!canPub)return;if(!window.confirm("Közzéteszed ezt a posztot az Instagramon (@"+v.username+")? "+sel.length+" kép. A közzétett poszt csak az Instagramon törölhető."))return;
+    setBusy("pub");post({action:"publish",images:sel.map(r=>({ref:r,y:50})),caption:cap,kind:src,id:src==="product"?pid:src==="news"?nid:"",label:src==="product"&&P?P.name:src==="news"&&Nw?Nw.title:"Egyéni poszt"}).then(j=>{setDone(j.post);setOk("A poszt megjelent az Instagramon.")}).catch(e=>setErr(e.message)).finally(()=>setBusy(""))};
+  let first=sel[0]?pool.find(i=>i.ref===sel[0]):null;
+  let tab=(k,l)=>h("button",{type:"button",onClick:()=>setMode(k),"data-testid":"ig-src-"+k,style:{...S.btn,padding:"8px 14px",...(src===k?{background:"#111827",color:"#fff",borderColor:"#111827"}:{})}},l);
+  return h("div",{style:{maxWidth:980,paddingBottom:40}},
+    h(PageHeader,{title:"Instagram",description:"Termékek, hírek vagy egyéni képek közzététele közvetlenül az összekötött Instagram-fiókba."}),
+    err&&h("div",{style:S.err,role:"alert","data-testid":"ig-err"},err),
+    ok&&h("div",{style:S.ok,role:"status","data-testid":"ig-ok"},ok,done&&done.permalink&&h("span",null," ",h("a",{href:done.permalink,target:"_blank",rel:"noopener noreferrer",style:{color:"#047857",fontWeight:600}},"Megnyitás az Instagramon →"))),
+    !v?h("p",{style:S.sub},"Betöltés…"):h(N.Fragment,null,
+    h(Card,{title:"Instagram-fiók",description:v.connected?null:"Kösd össze a webshopot a Bagdi Kata Instagram-fiókkal – utána innen egy kattintással posztolhatsz."},
+      v.connected?h("div",{"data-testid":"ig-connected",style:{display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}},
+        v.picture?h("img",{src:v.picture,alt:"",style:{width:48,height:48,borderRadius:"50%",objectFit:"cover"}}):h("span",{style:{width:48,height:48,borderRadius:"50%",background:"linear-gradient(45deg,#f9a03f,#e1306c,#833ab4)",display:"inline-block"}}),
+        h("div",{style:{flex:1,minWidth:200}},h("div",{style:{fontWeight:600,fontSize:15}},"@"+v.username," ",h(Badge,{tone:"green"},"Összekötve")),
+          h("div",{style:S.sub},(v.accountType?({BUSINESS:"Üzleti fiók",MEDIA_CREATOR:"Alkotói fiók",CREATOR:"Alkotói fiók"}[v.accountType]||v.accountType)+" · ":"")+"a hozzáférés érvényes eddig: "+fmtDate(v.expiresAt)+" (a rendszer magától megújítja)"),
+          v.lastError&&h("div",{style:{...S.sub,color:"#b91c1c"}},"Utolsó megújítási hiba: "+v.lastError)),
+        h("button",{type:"button",style:S.btn,disabled:!!busy,onClick:()=>{setBusy("ref");post({action:"refresh"}).then(()=>setOk("Hozzáférés megújítva.")).catch(e=>setErr(e.message)).finally(()=>setBusy(""))}},busy==="ref"?"Megújítás…":"Hozzáférés megújítása"),
+        h("button",{type:"button",style:S.btnR,disabled:!!busy,"data-testid":"ig-disconnect",onClick:()=>{if(window.confirm("Leválasztod az Instagram-fiókot? Utána nem lehet innen posztolni, amíg újra össze nem kötöd."))post({action:"disconnect"}).then(()=>setOk("Az Instagram-fiók leválasztva.")).catch(e=>setErr(e.message))}},"Leválasztás"))
+      :h("div",null,
+        h("div",{style:S.info},h("strong",null,"Mi kell hozzá? "),"Az Instagram-fiók legyen ",h("strong",null,"szakmai fiók"),
+          " (Üzleti vagy Alkotói), és kell egy ingyenes Meta fejlesztői alkalmazás, amelyből egy hozzáférési kulcsot (tokent) kapsz. Ezt kell alább beilleszteni – egyszer kell megcsinálni, kb. 10 perc. ",
+          h("button",{type:"button",onClick:()=>setGuide(!guide),style:{border:0,background:"none",color:"#1d4ed8",textDecoration:"underline",cursor:"pointer",padding:0,font:"inherit"},"data-testid":"ig-guide-toggle"},guide?"Útmutató elrejtése":"Lépésről lépésre útmutató")),
+        guide&&h("ol",{"data-testid":"ig-guide",style:{fontSize:13.5,lineHeight:1.6,color:"#374151",margin:"0 0 16px",paddingLeft:20}},
+          h("li",null,"Instagram app › Profil › ☰ › ",h("em",null,"Fióktípus és eszközök"),": ha még nem az, ",h("em",null,"Váltás szakmai fiókra"),"."),
+          h("li",null,"Számítógépen nyisd meg: ",h("a",{href:"https://developers.facebook.com/apps",target:"_blank",rel:"noopener noreferrer"},"developers.facebook.com/apps")," › lépj be a Facebook-fiókoddal › ",h("em",null,"Alkalmazás létrehozása"),"."),
+          h("li",null,"Használati esetnek válaszd: ",h("em",null,"„Üzenetek és tartalom kezelése az Instagramon”")," (Instagram API), adj neki nevet (pl. „Bagdi Kata webshop”), majd hozd létre."),
+          h("li",null,"Az alkalmazásban: ",h("em",null,"Instagram › API-beállítás Instagram-bejelentkezéssel"),". A ",h("em",null,"„Hozzáférési tokenek létrehozása”")," résznél ",h("em",null,"Fiók hozzáadása"),": jelentkezz be a Bagdi Kata Instagram-fiókkal, és engedélyezd."),
+          h("li",null,"A fiók sorában kattints a ",h("em",null,"„Token létrehozása”")," gombra, és másold ki a hosszú kódot."),
+          h("li",null,"Illeszd be az alábbi mezőbe, és kattints az ",h("em",null,"Összekötés"),"-re. A kulcs 60 napig érvényes, a rendszer naponta ellenőrzi és magától megújítja."),
+          h("li",null,"Az alkalmazást nem kell nyilvánossá tenni vagy Meta-ellenőrzésre küldeni, amíg csak a saját fiókodba posztolsz.")),
+        h("label",{style:{display:"block"}},h("span",{style:S.lab},"Instagram hozzáférési kulcs (token)"),
+          h("input",{type:"password",autoComplete:"off",style:S.inp,value:tok,onChange:ev=>setTok(ev.target.value),placeholder:"IGAA…","data-testid":"ig-token"})),
+        h("p",{style:{...S.sub,marginBottom:10}},"A kulcsot csak a szerver tárolja, a böngészőbe többé nem kerül vissza. Ne küldd el senkinek e-mailben vagy üzenetben."),
+        h("button",{type:"button",style:S.btnD,disabled:!tok.trim()||!!busy,"data-testid":"ig-connect",onClick:()=>{setBusy("con");post({action:"connect",token:tok.trim()}).then(j=>{setTok("");setOk("Összekötve: @"+j.username)}).catch(e=>setErr(e.message)).finally(()=>setBusy(""))}},busy==="con"?"Ellenőrzés…":"Összekötés"))),
+    h(Card,{title:"Új Instagram-poszt",description:"Válaszd ki, miről szóljon, jelöld ki a képeket (több kép = lapozós poszt, legfeljebb 10), és nézd át a szöveget. Az Instagramon a szövegben lévő link nem kattintható – ezért „link a profilban” szerepel."},
+      !v.connected&&h("div",{style:S.warn},"Posztolni az Instagram-fiók összekötése után lehet – addig is összeállíthatod és megnézheted az előnézetet."),
+      h("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}},tab("product","Termék"),tab("news","Hír / akció"),tab("custom","Egyéni kép")),
+      h("div",{style:{display:"grid",gap:20,gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",alignItems:"start"}},
+        h("div",null,
+          src==="news"&&h("label",{style:{display:"block",marginBottom:12}},h("span",{style:S.lab},"Hír vagy akció"),
+            h("select",{style:S.inp,value:nid,onChange:ev=>pickNews(ev.target.value),"data-testid":"ig-news"},h("option",{value:""},news.length?"– válassz –":"Nincs mentett hír"),news.map(n=>h("option",{key:n.id,value:n.id},(n.kind==="sale"?"Akció: ":"Hír: ")+(n.title||"(cím nélkül)")+(n.date?" · "+n.date:""))))),
+          h("label",{style:{display:"block",marginBottom:12}},h("span",{style:S.lab},src==="product"?"Termék":"Képek egy termékből (nem kötelező)"),
+            h("select",{style:S.inp,value:pid,onChange:ev=>pickProduct(ev.target.value),"data-testid":"ig-product"},h("option",{value:""},"– válassz –"),prods.map(p=>h("option",{key:p.id,value:p.id},p.name+" · "+igFt(p.price)+(p.stock>0?"":" · elfogyott"))))),
+          h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",margin:"4px 0 8px"}},h("span",{style:S.lab},"Képek – kattints a kijelöléshez ("+sel.length+"/10)"),
+            h("button",{type:"button",style:S.btn,onClick:()=>setPk(true),"data-testid":"ig-pick"},"+ Kép a Fotókból")),
+          pool.length?h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(84px,1fr))",gap:8}},pool.map(i=>{let n=sel.indexOf(i.ref);return h("button",{key:i.ref,type:"button",onClick:()=>tog(i.ref),"data-testid":"ig-img",style:{position:"relative",padding:0,border:n>=0?"3px solid #e1306c":"1px solid #e5e7eb",borderRadius:8,overflow:"hidden",aspectRatio:"4/5",background:"#f3f4f6",cursor:"pointer"}},
+            h("img",{src:i.url||igPrev(i.ref),alt:"",style:{width:"100%",height:"100%",objectFit:"cover",display:"block",opacity:n>=0?1:.75}}),
+            n>=0&&h("span",{style:{position:"absolute",top:4,right:4,background:"#e1306c",color:"#fff",borderRadius:999,minWidth:20,height:20,fontSize:12,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}},n+1))})):h("p",{style:S.sub},src==="product"?"Válassz terméket.":"Válassz terméket vagy tölts be képet a Fotókból."),
+          h("label",{style:{display:"block",marginTop:14}},h("span",{style:S.lab},"Szöveg"),
+            h("textarea",{style:{...S.inp,minHeight:200,fontFamily:"inherit",lineHeight:1.45},value:cap,maxLength:2200,onChange:ev=>setCap(ev.target.value),"data-testid":"ig-caption"})),
+          h("div",{style:{...S.sub,display:"flex",justifyContent:"space-between"}},h("span",{style:{color:tags>30?"#b91c1c":void 0}},tags+"/30 hashtag"),h("span",null,cap.length+"/2200 karakter")),
+          h("div",{style:{marginTop:14,display:"flex",gap:10,flexWrap:"wrap"}},
+            h("button",{type:"button",style:{...S.btnD,background:canPub?"linear-gradient(45deg,#f09433,#dc2743,#bc1888)":"#9ca3af",borderColor:"transparent"},disabled:!canPub,onClick:publish,"data-testid":"ig-publish"},busy==="pub"?"Közzététel… (akár fél perc)":"Közzététel az Instagramon"))),
+        h("div",{"data-testid":"ig-preview",style:{border:"1px solid #dbdbdb",borderRadius:10,background:"#fff",overflow:"hidden",maxWidth:380,fontFamily:"-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif"}},
+          h("div",{style:{display:"flex",alignItems:"center",gap:8,padding:"10px 12px"}},h("span",{style:{width:28,height:28,borderRadius:"50%",background:v.picture?"url("+v.picture+") center/cover":"linear-gradient(45deg,#f9a03f,#e1306c,#833ab4)"}}),h("strong",{style:{fontSize:13}},v.username||"bagdikata")),
+          h("div",{style:{background:"#f3f4f6",position:"relative",minHeight:first?0:240}},first?h("img",{src:first.url||igPrev(first.ref),alt:"",style:{width:"100%",height:"auto",maxHeight:475,objectFit:"cover",display:"block"}}):h("div",{style:{height:240,display:"flex",alignItems:"center",justifyContent:"center",color:"#9ca3af",fontSize:13}},"Nincs kép kijelölve"),
+            sel.length>1&&h("span",{style:{position:"absolute",top:10,right:10,background:"rgba(0,0,0,.6)",color:"#fff",borderRadius:999,padding:"2px 8px",fontSize:12}},"1/"+sel.length)),
+          h("div",{style:{padding:"10px 12px",fontSize:13,lineHeight:1.45,whiteSpace:"pre-wrap",maxHeight:260,overflow:"auto"}},h("strong",null,(v.username||"bagdikata")+" "),cap||h("span",{style:{color:"#9ca3af"}},"(nincs szöveg)"))))),
+    h(Card,{title:"Korábbi posztok"},v.posts&&v.posts.length?h("div",{style:scroll},h("table",{style:{width:"100%",borderCollapse:"collapse"}},h("thead",null,h("tr",null,h("th",{style:S.th},"Idő"),h("th",{style:S.th},"Miről"),h("th",{style:S.th},"Képek"),h("th",{style:S.th},""))),
+      h("tbody",null,v.posts.map((p,i)=>h("tr",{key:i},h("td",{style:S.td},fmtDate(p.at)),h("td",{style:S.td},({product:"Termék: ",news:"Hír: ",custom:""}[p.kind]||"")+(p.label||"")),h("td",{style:S.td},p.images),h("td",{style:S.td},p.permalink?h("a",{href:p.permalink,target:"_blank",rel:"noopener noreferrer"},"Megnyitás →"):"–")))))):h("p",{style:S.sub},"Még nem ment ki poszt innen."))),
+    pk&&h(N.Suspense,{fallback:null},h(IgPicker,{exclude:[],onClose:()=>setPk(false),onPick:rs=>{setPk(false);let add=rs.filter(r=>!pool.some(i=>i.ref===r)).map(r=>({ref:r,url:igPrev(r)}));setExtra(x=>[...x,...add]);setSel(s=>[...s,...rs.filter(r=>!s.includes(r))].slice(0,10))}})));
+}
+
+export{InstagramPage as AdminInstagramPage,CustomerMailCard,ProductTexts,DailyReports,HistoryTabs,NewsAdminPage as AdminNewsPage,EventsAdminPage as AdminEventsPage,LanguagePage as AdminLanguagePage,CouponsPage as AdminCouponsPage,NewsletterPage as AdminNewsletterPage};
