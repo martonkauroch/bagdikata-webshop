@@ -32,7 +32,7 @@ if ($act === 'save') {
 }
 if ($act === 'preview' || $act === 'test') {
     $T = mtpl_clean(isset($d->tpl) ? json_decode(json_encode($d->tpl), true) : null);
-    $kind = (isset($d->kind) && in_array($d->kind, array('order', 'contact', 'withdrawal'), true)) ? $d->kind : 'order';
+    $kind = (isset($d->kind) && in_array($d->kind, array('order', 'contact', 'withdrawal', 'shipped'), true)) ? $d->kind : 'order';
     $en = isset($d->lang) && $d->lang === 'en'; $L = $en ? 'en' : 'hu';
     $v = array('{nev}' => $en ? 'Anna Smith' : 'Kiss Anna', '{name}' => $en ? 'Anna Smith' : 'Kiss Anna', '{rendelesszam}' => 'BK-2611271234', '{azonosito}' => 'K-20261127-AB12C', '{email}' => 'anna@example.com');
     $C = $T[$kind]; $blocks = array(); $ref = '';
@@ -41,6 +41,13 @@ if ($act === 'preview' || $act === 'test') {
         $blocks[] = (object) array('heading' => mtpl_fill($C['heading'][$L], $v), 'lines' => mtpl_lines(mtpl_fill($C['body'][$L], $v)));
         $blocks[] = (object) array('table' => (object) array('head' => $en ? array('Item', 'Qty', 'Amount') : array('Termék', 'Db', 'Összeg'), 'rows' => array(array($en ? 'Mint beanie' : 'Menta sapka', '1', '8 990 Ft'), array($en ? 'Shipping and fees' : 'Szállítás és díjak', '', '1 290 Ft'), array($en ? 'Total' : 'Összesen', '', '10 280 Ft'))));
         $blocks[] = (object) array('lines' => mtpl_lines(mtpl_fill($C['closing'][$L], $v)));
+        $subject = mtpl_fill($C['subject'][$L], $v);
+    } elseif ($kind === 'shipped') {
+        $ref = 'BK-2611271234';
+        $o = (object) array('orderNumber' => 'BK-2611271234', 'shippingMethod' => 'foxpost', 'pickupPoint' => 'Foxpost – Budapest, Allee', 'customer' => (object) array('name' => $en ? 'Anna Smith' : 'Kiss Anna', 'email' => 'anna@example.com'));
+        $v = mail_shipped_vars($o, 'CLFOX0123456789', $en);
+        $blocks[] = (object) array('heading' => mtpl_fill($C['heading'][$L], $v), 'lines' => mtpl_lines(mail_shipped_body(mtpl_fill($C['body'][$L], $v))));
+        $blocks[] = (object) array('table' => (object) array('head' => $en ? array('Item', 'Qty', 'Amount') : array('Termék', 'Db', 'Összeg'), 'rows' => array(array($en ? 'Mint beanie' : 'Menta sapka', '1', '8 990 Ft'), array($en ? 'Shipping and fees' : 'Szállítás és díjak', '', '1 290 Ft'), array($en ? 'Total' : 'Összesen', '', '10 280 Ft'))));
         $subject = mtpl_fill($C['subject'][$L], $v);
     } elseif ($kind === 'contact') {
         $ref = 'K-20261127-AB12C';

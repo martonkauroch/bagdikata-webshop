@@ -1,6 +1,6 @@
 (function () {
   try {
-    var RE = /^G-[A-Z0-9]{4,15}$/, id = null, loaded = false, prevC, lastSent = null, pending = null, bannerEl = null, linkEl = null;
+    var evq = [], RE = /^G-[A-Z0-9]{4,15}$/, id = null, loaded = false, prevC, lastSent = null, pending = null, bannerEl = null, linkEl = null;
     function B() { var b = window.__BK; return b && b.shared ? b : null; }
     function consent() { try { return localStorage.getItem('bk_consent'); } catch (e) { return null; } }
     function setConsent(v) { try { localStorage.setItem('bk_consent', v ? '1' : '0'); if (!v) localStorage.removeItem('bk_vid'); } catch (e) {} }
@@ -20,6 +20,7 @@
       gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'granted' });
       gtag('js', new Date());
       gtag('config', id, { send_page_view: false });
+      while (evq.length) { var q = evq.shift(); gtag('event', q[0], q[1]); }
       var s = document.createElement('script'); s.async = true;
       s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id);
       document.head.appendChild(s);
@@ -83,6 +84,22 @@
       else if (c === '0' && prevC === '1') revoke();
       prevC = c;
     }
+    function prod(pid) { var a = window.__bkProds || []; for (var i = 0; i < a.length; i++) { if (a[i] && a[i].id === pid) return a[i]; } return null; }
+    window.bkGaEvent = function (name, params) {
+      try {
+        if (isAdminPage() || consent() !== '1') return;
+        if (!loaded) { evq.push([name, params || {}]); if (evq.length > 20) evq.shift(); return; }
+        gtag('event', name, params || {});
+      } catch (e) {}
+    };
+    window.bkGaItem = function (type, pid, ch) {
+      if (!pid) return;
+      var p = prod(pid), it = { item_id: pid, item_name: p ? p.name : pid, price: p ? p.price : undefined, item_category: p && p.category ? p.category : undefined, quantity: 1 };
+      if (type === 'view') window.bkGaEvent('view_item', { currency: 'HUF', value: it.price || 0, items: [it] });
+      else if (type === 'cart') window.bkGaEvent('add_to_cart', { currency: 'HUF', value: it.price || 0, items: [it] });
+      else if (type === 'click') window.bkGaEvent('select_item', { items: [it] });
+      else if (type === 'share') window.bkGaEvent('share', { method: ch || '', content_type: 'product', item_id: pid });
+    };
     window.__bkGaTick = tick;
     setInterval(tick, 700);
   } catch (e) {}

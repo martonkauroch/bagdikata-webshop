@@ -362,6 +362,43 @@ function mail_order_info_block($number, $en) {
     $L[] = ($en ? 'Privacy notice: ' : 'Adatkezelési tájékoztató: ') . $site . $p . 'adatvedelem';
     return (object) array('heading' => $en ? 'Order details' : 'A rendelés adatai', 'lines' => $L);
 }
+function mail_shipped_enabled() {
+    $s = mail_settings_obj();
+    return !($s && isset($s->notifications->shippedEmail->enabled) && $s->notifications->shippedEmail->enabled === false);
+}
+function mail_track_url($method, $code) {
+    $c = rawurlencode($code);
+    if ($method === 'foxpost') { return 'https://foxpost.hu/csomagkovetes/?code=' . $c; }
+    if ($method === 'packeta') { return 'https://tracking.packeta.com/hu/?id=' . $c; }
+    if ($method === 'gls_haz') { return 'https://gls-group.com/HU/hu/csomagkovetes?match=' . $c; }
+    return '';
+}
+function mail_shipped_vars($o, $tracking, $en) {
+    $SM = $en ? array('foxpost' => 'Foxpost parcel locker', 'packeta' => 'Packeta pick-up point', 'gls_haz' => 'GLS home delivery', 'szemelyes' => 'Personal pick-up (Budapest)')
+        : array('foxpost' => 'Foxpost csomagautomata', 'packeta' => 'Packeta átvételi pont', 'gls_haz' => 'GLS házhozszállítás', 'szemelyes' => 'Személyes átvétel (Budapest)');
+    $m = isset($o->shippingMethod) ? (string) $o->shippingMethod : '';
+    $pp = isset($o->pickupPoint) && is_string($o->pickupPoint) ? trim($o->pickupPoint) : '';
+    $ship = isset($SM[$m]) ? ($en ? 'Delivery: ' : 'Szállítási mód: ') . $SM[$m] . ($pp !== '' ? ' – ' . $pp : '') : '';
+    if ($m === 'szemelyes') { $ship .= $en ? ' – we will contact you to arrange the pick-up.' : ' – az átvétel idejét egyeztetjük veled.'; }
+    $tr = '';
+    if ($tracking !== '') { $u = mail_track_url($m, $tracking); $tr = ($en ? 'Tracking number: ' : 'Csomagszám: ') . $tracking . ($u !== '' ? "\n" . ($en ? 'Track your parcel: ' : 'Csomagkövetés: ') . $u : ''); }
+    $c = isset($o->customer) && is_object($o->customer) ? $o->customer : new stdClass();
+    $nm = isset($c->name) && is_string($c->name) ? mail_clean($c->name, 80) : '';
+    return array('{nev}' => mtpl_name($nm, $en), '{name}' => mtpl_name($nm, $en), '{rendelesszam}' => (string) $o->orderNumber, '{email}' => isset($c->email) ? (string) $c->email : '',
+        '{szallitas}' => $ship, '{csomagszam}' => $tr, '{kapcsolat}' => mtpl_contact_url($en));
+}
+function mail_shipped_body($s) { return trim(preg_replace("/\n{3,}/", "\n\n", (string) $s)); }
+function mail_confirm_shipped($o, $tracking) {
+    $en = isset($o->locale) && $o->locale === 'en'; $L = $en ? 'en' : 'hu';
+    $email = isset($o->customer->email) ? trim((string) $o->customer->email) : '';
+    if (!mail_valid($email)) { throw new Exception('A rendelésben nincs érvényes e-mail-cím.'); }
+    $T = mtpl_get(); $C = $T['shipped'];
+    $v = mail_shipped_vars($o, $tracking, $en);
+    mtpl_frame_begin($T, $en);
+    try { mail_confirm_send($email, 'shipped', $L, (string) $o->orderNumber, mtpl_fill($C['subject'][$L], $v), mtpl_fill($C['heading'][$L], $v), mtpl_lines(mail_shipped_body(mtpl_fill($C['body'][$L], $v))), mail_order_table($o, $en), 'order', null, 0); }
+    finally { mtpl_frame_end(); }
+    return $email;
+}
 function mail_transfer_block($number, $en) {
     $raw = read_raw('store'); $st = $raw ? json_decode($raw) : null; $o = null;
     if (is_object($st) && isset($st->orders) && is_array($st->orders)) { foreach ($st->orders as $x) { if (is_object($x) && isset($x->orderNumber) && $x->orderNumber === $number) { $o = $x; break; } } }

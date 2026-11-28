@@ -19,6 +19,11 @@ function mtpl_defaults() {
         'withdrawal' => array(
             'heading' => array('hu' => 'Az elállási nyilatkozatot megkaptuk', 'en' => 'We received your withdrawal'),
             'body' => array('hu' => '', 'en' => '')),
+        'shipped' => array(
+            'subject' => array('hu' => 'Úton van a csomagod – {rendelesszam}', 'en' => 'Your parcel is on its way – {rendelesszam}'),
+            'heading' => array('hu' => 'Feladtuk a csomagodat', 'en' => 'Your parcel has been shipped'),
+            'body' => array('hu' => "Kedves {nev}!\n\nA(z) {rendelesszam} számú rendelésedet feladtuk.\n\n{szallitas}\n{csomagszam}\n\nKöszönjük, hogy nálunk vásároltál! Ha kérdésed van, írj nekünk a webshop üzenetküldő űrlapján ({kapcsolat}).\n\nÜdvözlettel:\nBagdi Kata",
+                'en' => "Dear {nev},\n\nyour order {rendelesszam} has been shipped.\n\n{szallitas}\n{csomagszam}\n\nThank you for shopping with us! If you have any question, send us a message using the form on our website ({kapcsolat}).\n\nKind regards,\nBagdi Kata")),
     );
 }
 function mtpl_clean($in) {
@@ -30,7 +35,7 @@ function mtpl_clean($in) {
     if (isset($in['logo']) && is_string($in['logo']) && preg_match('/^(|c:(png|jpg|gif|webp):[a-f0-9]{8,40})$/', $in['logo'])) { $out['logo'] = $in['logo']; }
     if (isset($in['logoWidth']) && is_numeric($in['logoWidth'])) { $out['logoWidth'] = max(30, min(220, (int) $in['logoWidth'])); }
     $lim = array('subject' => 150, 'heading' => 120, 'body' => 3000, 'closing' => 1500);
-    foreach (array('order', 'contact', 'withdrawal') as $k) {
+    foreach (array('order', 'contact', 'withdrawal', 'shipped') as $k) {
         foreach ($d[$k] as $f => $pair) {
             foreach (array('hu', 'en') as $l) {
                 $x = isset($in[$k][$f][$l]) ? $str($in[$k][$f][$l], $lim[$f]) : null;
