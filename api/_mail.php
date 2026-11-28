@@ -190,6 +190,7 @@ function mail_confirm_send($to, $kind, $lang, $ref, $subject, $heading, $paras, 
     if ($table) {
         $blocks[] = (object) array('heading' => $heading, 'lines' => array_slice($paras, 0, count($paras) - $tail));
         $blocks[] = (object) array('table' => $table);
+        if ($extra && isset($extra->pre)) { $blocks[] = $extra->pre; unset($extra->pre); }
         if ($extra) { $blocks[] = $extra; }
         if ($tail > 0) { $blocks[] = (object) array('lines' => array_slice($paras, -$tail)); }
     } else {
@@ -337,6 +338,30 @@ function mail_confirm_pending_run($num, $email) {
         return true;
     } catch (Throwable $e) { mail_log('HIBA order-visszaigazolas: ' . mail_clean($e->getMessage(), 200)); return false; }
 }
+function mail_order_info_block($number, $en) {
+    $raw = read_raw('store'); $st = $raw ? json_decode($raw) : null; $o = null;
+    if (is_object($st) && isset($st->orders) && is_array($st->orders)) { foreach (array_slice($st->orders, 0, 400) as $x) { if (is_object($x) && isset($x->orderNumber) && $x->orderNumber === $number) { $o = $x; break; } } }
+    if (!$o) { return null; }
+    $SM = $en ? array('foxpost' => 'Foxpost parcel locker', 'packeta' => 'Packeta pick-up point', 'gls_haz' => 'GLS home delivery', 'szemelyes' => 'Personal pick-up (Budapest)')
+        : array('foxpost' => 'Foxpost csomagautomata', 'packeta' => 'Packeta átvételi pont', 'gls_haz' => 'GLS házhozszállítás', 'szemelyes' => 'Személyes átvétel (Budapest)');
+    $PM = $en ? array('atutalas' => 'Bank transfer in advance', 'utanvet' => 'Cash on delivery', 'kartya' => 'Card') : array('atutalas' => 'Előre utalás', 'utanvet' => 'Utánvét', 'kartya' => 'Bankkártya');
+    $g = function ($x, $k) { return isset($x->$k) && is_string($x->$k) ? trim($x->$k) : ''; };
+    $ad = isset($o->address) && is_object($o->address) ? $o->address : new stdClass(); $c = isset($o->customer) && is_object($o->customer) ? $o->customer : new stdClass();
+    $sm = isset($o->shippingMethod) && isset($SM[$o->shippingMethod]) ? $SM[$o->shippingMethod] : '';
+    $L = array();
+    if ($sm !== '') { $L[] = ($en ? 'Delivery: ' : 'Szállítási mód: ') . $sm . ($g($o, 'pickupPoint') !== '' ? ' – ' . $g($o, 'pickupPoint') : ''); }
+    if (isset($o->paymentMethod) && isset($PM[$o->paymentMethod])) { $L[] = ($en ? 'Payment: ' : 'Fizetési mód: ') . $PM[$o->paymentMethod]; }
+    $addr = trim($g($ad, 'zip') . ' ' . $g($ad, 'city') . ', ' . $g($ad, 'street'), ' ,');
+    if ($addr !== '') { $L[] = ($en ? 'Address: ' : 'Cím: ') . $addr; }
+    $L[] = ($en ? 'Name / phone: ' : 'Név / telefon: ') . trim($g($c, 'name') . ($g($c, 'phone') !== '' ? ', ' . $g($c, 'phone') : ''));
+    if ($g($o, 'note') !== '') { $L[] = ($en ? 'Note: ' : 'Megjegyzés: ') . mb_substr($g($o, 'note'), 0, 300); }
+    $site = mail_site_url(); $p = $en ? '/#/en/' : '/#/';
+    $L[] = '';
+    $L[] = ($en ? 'Terms and Conditions: ' : 'Általános szerződési feltételek (ÁSZF): ') . $site . $p . 'aszf';
+    $L[] = ($en ? 'Right of withdrawal (14 days): ' : 'Elállási jog (14 nap) és elállási nyilatkozat: ') . $site . $p . 'elallas';
+    $L[] = ($en ? 'Privacy notice: ' : 'Adatkezelési tájékoztató: ') . $site . $p . 'adatvedelem';
+    return (object) array('heading' => $en ? 'Order details' : 'A rendelés adatai', 'lines' => $L);
+}
 function mail_transfer_block($number, $en) {
     $raw = read_raw('store'); $st = $raw ? json_decode($raw) : null; $o = null;
     if (is_object($st) && isset($st->orders) && is_array($st->orders)) { foreach ($st->orders as $x) { if (is_object($x) && isset($x->orderNumber) && $x->orderNumber === $number) { $o = $x; break; } } }
@@ -371,6 +396,10 @@ function mail_confirm_order($email, $name, $lang, $number, $table) {
     $number = mail_clean($number, 60);
     $xfer = null;
     try { $xfer = mail_transfer_block($number, $en); } catch (Throwable $e) { $xfer = null; }
+    $info = null;
+    try { $info = mail_order_info_block($number, $en); } catch (Throwable $e) { $info = null; }
+    if ($info && $xfer) { $xfer = (object) array('heading' => $xfer->heading, 'lines' => $xfer->lines, 'pre' => $info); }
+    elseif ($info) { $xfer = $info; }
     $T = mtpl_get(); $C = $T['order'];
     $v = array('{nev}' => mtpl_name(mail_clean($name, 80), $en), '{name}' => mtpl_name(mail_clean($name, 80), $en), '{rendelesszam}' => $number, '{email}' => (string) $email, '{kapcsolat}' => mtpl_contact_url($en));
     $body = mtpl_lines(mtpl_fill($C['body'][$L], $v)); $close = mtpl_lines(mtpl_fill($C['closing'][$L], $v));

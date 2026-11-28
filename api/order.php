@@ -61,7 +61,7 @@ if ($sk === 'gls' && ($o->address->zip === '' || $o->address->city === '' || $o-
 if (isset($sc->fee) && is_numeric($sc->fee)) { $fee = max(0, (int) round($sc->fee)); }
 $codOk = $sk === 'pickup' ? false : (isset($sc->codEnabled) ? $sc->codEnabled !== false : $codDef);
 $pm = (isset($o->paymentMethod) && is_string($o->paymentMethod)) ? $o->paymentMethod : '';
-if (!in_array($pm, array('kartya', 'atutalas', 'utanvet'), true)) { fail(400, 'Érvénytelen fizetési mód.'); }
+if (!in_array($pm, array('atutalas', 'utanvet'), true)) { fail(400, $pm === 'kartya' ? 'A bankkártyás fizetés jelenleg nem érhető el. Kérjük, válassz másik fizetési módot.' : 'Érvénytelen fizetési mód.'); }
 if ($pm === 'utanvet' && (!$codOk || (isset($o->currency) && $o->currency !== 'HUF'))) { fail(400, 'Utánvét ennél a szállítási módnál nem választható.'); }
 $free = (isset($sh->freeShippingFrom) && is_numeric($sh->freeShippingFrom)) ? (int) $sh->freeShippingFrom : 20000;
 $codFee = (isset($sh->codFee) && is_numeric($sh->codFee)) ? max(0, (int) $sh->codFee) : 490;
@@ -106,7 +106,7 @@ mutate_json('store', function ($cur) use ($o, &$isNew, $items, $sub, $eligSub, $
     $o->test = !site_is_public();
     $o->createdAt = date('c');
     if (!isset($o->orderNumber) || !is_string($o->orderNumber) || !preg_match('/^BK-\d{1,12}$/', $o->orderNumber)) { $o->orderNumber = 'BK-' . date('ymdHis'); }
-    if (!isset($o->status) || !in_array($o->status, array('uj', 'fizetve'), true)) { $o->status = 'uj'; }
+    $o->status = 'uj';
     array_unshift($orders, $o);
     $cur->orders = array_slice($orders, 0, 2000);
     if (isset($cur->products) && is_array($cur->products)) {
